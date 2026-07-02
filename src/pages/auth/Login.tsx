@@ -41,6 +41,7 @@ function InputField({
           value={value}
           onChange={(e) => { onChange(e.target.value); }}
           placeholder={placeholder}
+          autoComplete={type === 'password' ? 'current-password' : type === 'email' ? 'email' : 'off'}
         />
         {showToggle && (
           <button type="button" className={styles.eyeBtn} onClick={onToggle} tabIndex={-1}>

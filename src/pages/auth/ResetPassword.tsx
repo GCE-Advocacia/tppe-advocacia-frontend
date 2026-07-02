@@ -26,13 +26,16 @@ function InputField({
     <div className={styles.fieldWrap}>
       <span className={`${styles.fieldLabel} ${error ? styles.fieldLabelError : ''}`}>{label}</span>
       <div className={`${styles.fieldInner} ${error ? styles.fieldInnerError : ''}`}>
-        <span className={styles.fieldIcon}><Lock size={16} /></span>
+        <span className={styles.fieldIcon}>
+          <Lock size={16} />
+        </span>
         <input
           className={styles.fieldInput}
           type={show ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          autoComplete="new-password"
         />
         <button type="button" className={styles.eyeBtn} onClick={onToggle} tabIndex={-1}>
           {show ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -81,6 +84,10 @@ export default function ResetPassword() {
 
   async function handleSubmit() {
     setErro('');
+    if (!token) {
+      setErro('Link inválido ou incompleto.');
+      return;
+    }
     if (novaSenha.length < 8) {
       setErro('A senha deve ter no mínimo 8 caracteres.');
       return;
@@ -124,15 +131,18 @@ export default function ResetPassword() {
               <h1 className={styles.cardTitle} style={{ textAlign: 'left', fontSize: '1.4rem' }}>
                 Senha redefinida
               </h1>
-              <p className={styles.successMsg}>
-                Sua senha foi atualizada com sucesso. Faça login com a nova senha.
-              </p>
+              <p className={styles.successMsg}>Sua senha foi atualizada com sucesso. Faça login com a nova senha.</p>
               <button className={styles.btnSubmit} onClick={() => navigate('/login')}>
                 Ir para Login
               </button>
             </>
           ) : (
-            <form onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleSubmit();
+              }}
+            >
               <h1 className={styles.cardTitle} style={{ textAlign: 'left', fontSize: '1.4rem' }}>
                 Redefinir senha
               </h1>
@@ -141,28 +151,30 @@ export default function ResetPassword() {
               <InputField
                 label="NOVA SENHA"
                 value={novaSenha}
-                onChange={(v) => { setNovaSenha(v); setErro(''); }}
+                onChange={(v) => {
+                  setNovaSenha(v);
+                  setErro('');
+                }}
                 error={Boolean(erro)}
                 placeholder="Mínimo 8 caracteres"
                 show={showNova}
-                onToggle={() => setShowNova(s => !s)}
+                onToggle={() => setShowNova((s) => !s)}
               />
 
               <InputField
                 label="CONFIRMAR SENHA"
                 value={confirma}
-                onChange={(v) => { setConfirma(v); setErro(''); }}
+                onChange={(v) => {
+                  setConfirma(v);
+                  setErro('');
+                }}
                 error={Boolean(erro)}
                 placeholder="Repita a senha"
                 show={showConfirma}
-                onToggle={() => setShowConfirma(s => !s)}
+                onToggle={() => setShowConfirma((s) => !s)}
               />
 
-              <button
-                type="submit"
-                className={styles.btnSubmit}
-                disabled={loading || !novaSenha || !confirma}
-              >
+              <button type="submit" className={styles.btnSubmit} disabled={loading || !novaSenha || !confirma}>
                 {loading ? 'Salvando...' : 'Redefinir senha'}
               </button>
 

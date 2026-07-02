@@ -9,7 +9,7 @@ import {
   type Appointment, type AppointmentType, type AppointmentWrite,
 } from '../../../services/appointments';
 import {
-  getGoogleStatus, getGoogleAuthUrl, disconnectGoogle, syncAllToGoogle,
+  getGoogleStatus, getGoogleAuthUrl, disconnectGoogle, syncAllToGoogle, pullFromGoogle,
   type GoogleStatus,
 } from '../../../services/googleCalendar';
 import { calculateDeadline } from '../../../services/deadlines';
@@ -630,8 +630,26 @@ export default function Agenda() {
     setGoogleBusy(true);
     setGoogleMsg(null);
     try {
-      const res = await syncAllToGoogle();
-      setGoogleMsg({ kind: 'ok', text: `Sincronização concluída: ${res.synced} compromisso${res.synced !== 1 ? 's' : ''} enviado${res.synced !== 1 ? 's' : ''}.${res.failed > 0 ? ` (${res.failed} falha${res.failed !== 1 ? 's' : ''})` : ''}` });
+      // Bidirecional: primeiro empurra os pendentes, depois puxa o que mudou
+      // no Google. Push antes evita que um compromisso recém-criado local
+      // seja tratado como novidade na volta.
+      const pushed = await syncAllToGoogle();
+      const pulled = await pullFromGoogle();
+
+      const parts: string[] = [];
+      if (pushed.synced > 0) parts.push(`${pushed.synced} enviado${pushed.synced !== 1 ? 's' : ''}`);
+      if (pulled.created > 0) parts.push(`${pulled.created} importado${pulled.created !== 1 ? 's' : ''}`);
+      if (pulled.updated > 0) parts.push(`${pulled.updated} atualizado${pulled.updated !== 1 ? 's' : ''}`);
+      if (pulled.deleted > 0) parts.push(`${pulled.deleted} removido${pulled.deleted !== 1 ? 's' : ''}`);
+      const summary = parts.length > 0 ? parts.join(', ') : 'nada a sincronizar';
+      const failedSuffix = pushed.failed > 0 ? ` (${pushed.failed} falha${pushed.failed !== 1 ? 's' : ''} no envio)` : '';
+
+      setGoogleMsg({ kind: 'ok', text: `Sincronização concluída: ${summary}.${failedSuffix}` });
+
+      // Recarrega para exibir os compromissos importados do Google.
+      if (pulled.created > 0 || pulled.updated > 0 || pulled.deleted > 0) {
+        await loadYear(year);
+      }
     } catch {
       setGoogleMsg({ kind: 'err', text: 'Erro ao sincronizar com o Google Calendar.' });
     } finally {

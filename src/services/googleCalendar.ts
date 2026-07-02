@@ -12,6 +12,12 @@ export type GoogleSyncResult = {
   failed: number;
 };
 
+export type GooglePullResult = {
+  created: number;
+  updated: number;
+  deleted: number;
+};
+
 export async function getGoogleStatus(): Promise<GoogleStatus> {
   const res = await apiRequest<SuccessResponse<GoogleStatus>>(
     '/integrations/google/status',
@@ -33,6 +39,14 @@ export async function disconnectGoogle(): Promise<void> {
 export async function syncAllToGoogle(): Promise<GoogleSyncResult> {
   const res = await apiRequest<SuccessResponse<GoogleSyncResult>>(
     '/integrations/google/sync-all',
+    { method: 'POST' },
+  );
+  return res.data;
+}
+
+export async function pullFromGoogle(): Promise<GooglePullResult> {
+  const res = await apiRequest<SuccessResponse<GooglePullResult>>(
+    '/integrations/google/pull',
     { method: 'POST' },
   );
   return res.data;
