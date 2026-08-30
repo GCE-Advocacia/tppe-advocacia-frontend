@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM ghcr.io/bessazs/docker-images/node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine
+FROM ghcr.io/bessazs/docker-images/node:20-alpine
 
 WORKDIR /app
 
