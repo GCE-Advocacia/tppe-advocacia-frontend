@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: ${REGISTRY_IMAGE}:${IMAGE_TAG}
+    build: .
     container_name: advocacia-app-homolog-front
     ports:
       - "3000:3000"
