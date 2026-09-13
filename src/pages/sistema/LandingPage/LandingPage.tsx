@@ -7,6 +7,7 @@ import { ApiError } from '../../../services/api';
 import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
 import type { LandingPageData, Diferencial, AreaAtuacao } from './types';
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
+import ColorPicker from '../../../components/sistema/shared/ColorPicker';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -33,7 +34,7 @@ const EMPTY_DATA: LandingPageData = {
   areas: EMPTY_AREAS,
   color: '#232C43',
   colorBgPrimary: '#232C43',
-  colorBgSecondary: '#FFFFFF',
+  colorBgSecondary: '#F5F3EF',
   colorBgSobre: '#FFFFFF',
   colorButtons: '#661C16',
   colorTitlePrimary: '#FFFFFF',
@@ -404,69 +405,68 @@ export default function LandingPageConfig() {
       {/* ── Identidade Visual / Cores ── */}
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Botão para restaurar cores originais */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              style={{
+                background: 'none',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                padding: '6px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: 'var(--navy)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+              }}
+              onClick={() => {
+                setData(d => ({
+                  ...d,
+                  color: '#232C43',
+                  colorBgPrimary: '#232C43',
+                  colorBgSecondary: '#F5F3EF',
+                  colorBgSobre: '#FFFFFF',
+                  colorButtons: '#661C16',
+                  colorTitlePrimary: '#FFFFFF',
+                  colorTitleSecondary: '#232C43',
+                }));
+              }}
+            >
+              ↺ Restaurar Cores Originais do Escritório
+            </button>
+          </div>
+
           {/* 1 - Cores de Fundo */}
           <div>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
               1. Cores de Fundo
             </h3>
             <div className={styles.row2}>
-              <Field label="FUNDO: HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorBgPrimary || '#232C43'}
-                    onChange={e => set('colorBgPrimary', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorBgPrimary || '#232C43'}
-                    maxLength={7}
-                    onChange={e => set('colorBgPrimary', e.target.value)}
-                    placeholder="#232C43"
-                  />
-                </div>
+              <Field label="FUNDO: NAVBAR, HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
+                <ColorPicker
+                  value={data.colorBgPrimary || '#232C43'}
+                  onChange={v => {
+                    set('colorBgPrimary', v);
+                    set('color', v);
+                  }}
+                />
               </Field>
 
               <Field label="FUNDO: ESCRITÓRIO, ÁREAS E CONTATO">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorBgSecondary || '#FFFFFF'}
-                    onChange={e => set('colorBgSecondary', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorBgSecondary || '#FFFFFF'}
-                    maxLength={7}
-                    onChange={e => set('colorBgSecondary', e.target.value)}
-                    placeholder="#FFFFFF"
-                  />
-                </div>
+                <ColorPicker
+                  value={data.colorBgSecondary || '#F5F3EF'}
+                  onChange={v => set('colorBgSecondary', v)}
+                />
               </Field>
             </div>
 
             <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
               <Field label="FUNDO: SOBRE (INDEPENDENTE)">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorBgSobre || '#FFFFFF'}
-                    onChange={e => set('colorBgSobre', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorBgSobre || '#FFFFFF'}
-                    maxLength={7}
-                    onChange={e => set('colorBgSobre', e.target.value)}
-                    placeholder="#FFFFFF"
-                  />
-                </div>
+                <ColorPicker
+                  value={data.colorBgSobre || '#FFFFFF'}
+                  onChange={v => set('colorBgSobre', v)}
+                />
               </Field>
             </div>
           </div>
@@ -480,22 +480,10 @@ export default function LandingPageConfig() {
             </h3>
             <div style={{ maxWidth: 'calc(50% - 12px)' }}>
               <Field label="BOTÕES DE AÇÃO (AGENDAR, FALE CONOSCO, WHATSAPP, ENVIAR)">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorButtons || '#661C16'}
-                    onChange={e => set('colorButtons', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorButtons || '#661C16'}
-                    maxLength={7}
-                    onChange={e => set('colorButtons', e.target.value)}
-                    placeholder="#661C16"
-                  />
-                </div>
+                <ColorPicker
+                  value={data.colorButtons || '#661C16'}
+                  onChange={v => set('colorButtons', v)}
+                />
               </Field>
             </div>
           </div>
@@ -509,41 +497,17 @@ export default function LandingPageConfig() {
             </h3>
             <div className={styles.row2}>
               <Field label="TÍTULOS: HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorTitlePrimary || '#FFFFFF'}
-                    onChange={e => set('colorTitlePrimary', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorTitlePrimary || '#FFFFFF'}
-                    maxLength={7}
-                    onChange={e => set('colorTitlePrimary', e.target.value)}
-                    placeholder="#FFFFFF"
-                  />
-                </div>
+                <ColorPicker
+                  value={data.colorTitlePrimary || '#FFFFFF'}
+                  onChange={v => set('colorTitlePrimary', v)}
+                />
               </Field>
 
               <Field label="TÍTULOS: ESCRITÓRIO, ÁREAS, CONTATO E SOBRE">
-                <div className={styles.colorInputWrapper}>
-                  <input
-                    type="color"
-                    className={styles.colorInput}
-                    value={data.colorTitleSecondary || '#232C43'}
-                    onChange={e => set('colorTitleSecondary', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className={styles.colorTextInput}
-                    value={data.colorTitleSecondary || '#232C43'}
-                    maxLength={7}
-                    onChange={e => set('colorTitleSecondary', e.target.value)}
-                    placeholder="#232C43"
-                  />
-                </div>
+                <ColorPicker
+                  value={data.colorTitleSecondary || '#232C43'}
+                  onChange={v => set('colorTitleSecondary', v)}
+                />
               </Field>
             </div>
           </div>

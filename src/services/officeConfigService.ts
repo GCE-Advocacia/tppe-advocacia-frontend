@@ -79,7 +79,7 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     })),
     color: api.color ?? '#232C43',
     colorBgPrimary: api.color_bg_primary ?? '#232C43',
-    colorBgSecondary: api.color_bg_secondary ?? '#FFFFFF',
+    colorBgSecondary: api.color_bg_secondary ?? '#F5F3EF',
     colorBgSobre: api.color_bg_sobre ?? '#FFFFFF',
     colorButtons: api.color_buttons ?? '#661C16',
     colorTitlePrimary: api.color_title_primary ?? '#FFFFFF',
