@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
-  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette,
+  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
 import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
@@ -148,11 +148,19 @@ function SectionCard({ icon, title, children }: SectionCardProps) {
   );
 }
 
-interface FieldProps { label: string; children: React.ReactNode; }
-function Field({ label, children }: FieldProps) {
+interface FieldProps { label: string; tooltip?: string; children: React.ReactNode; }
+function Field({ label, tooltip, children }: FieldProps) {
   return (
     <div className={styles.field}>
-      <label className={styles.fieldLabel}>{label}</label>
+      <label className={styles.fieldLabel}>
+        <span>{label}</span>
+        {tooltip && (
+          <span className={styles.tooltipWrapper} tabIndex={0} aria-label={tooltip}>
+            <Info size={13} className={styles.tooltipIcon} />
+            <span className={styles.tooltipText}>{tooltip}</span>
+          </span>
+        )}
+      </label>
       {children}
     </div>
   );
@@ -433,7 +441,7 @@ export default function LandingPageConfig() {
                 }));
               }}
             >
-              ↺ Restaurar Cores Originais do Escritório
+              ↺ Restaurar Cores Padrão
             </button>
           </div>
 
@@ -443,7 +451,10 @@ export default function LandingPageConfig() {
               1. Cores de Fundo
             </h3>
             <div className={styles.row2}>
-              <Field label="FUNDO: NAVBAR, HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
+              <Field
+                label="BACKGROUND 1"
+                tooltip="Aplica-se às seções: Navbar, Hero (inclui o fundo do botão vazado 'Conheça o Escritório'), Diferenciais, Artigos e Rodapé"
+              >
                 <ColorPicker
                   value={data.colorBgPrimary || '#232C43'}
                   onChange={v => {
@@ -453,7 +464,10 @@ export default function LandingPageConfig() {
                 />
               </Field>
 
-              <Field label="FUNDO: ESCRITÓRIO, ÁREAS E CONTATO">
+              <Field
+                label="BACKGROUND 2"
+                tooltip="Aplica-se às seções: Escritório, Áreas e Contato"
+              >
                 <ColorPicker
                   value={data.colorBgSecondary || '#F5F3EF'}
                   onChange={v => set('colorBgSecondary', v)}
@@ -462,7 +476,10 @@ export default function LandingPageConfig() {
             </div>
 
             <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
-              <Field label="FUNDO: SOBRE (INDEPENDENTE)">
+              <Field
+                label="BACKGROUND 3"
+                tooltip="Aplica-se à seção: Sobre o Advogado"
+              >
                 <ColorPicker
                   value={data.colorBgSobre || '#FFFFFF'}
                   onChange={v => set('colorBgSobre', v)}
@@ -479,7 +496,10 @@ export default function LandingPageConfig() {
               2. Cores dos Botões
             </h3>
             <div style={{ maxWidth: 'calc(50% - 12px)' }}>
-              <Field label="BOTÕES DE AÇÃO (AGENDAR, FALE CONOSCO, WHATSAPP, ENVIAR)">
+              <Field
+                label="BOTÕES DE AÇÃO"
+                tooltip="Aplica-se aos botões principais: 'Agendar Consulta', 'Fale Conosco', 'Falar no WhatsApp' e 'Enviar Mensagem' (o botão 'Conheça o Escritório' possui estilo vazado/outline sobre o Background 1)"
+              >
                 <ColorPicker
                   value={data.colorButtons || '#661C16'}
                   onChange={v => set('colorButtons', v)}
@@ -493,17 +513,23 @@ export default function LandingPageConfig() {
           {/* 3 - Cores das Fontes */}
           <div>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
-              3. Cores dos Títulos (h2)
+              3. Cores das Fontes
             </h3>
             <div className={styles.row2}>
-              <Field label="TÍTULOS: HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
+              <Field
+                label="TÍTULOS 1"
+                tooltip="Aplica-se aos títulos das seções: Hero, Diferenciais, Artigos e Rodapé"
+              >
                 <ColorPicker
                   value={data.colorTitlePrimary || '#FFFFFF'}
                   onChange={v => set('colorTitlePrimary', v)}
                 />
               </Field>
 
-              <Field label="TÍTULOS: ESCRITÓRIO, ÁREAS, CONTATO E SOBRE">
+              <Field
+                label="TÍTULOS 2"
+                tooltip="Aplica-se aos títulos das seções: Escritório, Áreas, Contato e Sobre"
+              >
                 <ColorPicker
                   value={data.colorTitleSecondary || '#232C43'}
                   onChange={v => set('colorTitleSecondary', v)}
