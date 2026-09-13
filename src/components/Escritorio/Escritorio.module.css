@@ -1,5 +1,5 @@
 .section {
-  background: var(--white);
+  background: var(--bg-secondary, var(--white));
   padding: 100px 0;
 }
 
@@ -50,7 +50,7 @@
   font-size: clamp(1.8rem, 3vw, 2.4rem);
   font-weight: 700;
   font-style: normal;
-  color: var(--navy);
+  color: var(--title-secondary, var(--navy));
   line-height: 1.2;
   margin-bottom: 24px;
 }

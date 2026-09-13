@@ -1,5 +1,5 @@
 .hero {
-  background: var(--navy);
+  background: var(--bg-primary, var(--navy));
   display: flex;
   width: 100%;
   min-height: 100vh;
@@ -44,7 +44,7 @@
 
 .title {
   width: 569px;
-  color: var(--white);
+  color: var(--title-primary, var(--white));
   font-family: 'Montserrat';
   font-style: normal;
   font-size: 64px;
@@ -73,7 +73,7 @@
   padding: 18px 31.148px 18px 32px;
   justify-content: center;
   align-items: center;
-  background: var(--crimson);
+  background: var(--btn-primary-bg, var(--crimson));
   color: var(--white);
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;

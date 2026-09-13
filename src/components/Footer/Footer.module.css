@@ -1,4 +1,4 @@
-.footer { background: var(--navy-dark); padding: 40px 0; }
+.footer { background: var(--bg-primary, var(--navy-dark)); padding: 40px 0; }
 
 .inner {
   padding: 0 var(--px);

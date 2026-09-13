@@ -1,4 +1,4 @@
-.section { background: var(--white); padding: 100px 0; }
+.section { background: var(--bg-sobre, var(--white)); padding: 100px 0; }
 
 .inner {
   max-width: var(--max-width);
@@ -54,7 +54,7 @@
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 3vw, 2.6rem);
   font-weight: 700;
-  color: var(--navy);
+  color: var(--title-secondary, var(--navy));
   margin-bottom: 6px;
 }
 

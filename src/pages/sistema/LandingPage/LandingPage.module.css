@@ -375,6 +375,69 @@
 }
 .btnSave:hover { background: var(--navy-mid); }
 
+/* ── Color Picker ── */
+.colorPickerContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.colorInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fafafa;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: border-color .2s, background .2s;
+}
+
+.colorInputWrapper:focus-within {
+  border-color: var(--navy);
+  background: var(--white);
+}
+
+.colorInput {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+.colorTextInput {
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  width: 85px;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.colorHint {
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .row2 { grid-template-columns: 1fr; }

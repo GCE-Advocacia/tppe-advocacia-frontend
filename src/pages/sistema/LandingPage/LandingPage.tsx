@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
-  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2,
+  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
 import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
@@ -31,6 +31,13 @@ const EMPTY_DATA: LandingPageData = {
   advogadoTitulo: '', advogadoOab: '', advogadoConteudo: '', advogadoImagem: '', advogadoImagemPos: { x: 50, y: 50 },
   diferenciais: EMPTY_DIFERENCIAIS,
   areas: EMPTY_AREAS,
+  color: '#232C43',
+  colorBgPrimary: '#232C43',
+  colorBgSecondary: '#FFFFFF',
+  colorBgSobre: '#FFFFFF',
+  colorButtons: '#661C16',
+  colorTitlePrimary: '#FFFFFF',
+  colorTitleSecondary: '#232C43',
 };
 import styles from './LandingPage.module.css';
 
@@ -391,6 +398,155 @@ export default function LandingPageConfig() {
               )}
             </div>
           ))}
+        </div>
+      </SectionCard>
+
+      {/* ── Identidade Visual / Cores ── */}
+      <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* 1 - Cores de Fundo */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              1. Cores de Fundo
+            </h3>
+            <div className={styles.row2}>
+              <Field label="FUNDO: HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorBgPrimary || '#232C43'}
+                    onChange={e => set('colorBgPrimary', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorBgPrimary || '#232C43'}
+                    maxLength={7}
+                    onChange={e => set('colorBgPrimary', e.target.value)}
+                    placeholder="#232C43"
+                  />
+                </div>
+              </Field>
+
+              <Field label="FUNDO: ESCRITÓRIO, ÁREAS E CONTATO">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorBgSecondary || '#FFFFFF'}
+                    onChange={e => set('colorBgSecondary', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorBgSecondary || '#FFFFFF'}
+                    maxLength={7}
+                    onChange={e => set('colorBgSecondary', e.target.value)}
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
+              <Field label="FUNDO: SOBRE (INDEPENDENTE)">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorBgSobre || '#FFFFFF'}
+                    onChange={e => set('colorBgSobre', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorBgSobre || '#FFFFFF'}
+                    maxLength={7}
+                    onChange={e => set('colorBgSobre', e.target.value)}
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </Field>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0' }} />
+
+          {/* 2 - Cores dos Botões */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              2. Cores dos Botões
+            </h3>
+            <div style={{ maxWidth: 'calc(50% - 12px)' }}>
+              <Field label="BOTÕES DE AÇÃO (AGENDAR, FALE CONOSCO, WHATSAPP, ENVIAR)">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorButtons || '#661C16'}
+                    onChange={e => set('colorButtons', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorButtons || '#661C16'}
+                    maxLength={7}
+                    onChange={e => set('colorButtons', e.target.value)}
+                    placeholder="#661C16"
+                  />
+                </div>
+              </Field>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0' }} />
+
+          {/* 3 - Cores das Fontes */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              3. Cores dos Títulos (h2)
+            </h3>
+            <div className={styles.row2}>
+              <Field label="TÍTULOS: HERO, DIFERENCIAIS, ARTIGOS E RODAPÉ">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorTitlePrimary || '#FFFFFF'}
+                    onChange={e => set('colorTitlePrimary', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorTitlePrimary || '#FFFFFF'}
+                    maxLength={7}
+                    onChange={e => set('colorTitlePrimary', e.target.value)}
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </Field>
+
+              <Field label="TÍTULOS: ESCRITÓRIO, ÁREAS, CONTATO E SOBRE">
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.colorTitleSecondary || '#232C43'}
+                    onChange={e => set('colorTitleSecondary', e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    className={styles.colorTextInput}
+                    value={data.colorTitleSecondary || '#232C43'}
+                    maxLength={7}
+                    onChange={e => set('colorTitleSecondary', e.target.value)}
+                    placeholder="#232C43"
+                  />
+                </div>
+              </Field>
+            </div>
+          </div>
         </div>
       </SectionCard>
 

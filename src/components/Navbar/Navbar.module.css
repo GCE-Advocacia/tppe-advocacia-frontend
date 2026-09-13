@@ -58,7 +58,7 @@
   align-items: center;
   flex-shrink: 0;
   aspect-ratio: 200 / 51;
-  background: var(--crimson);
+  background: var(--btn-primary-bg, var(--crimson));
   color: #FFF;
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
@@ -128,7 +128,7 @@
 .drawerBtn {
   display: block;
   margin-top: 16px;
-  background: var(--crimson);
+  background: var(--btn-primary-bg, var(--crimson));
   color: var(--white);
   text-align: center;
   padding: 12px;

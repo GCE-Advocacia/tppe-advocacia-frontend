@@ -1,4 +1,4 @@
-.section { background: var(--navy); padding: 100px 0; }
+.section { background: var(--bg-primary, var(--navy)); padding: 100px 0; }
 
 .inner {
   max-width: var(--max-width);
@@ -16,7 +16,7 @@
 .heading {
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  color: var(--white); font-weight: 700;
+  color: var(--title-primary, var(--white)); font-weight: 700;
 }
 
 /* Carrossel */
