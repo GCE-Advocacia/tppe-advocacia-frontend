@@ -1,12 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { listTransactions } from '../../../services/finance';
-import type { FinanceTransaction, TransactionType } from '../../../services/finance';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import Modal from '../../../components/sistema/Modal/Modal';
+import { listTransactions, createIncome } from '../../../services/finance';
+import type {
+  FinanceTransaction,
+  FinanceTransactionCreate,
+  TransactionType,
+} from '../../../services/finance';
+import { ApiError } from '../../../services/api';
 import styles from './Financeiro.module.css';
 
 const TYPE_LABEL: Record<TransactionType, string> = {
   INCOME:  'Entrada',
   EXPENSE: 'Saída',
+};
+
+const MODAL_TITLE: Record<TransactionType, string> = {
+  INCOME:  'Nova Entrada',
+  EXPENSE: 'Nova Saída',
 };
 
 const TYPE_STYLE: Record<TransactionType, React.CSSProperties> = {
@@ -30,12 +41,26 @@ function formatCurrency(amount: string) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+/** Aceita "1500,50", "1.500,50" ou "1500.50" e devolve sempre com ponto. */
+function normalizeAmount(raw: string) {
+  const value = raw.trim();
+  if (value.includes(',')) return value.replace(/\./g, '').replace(',', '.');
+  return value;
+}
+
 export default function Financeiro() {
   const [items, setItems]     = useState<FinanceTransaction[]>([]);
   const [total, setTotal]     = useState(0);
   const [page, setPage]       = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+
+  const [modalType, setModalType]   = useState<TransactionType | null>(null);
+  const [formDesc, setFormDesc]     = useState('');
+  const [formAmount, setFormAmount] = useState('');
+  const [formDate, setFormDate]     = useState('');
+  const [formError, setFormError]   = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async (p: number) => {
     setLoading(true);
@@ -55,6 +80,49 @@ export default function Financeiro() {
     void fetchData(page);
   }, [fetchData, page]);
 
+  function openModal(type: TransactionType) {
+    setFormDesc(''); setFormAmount(''); setFormDate('');
+    setFormError('');
+    setModalType(type);
+  }
+
+  function closeModal() { setModalType(null); setFormError(''); }
+
+  function validateForm(): string {
+    if (!formDesc.trim())   return 'Descrição é obrigatória.';
+    if (!formAmount.trim()) return 'Valor é obrigatório.';
+    const amount = normalizeAmount(formAmount);
+    if (!/^\d+(\.\d{1,2})?$/.test(amount)) return 'Valor inválido. Use o formato 1500,50.';
+    if (Number(amount) <= 0) return 'Valor deve ser maior que zero.';
+    if (!formDate)          return 'Data é obrigatória.';
+    return '';
+  }
+
+  function buildPayload(): FinanceTransactionCreate {
+    return {
+      description:      formDesc.trim(),
+      amount:           normalizeAmount(formAmount),
+      transaction_date: formDate,
+    };
+  }
+
+  async function salvarLancamento() {
+    if (!modalType) return;
+    const err = validateForm();
+    if (err) { setFormError(err); return; }
+    setSubmitting(true); setFormError('');
+    try {
+      await createIncome(buildPayload());
+      closeModal();
+      if (page === 1) void fetchData(1);
+      else setPage(1);
+    } catch (e) {
+      setFormError(e instanceof ApiError ? e.message : 'Não foi possível salvar o lançamento.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
   return (
@@ -62,6 +130,11 @@ export default function Financeiro() {
 
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Controle Financeiro</h1>
+        <div className={styles.headerActions}>
+          <button className={styles.btnPrimary} onClick={() => openModal('INCOME')}>
+            <Plus size={16} /> Nova Entrada
+          </button>
+        </div>
       </div>
 
       {loading && <p className={styles.statusMsg}>Carregando...</p>}
@@ -132,6 +205,77 @@ export default function Financeiro() {
         </div>
       </div>
 
+      {/* Modal de lançamento — mesmo formulário para entradas e saídas */}
+      {modalType && (
+        <Modal title={MODAL_TITLE[modalType]} onClose={closeModal}>
+          <TransactionFormFields
+            formDesc={formDesc}     setFormDesc={setFormDesc}
+            formAmount={formAmount} setFormAmount={setFormAmount}
+            formDate={formDate}     setFormDate={setFormDate}
+          />
+          {formError && <p className={styles.errorMsg}>{formError}</p>}
+          <div className={styles.modalFooter}>
+            <button className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
+            <button
+              className={styles.btnPrimary}
+              onClick={() => void salvarLancamento()}
+              disabled={submitting}
+            >
+              <Plus size={16} /> {submitting ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
     </div>
+  );
+}
+
+interface FormProps {
+  formDesc: string;   setFormDesc:   (v: string) => void;
+  formAmount: string; setFormAmount: (v: string) => void;
+  formDate: string;   setFormDate:   (v: string) => void;
+}
+
+function TransactionFormFields({
+  formDesc, setFormDesc,
+  formAmount, setFormAmount,
+  formDate, setFormDate,
+}: FormProps) {
+  return (
+    <>
+      <div className={styles.fieldGroup}>
+        <label className={styles.fieldLabel}>Descrição</label>
+        <input
+          className={styles.fieldInput}
+          value={formDesc}
+          onChange={e => setFormDesc(e.target.value)}
+          placeholder="Ex: Honorários contratuais"
+          maxLength={255}
+        />
+      </div>
+      <div className={styles.fieldRow}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>Valor (R$)</label>
+          <input
+            className={styles.fieldInput}
+            value={formAmount}
+            onChange={e => setFormAmount(e.target.value)}
+            placeholder="0,00"
+            inputMode="decimal"
+          />
+          <p className={styles.fieldHint}>Use vírgula ou ponto para os centavos.</p>
+        </div>
+        <div className={styles.fieldGroup}>
+          <label className={styles.fieldLabel}>Data</label>
+          <input
+            type="date"
+            className={styles.fieldInput}
+            value={formDate}
+            onChange={e => setFormDate(e.target.value)}
+          />
+        </div>
+      </div>
+    </>
   );
 }
