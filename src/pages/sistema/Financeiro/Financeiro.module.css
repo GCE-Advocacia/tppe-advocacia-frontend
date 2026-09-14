@@ -1,0 +1,93 @@
+.page { padding: 0; }
+
+.pageHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: 2rem; font-weight: 700; color: var(--navy);
+}
+
+/* Table */
+.tableWrap {
+  background: var(--white);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.table { width: 100%; min-width: 640px; border-collapse: collapse; }
+
+.table thead tr { border-bottom: 1px solid #f0f0f0; }
+
+.table th {
+  padding: 14px 20px; text-align: left;
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--gray);
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f5f5f5; transition: background .15s;
+}
+.table tbody tr:last-child { border-bottom: none; }
+.table tbody tr:hover { background: #fafafa; }
+.table td { padding: 16px 20px; vertical-align: middle; }
+
+.dateCell { font-weight: 600; color: var(--navy); font-size: .9rem; white-space: nowrap; }
+.descCell { color: var(--text); font-size: .9rem; }
+
+.amountHead { text-align: right; }
+.amountCell {
+  text-align: right; white-space: nowrap;
+  font-size: .9rem; font-weight: 700; color: var(--navy);
+}
+.amountIncome  { color: #2e7d32; }
+.amountExpense { color: var(--crimson); }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .06em;
+}
+
+/* Pagination */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 24px; color: var(--gray); font-size: .85rem;
+}
+
+.pageInfo strong { color: var(--navy); }
+.pageControls { display: flex; align-items: center; gap: 4px; }
+
+.pageArrow {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid #e0e0e0; background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--gray); transition: background .2s;
+}
+.pageArrow:hover:not(:disabled) { background: #f5f5f5; }
+.pageArrow:disabled { opacity: .4; cursor: default; }
+
+.pageNum {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 1px solid #e0e0e0; background: var(--white);
+  font-size: .85rem; cursor: pointer; font-family: var(--font-body);
+  color: var(--gray); transition: background .2s;
+}
+.pageNum:hover { background: #f5f5f5; }
+.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
+
+/* Status */
+.statusMsg { padding: 24px 0; color: var(--gray); font-size: .9rem; text-align: center; }
+.errorMsg {
+  padding: 10px 14px; margin: 8px 0;
+  background: #fce4ec; color: var(--crimson);
+  border-radius: 8px; font-size: .85rem;
+}
+
+@media (max-width: 650px) {
+  .pageHeader { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .pagination { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
