@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowUpCircle, ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-react';
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  X,
+} from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
 import {
   listTransactions,
@@ -186,6 +194,19 @@ export default function Financeiro() {
             {summary ? formatCurrency(summary.total_income) : '—'}
           </p>
           <p className={styles.summarySub}>Receitas no período</p>
+        </div>
+
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryTop}>
+            <div className={styles.summaryIcon} style={{ background: '#fce4ec' }}>
+              <ArrowDownCircle size={20} color="#661C16" />
+            </div>
+          </div>
+          <p className={styles.summaryLabel}>Total de Saídas</p>
+          <p className={styles.summaryValue} style={{ color: 'var(--crimson)' }}>
+            {summary ? formatCurrency(summary.total_expense) : '—'}
+          </p>
+          <p className={styles.summarySub}>Despesas no período</p>
         </div>
       </div>
 
