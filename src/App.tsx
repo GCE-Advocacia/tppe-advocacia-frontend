@@ -51,6 +51,7 @@ import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
 import Feriados from './pages/sistema/Feriados/Feriados';
+import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
 function LandingPage() {
   return (
@@ -116,6 +117,9 @@ export default function App() {
             </Route>
             <Route element={<AdminRoute />}>
               <Route path="feriados" element={<Feriados />} />
+            </Route>
+            <Route element={<AdminRoute />}>
+              <Route path="financeiro" element={<Financeiro />} />
             </Route>
           </Route>
         </Route>
