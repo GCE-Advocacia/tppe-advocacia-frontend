@@ -1,8 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-react';
+import { ArrowUpCircle, ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
-import { listTransactions, createIncome, createExpense } from '../../../services/finance';
+import {
+  listTransactions,
+  getFinanceSummary,
+  createIncome,
+  createExpense,
+} from '../../../services/finance';
 import type {
+  FinanceSummary,
   FinanceTransaction,
   FinanceTransactionCreate,
   TransactionType,
@@ -50,6 +56,7 @@ function normalizeAmount(raw: string) {
 
 export default function Financeiro() {
   const [items, setItems]     = useState<FinanceTransaction[]>([]);
+  const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [total, setTotal]     = useState(0);
   const [page, setPage]       = useState(1);
   const [loading, setLoading] = useState(false);
@@ -69,14 +76,23 @@ export default function Financeiro() {
     setLoading(true);
     setError('');
     try {
-      const res = await listTransactions({
-        date_from: from || undefined,
-        date_to:   to   || undefined,
-        page:      p,
-        limit:     LIMIT,
-      });
+      // Listagem e resumo compartilham o período e são buscados juntos para
+      // que os cards e a tabela nunca fiquem dessincronizados.
+      const [res, resumo] = await Promise.all([
+        listTransactions({
+          date_from: from || undefined,
+          date_to:   to   || undefined,
+          page:      p,
+          limit:     LIMIT,
+        }),
+        getFinanceSummary({
+          date_from: from || undefined,
+          date_to:   to   || undefined,
+        }),
+      ]);
       setItems(res.data);
       setTotal(res.meta.total);
+      setSummary(resumo);
     } catch (e) {
       if (e instanceof ApiError && e.code === 'INVALID_FINANCIAL_PERIOD') {
         setError('Período inválido: a data inicial não pode ser posterior à data final.');
@@ -85,6 +101,7 @@ export default function Financeiro() {
       }
       setItems([]);
       setTotal(0);
+      setSummary(null);
     } finally {
       setLoading(false);
     }
@@ -153,6 +170,22 @@ export default function Financeiro() {
           <button className={styles.btnExpense} onClick={() => openModal('EXPENSE')}>
             <Minus size={16} /> Nova Saída
           </button>
+        </div>
+      </div>
+
+      {/* Resumo do período */}
+      <div className={styles.summaryGrid}>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryTop}>
+            <div className={styles.summaryIcon} style={{ background: '#e8f5e9' }}>
+              <ArrowUpCircle size={20} color="#2e7d32" />
+            </div>
+          </div>
+          <p className={styles.summaryLabel}>Total de Entradas</p>
+          <p className={styles.summaryValue} style={{ color: '#2e7d32' }}>
+            {summary ? formatCurrency(summary.total_income) : '—'}
+          </p>
+          <p className={styles.summarySub}>Receitas no período</p>
         </div>
       </div>
 

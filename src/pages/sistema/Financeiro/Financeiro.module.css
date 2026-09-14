@@ -32,6 +32,36 @@
 .btnExpense:hover { background: var(--crimson-light); }
 .btnExpense:disabled { opacity: .6; cursor: default; }
 
+/* Resumo do período */
+.summaryGrid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; margin-bottom: 24px;
+}
+
+.summaryCard {
+  background: var(--white); border-radius: 12px;
+  padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.summaryTop { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+
+.summaryIcon {
+  width: 40px; height: 40px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.summaryLabel {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gray); margin-bottom: 6px;
+}
+
+.summaryValue {
+  font-size: 1.6rem; font-weight: 800; color: var(--navy);
+  line-height: 1.2; margin-bottom: 4px; word-break: break-word;
+}
+
+.summarySub { font-size: .78rem; color: var(--gray); }
+
 .btnBack {
   display: flex; align-items: center; gap: 8px;
   background: none; border: none; color: var(--navy);
@@ -175,6 +205,10 @@
   padding: 10px 14px; margin: 8px 0;
   background: #fce4ec; color: var(--crimson);
   border-radius: 8px; font-size: .85rem;
+}
+
+@media (max-width: 900px) {
+  .summaryGrid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 650px) {
