@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Minus,
   Plus,
+  Wallet,
   X,
 } from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
@@ -163,8 +164,9 @@ export default function Financeiro() {
     }
   }
 
-  const totalPages  = Math.max(1, Math.ceil(total / LIMIT));
-  const hasFilters  = !!(dateFrom || dateTo);
+  const totalPages     = Math.max(1, Math.ceil(total / LIMIT));
+  const hasFilters     = !!(dateFrom || dateTo);
+  const saldoNegativo  = !!summary && Number(summary.balance) < 0;
 
   return (
     <div className={styles.page}>
@@ -207,6 +209,19 @@ export default function Financeiro() {
             {summary ? formatCurrency(summary.total_expense) : '—'}
           </p>
           <p className={styles.summarySub}>Despesas no período</p>
+        </div>
+
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryTop}>
+            <div className={styles.summaryIcon} style={{ background: '#e8eaf6' }}>
+              <Wallet size={20} color="#232C43" />
+            </div>
+          </div>
+          <p className={styles.summaryLabel}>Saldo</p>
+          <p className={`${styles.summaryValue} ${saldoNegativo ? styles.summaryValueRed : ''}`}>
+            {summary ? formatCurrency(summary.balance) : '—'}
+          </p>
+          <p className={styles.summarySub}>Entradas menos saídas</p>
         </div>
       </div>
 
