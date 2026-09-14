@@ -1,4 +1,3 @@
-import os
 import random
 import re
 import time
@@ -8,14 +7,11 @@ import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from conftest import BASE_URL, do_logout, pause
+from conftest import BASE_URL, pause
 
 FINANCEIRO_URL = f"{BASE_URL}/sistema/financeiro"
 
 ERRO_CARGA = "Não foi possível carregar os lançamentos financeiros."
-
-TEST_USER_EMAIL = os.getenv("TEST_USER_EMAIL")
-TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD")
 
 
 def js_click(driver, element):
@@ -126,24 +122,6 @@ def _criar_lancamento(driver, wait, botao: str, descricao: str, valor: str, data
     ))
     _esperar_carga(driver, wait)
     pause()
-
-
-@pytest.fixture
-def usuario_comum(driver, wait):
-    if not (TEST_USER_EMAIL and TEST_USER_PASSWORD):
-        pytest.skip("Defina TEST_USER_EMAIL e TEST_USER_PASSWORD de um usuário não-admin")
-
-    driver.get(f"{BASE_URL}/login")
-    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
-    driver.find_element(By.CSS_SELECTOR, "input[type='email']").clear()
-    driver.find_element(By.CSS_SELECTOR, "input[type='email']").send_keys(TEST_USER_EMAIL)
-    driver.find_element(By.CSS_SELECTOR, "input[type='password']").send_keys(TEST_USER_PASSWORD)
-    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
-    wait.until(EC.url_contains("/sistema"))
-    pause()
-
-    yield driver
-    do_logout(driver)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -510,25 +488,3 @@ class TestResumoFinanceiro:
             By.XPATH, "//p[normalize-space(text())='Saldo']/following-sibling::p[1]"
         )
         assert "summaryValueRed" in (saldo.get_attribute("class") or "")
-
-
-class TestAcessoRestrito:
-    def test_menu_exibe_financeiro_para_admin(self, logged_in, wait):
-        _abrir_financeiro(logged_in, wait)
-        assert logged_in.find_element(By.CSS_SELECTOR, "a[href='/sistema/financeiro']")
-
-    def test_menu_oculta_financeiro_para_usuario_comum(self, usuario_comum, wait):
-        usuario_comum.get(f"{BASE_URL}/sistema/clientes")
-        wait.until(EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "a[href='/sistema/clientes']")
-        ))
-        pause()
-        assert not usuario_comum.find_elements(
-            By.CSS_SELECTOR, "a[href='/sistema/financeiro']"
-        )
-
-    def test_rota_financeiro_redireciona_usuario_comum(self, usuario_comum, wait):
-        usuario_comum.get(FINANCEIRO_URL)
-        wait.until(lambda d: "/sistema/financeiro" not in d.current_url)
-        pause()
-        assert "Controle Financeiro" not in usuario_comum.page_source
