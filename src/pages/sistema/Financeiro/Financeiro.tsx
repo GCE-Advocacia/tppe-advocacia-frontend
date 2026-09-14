@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowDownCircle,
   ArrowUpCircle,
@@ -81,7 +81,10 @@ export default function Financeiro() {
   const [formError, setFormError]   = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const requestId = useRef(0);
+
   const fetchData = useCallback(async (p: number, from: string, to: string) => {
+    const id = ++requestId.current;
     setLoading(true);
     setError('');
     try {
@@ -99,10 +102,12 @@ export default function Financeiro() {
           date_to:   to   || undefined,
         }),
       ]);
+      if (id !== requestId.current) return;
       setItems(res.data);
       setTotal(res.meta.total);
       setSummary(resumo);
     } catch (e) {
+      if (id !== requestId.current) return;
       if (e instanceof ApiError && e.code === 'INVALID_FINANCIAL_PERIOD') {
         setError('Período inválido: a data inicial não pode ser posterior à data final.');
       } else {
@@ -112,7 +117,7 @@ export default function Financeiro() {
       setTotal(0);
       setSummary(null);
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }, []);
 
@@ -132,7 +137,9 @@ export default function Financeiro() {
     if (!formDesc.trim())   return 'Descrição é obrigatória.';
     if (!formAmount.trim()) return 'Valor é obrigatório.';
     const amount = normalizeAmount(formAmount);
-    if (!/^\d+(\.\d{1,2})?$/.test(amount)) return 'Valor inválido. Use o formato 1500,50.';
+    if (!/^\d{1,10}(\.\d{1,2})?$/.test(amount)) {
+      return 'Valor inválido. Use o formato 1500,50, com até 10 dígitos antes da vírgula.';
+    }
     if (Number(amount) <= 0) return 'Valor deve ser maior que zero.';
     if (!formDate)          return 'Data é obrigatória.';
     return '';

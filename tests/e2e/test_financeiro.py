@@ -1,17 +1,21 @@
+import os
 import random
 import re
 import time
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
-from conftest import BASE_URL, pause
+from conftest import BASE_URL, do_logout, pause
 
 FINANCEIRO_URL = f"{BASE_URL}/sistema/financeiro"
 
 ERRO_CARGA = "Não foi possível carregar os lançamentos financeiros."
+
+TEST_USER_EMAIL = os.getenv("TEST_USER_EMAIL")
+TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD")
 
 
 def js_click(driver, element):
@@ -44,8 +48,7 @@ def _para_float(texto: str) -> float:
 
 
 def _dia_isolado() -> str:
-    """Data única por execução, para isolar os lançamentos do teste."""
-    return date(2021, random.randint(1, 12), random.randint(1, 28)).isoformat()
+    return (date(1900, 1, 1) + timedelta(days=random.randrange(36_500))).isoformat()
 
 
 def _abrir_financeiro(driver, wait):
@@ -123,6 +126,24 @@ def _criar_lancamento(driver, wait, botao: str, descricao: str, valor: str, data
     ))
     _esperar_carga(driver, wait)
     pause()
+
+
+@pytest.fixture
+def usuario_comum(driver, wait):
+    if not (TEST_USER_EMAIL and TEST_USER_PASSWORD):
+        pytest.skip("Defina TEST_USER_EMAIL e TEST_USER_PASSWORD de um usuário não-admin")
+
+    driver.get(f"{BASE_URL}/login")
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
+    driver.find_element(By.CSS_SELECTOR, "input[type='email']").clear()
+    driver.find_element(By.CSS_SELECTOR, "input[type='email']").send_keys(TEST_USER_EMAIL)
+    driver.find_element(By.CSS_SELECTOR, "input[type='password']").send_keys(TEST_USER_PASSWORD)
+    driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+    wait.until(EC.url_contains("/sistema"))
+    pause()
+
+    yield driver
+    do_logout(driver)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -227,6 +248,37 @@ class TestCadastrarEntrada:
         pause()
         assert "Valor inválido" in logged_in.page_source
 
+    @pytest.mark.parametrize("valor, mensagem", [
+        ("",               "Valor é obrigatório."),
+        ("0,00",           "Valor deve ser maior que zero."),
+        ("12345678901,00", "Valor inválido"),
+        ("50,00",          "Data é obrigatória."),
+    ])
+    def test_validacao_do_formulario_exibe_mensagem(self, logged_in, wait, valor, mensagem):
+        _abrir_financeiro(logged_in, wait)
+        js_click(logged_in, logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Nova Entrada')]"
+        ))
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[placeholder='0,00']")
+        ))
+        pause()
+        logged_in.find_element(
+            By.CSS_SELECTOR, "input[placeholder*='Honorários']"
+        ).send_keys("Consultoria")
+        if valor:
+            logged_in.find_element(
+                By.CSS_SELECTOR, "input[placeholder='0,00']"
+            ).send_keys(valor)
+        scroll_and_click(logged_in, logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Salvar')]"
+        ))
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, f"//*[contains(text(),'{mensagem}')]")
+        ))
+        pause()
+        assert mensagem in logged_in.page_source
+
     def test_cadastrar_entrada_com_virgula_aparece_na_listagem(self, logged_in, wait):
         _abrir_financeiro(logged_in, wait)
         _pular_se_api_indisponivel(logged_in)
@@ -252,6 +304,21 @@ class TestCadastrarEntrada:
             By.XPATH, f"//tr[td[contains(text(),'{descricao}')]]"
         )
         assert "Entrada" in linha.text
+
+    @pytest.mark.parametrize("valor", ["1.500,50", "1500.50"])
+    def test_formatos_de_valor_aceitos(self, logged_in, wait, valor):
+        _abrir_financeiro(logged_in, wait)
+        _pular_se_api_indisponivel(logged_in)
+
+        dia = _dia_isolado()
+        descricao = f"Honorários de êxito {random.randint(1000, 9999)}"
+        _criar_lancamento(logged_in, wait, "Nova Entrada", descricao, valor, dia)
+
+        _aplicar_periodo(logged_in, wait, dia, dia)
+        linha = logged_in.find_element(
+            By.XPATH, f"//tr[td[contains(text(),'{descricao}')]]"
+        )
+        assert "1.500,50" in linha.text
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -429,15 +496,39 @@ class TestResumoFinanceiro:
         _pular_se_api_indisponivel(logged_in)
 
         dia = _dia_isolado()
+        _aplicar_periodo(logged_in, wait, dia, dia)
+        saldo_atual = _totais(logged_in)["saldo"]
+        valor = f"{max(saldo_atual, 0) + 999:.2f}".replace(".", ",")
+
         descricao = f"Prejuízo do dia {random.randint(1000, 9999)}"
-        _criar_lancamento(logged_in, wait, "Nova Saída", descricao, "999,00", dia)
+        _criar_lancamento(logged_in, wait, "Nova Saída", descricao, valor, dia)
 
         _aplicar_periodo(logged_in, wait, dia, dia)
-        totais = _totais(logged_in)
-        if totais["saldo"] >= 0:
-            pytest.skip("Período já possuía entradas suficientes para saldo positivo")
+        assert _totais(logged_in)["saldo"] < 0
 
         saldo = logged_in.find_element(
             By.XPATH, "//p[normalize-space(text())='Saldo']/following-sibling::p[1]"
         )
         assert "summaryValueRed" in (saldo.get_attribute("class") or "")
+
+
+class TestAcessoRestrito:
+    def test_menu_exibe_financeiro_para_admin(self, logged_in, wait):
+        _abrir_financeiro(logged_in, wait)
+        assert logged_in.find_element(By.CSS_SELECTOR, "a[href='/sistema/financeiro']")
+
+    def test_menu_oculta_financeiro_para_usuario_comum(self, usuario_comum, wait):
+        usuario_comum.get(f"{BASE_URL}/sistema/clientes")
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "a[href='/sistema/clientes']")
+        ))
+        pause()
+        assert not usuario_comum.find_elements(
+            By.CSS_SELECTOR, "a[href='/sistema/financeiro']"
+        )
+
+    def test_rota_financeiro_redireciona_usuario_comum(self, usuario_comum, wait):
+        usuario_comum.get(FINANCEIRO_URL)
+        wait.until(lambda d: "/sistema/financeiro" not in d.current_url)
+        pause()
+        assert "Controle Financeiro" not in usuario_comum.page_source
