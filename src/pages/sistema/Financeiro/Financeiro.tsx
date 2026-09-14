@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
-import { listTransactions, createIncome } from '../../../services/finance';
+import { listTransactions, createIncome, createExpense } from '../../../services/finance';
 import type {
   FinanceTransaction,
   FinanceTransactionCreate,
@@ -112,7 +112,8 @@ export default function Financeiro() {
     if (err) { setFormError(err); return; }
     setSubmitting(true); setFormError('');
     try {
-      await createIncome(buildPayload());
+      const salvar = modalType === 'INCOME' ? createIncome : createExpense;
+      await salvar(buildPayload());
       closeModal();
       if (page === 1) void fetchData(1);
       else setPage(1);
@@ -133,6 +134,9 @@ export default function Financeiro() {
         <div className={styles.headerActions}>
           <button className={styles.btnPrimary} onClick={() => openModal('INCOME')}>
             <Plus size={16} /> Nova Entrada
+          </button>
+          <button className={styles.btnExpense} onClick={() => openModal('EXPENSE')}>
+            <Minus size={16} /> Nova Saída
           </button>
         </div>
       </div>
@@ -217,11 +221,12 @@ export default function Financeiro() {
           <div className={styles.modalFooter}>
             <button className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
             <button
-              className={styles.btnPrimary}
+              className={modalType === 'INCOME' ? styles.btnPrimary : styles.btnExpense}
               onClick={() => void salvarLancamento()}
               disabled={submitting}
             >
-              <Plus size={16} /> {submitting ? 'Salvando...' : 'Salvar'}
+              {modalType === 'INCOME' ? <Plus size={16} /> : <Minus size={16} />}
+              {submitting ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </Modal>

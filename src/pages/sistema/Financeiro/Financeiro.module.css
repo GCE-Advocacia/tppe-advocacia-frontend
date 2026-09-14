@@ -22,6 +22,16 @@
 .btnPrimary:hover { background: var(--navy-mid); }
 .btnPrimary:disabled { opacity: .6; cursor: default; }
 
+.btnExpense {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--crimson); color: var(--white);
+  border: none; padding: 10px 20px; border-radius: 8px;
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); transition: background .2s;
+}
+.btnExpense:hover { background: var(--crimson-light); }
+.btnExpense:disabled { opacity: .6; cursor: default; }
+
 /* Table */
 .tableWrap {
   background: var(--white);
