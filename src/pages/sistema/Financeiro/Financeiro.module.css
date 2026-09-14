@@ -32,6 +32,36 @@
 .btnExpense:hover { background: var(--crimson-light); }
 .btnExpense:disabled { opacity: .6; cursor: default; }
 
+.btnBack {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none; color: var(--navy);
+  font-size: .9rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-body); transition: opacity .2s;
+}
+.btnBack:hover { opacity: .7; }
+
+/* Filters */
+.filterBar {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 24px;
+}
+
+.filterDateGroup { display: flex; align-items: center; gap: 8px; }
+
+.filterLabel {
+  font-size: .82rem; font-weight: 600; color: var(--gray);
+  white-space: nowrap;
+}
+
+.filterInput {
+  padding: 8px 12px;
+  border: 1.5px solid #e0e0e0; border-radius: 8px;
+  font-family: var(--font-body); font-size: .85rem;
+  color: var(--text); background: var(--white);
+  outline: none; transition: border-color .2s;
+}
+.filterInput:focus { border-color: var(--navy); }
+
 /* Table */
 .tableWrap {
   background: var(--white);
@@ -151,4 +181,7 @@
   .pageHeader { flex-direction: column; align-items: flex-start; gap: 12px; }
   .fieldRow { grid-template-columns: 1fr; }
   .pagination { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .filterBar { flex-direction: column; align-items: flex-start; }
+  .filterInput { width: 100%; box-sizing: border-box; }
+  .filterDateGroup { width: 100%; }
 }

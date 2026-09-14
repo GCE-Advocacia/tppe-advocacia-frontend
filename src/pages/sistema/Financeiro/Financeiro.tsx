@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
 import { listTransactions, createIncome, createExpense } from '../../../services/finance';
 import type {
@@ -55,6 +55,9 @@ export default function Financeiro() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo]     = useState('');
+
   const [modalType, setModalType]   = useState<TransactionType | null>(null);
   const [formDesc, setFormDesc]     = useState('');
   const [formAmount, setFormAmount] = useState('');
@@ -62,23 +65,34 @@ export default function Financeiro() {
   const [formError, setFormError]   = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = useCallback(async (p: number) => {
+  const fetchData = useCallback(async (p: number, from: string, to: string) => {
     setLoading(true);
     setError('');
     try {
-      const res = await listTransactions({ page: p, limit: LIMIT });
+      const res = await listTransactions({
+        date_from: from || undefined,
+        date_to:   to   || undefined,
+        page:      p,
+        limit:     LIMIT,
+      });
       setItems(res.data);
       setTotal(res.meta.total);
-    } catch {
-      setError('Não foi possível carregar os lançamentos financeiros.');
+    } catch (e) {
+      if (e instanceof ApiError && e.code === 'INVALID_FINANCIAL_PERIOD') {
+        setError('Período inválido: a data inicial não pode ser posterior à data final.');
+      } else {
+        setError('Não foi possível carregar os lançamentos financeiros.');
+      }
+      setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void fetchData(page);
-  }, [fetchData, page]);
+    void fetchData(page, dateFrom, dateTo);
+  }, [fetchData, page, dateFrom, dateTo]);
 
   function openModal(type: TransactionType) {
     setFormDesc(''); setFormAmount(''); setFormDate('');
@@ -115,7 +129,7 @@ export default function Financeiro() {
       const salvar = modalType === 'INCOME' ? createIncome : createExpense;
       await salvar(buildPayload());
       closeModal();
-      if (page === 1) void fetchData(1);
+      if (page === 1) void fetchData(1, dateFrom, dateTo);
       else setPage(1);
     } catch (e) {
       setFormError(e instanceof ApiError ? e.message : 'Não foi possível salvar o lançamento.');
@@ -124,7 +138,8 @@ export default function Financeiro() {
     }
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+  const totalPages  = Math.max(1, Math.ceil(total / LIMIT));
+  const hasFilters  = !!(dateFrom || dateTo);
 
   return (
     <div className={styles.page}>
@@ -139,6 +154,36 @@ export default function Financeiro() {
             <Minus size={16} /> Nova Saída
           </button>
         </div>
+      </div>
+
+      {/* Filtro por período */}
+      <div className={styles.filterBar}>
+        <div className={styles.filterDateGroup}>
+          <span className={styles.filterLabel}>De</span>
+          <input
+            type="date"
+            className={styles.filterInput}
+            value={dateFrom}
+            onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+          />
+        </div>
+        <div className={styles.filterDateGroup}>
+          <span className={styles.filterLabel}>Até</span>
+          <input
+            type="date"
+            className={styles.filterInput}
+            value={dateTo}
+            onChange={e => { setDateTo(e.target.value); setPage(1); }}
+          />
+        </div>
+        {hasFilters && (
+          <button
+            className={styles.btnBack}
+            onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+          >
+            <X size={14} /> Limpar
+          </button>
+        )}
       </div>
 
       {loading && <p className={styles.statusMsg}>Carregando...</p>}
