@@ -338,7 +338,7 @@
 .tasksHeader button:hover { background: var(--navy-mid); }
 .tasksList { display: grid; gap: 8px; }
 .taskCard {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto 30px; align-items: center;
   gap: 12px; padding: 12px; border: 1px solid #e4e7ed; border-radius: 7px; background: #fafbfc;
 }
 .taskCardMain { min-width: 0; }
@@ -348,6 +348,8 @@
 .taskDue span, .taskDue strong { display: block; }
 .taskDue span { color: var(--gray); font-size: .58rem; text-transform: uppercase; margin-bottom: 4px; }
 .taskDue strong { color: var(--navy); font-size: .68rem; }
+.taskCard > button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #dfe2e8; border-radius: 5px; color: var(--navy); background: var(--white); cursor: pointer; }
+.taskCard > button:hover { background: #edf0f4; }
 .taskStatus { display: inline-flex; padding: 3px 6px; border-radius: 4px; font-size: .57rem; font-weight: 700; text-transform: uppercase; }
 .taskTODO { color: #606976; background: #eef0f3; }
 .taskIN_PROGRESS { color: #315e96; background: #e7f0fa; }
@@ -383,6 +385,6 @@
   .modalFooter button { justify-content: center; }
   .deadlineCard { grid-template-columns: minmax(0, 1fr) 30px; }
   .deadlineDue { grid-column: 1 / -1; grid-row: 2; text-align: left; }
-  .taskCard { grid-template-columns: minmax(0, 1fr); }
+  .taskCard { grid-template-columns: minmax(0, 1fr) 30px; }
   .taskDue { grid-column: 1 / -1; grid-row: 2; text-align: left; }
 }

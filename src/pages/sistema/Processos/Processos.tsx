@@ -510,6 +510,8 @@ function ProcessDetailsModal({
   const [showTaskForm, setShowTaskForm] = useState(false);
   // tarefas ja cadastradas neste processo
   const [tasks, setTasks] = useState<Task[]>([]);
+  // tarefa aberta para edicao a partir da lista
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   async function loadDetails() {
     setLoading(true);
@@ -531,6 +533,16 @@ function ProcessDetailsModal({
       setFeedback({ message: errorMessage(requestError), kind: 'error' });
     } finally {
       setLoading(false);
+    }
+  }
+
+  // recarrega so as tarefas, sem rebuscar o resto da ficha
+  async function loadTasks() {
+    try {
+      const tasksResponse = await listTasks({ process_id: processId, limit: 100 });
+      setTasks(tasksResponse.data);
+    } catch (requestError) {
+      setFeedback({ message: errorMessage(requestError), kind: 'error' });
     }
   }
 
@@ -863,6 +875,9 @@ function ProcessDetailsModal({
                           <strong>{formatDate(task.due_date)}</strong>
                         </div>
                       )}
+                      <button onClick={() => setEditingTask(task)} title="Editar tarefa" aria-label="Editar tarefa">
+                        <Pencil size={15} />
+                      </button>
                     </article>
                   ))}
                 </div>
@@ -959,14 +974,19 @@ function ProcessDetailsModal({
               )}
 
                {/* renderizar */}
-              {showTaskForm && (
+              {(showTaskForm || editingTask) && (
                 <TaskFormModal
-                  task={null}
+                  task={editingTask}
                   initialProcessId={processId}
-                  onClose={() => setShowTaskForm(false)}
+                  onClose={() => {
+                    setShowTaskForm(false);
+                    setEditingTask(null);
+                  }}
                   onSaved={() => {
                     setShowTaskForm(false);
-                    onChanged('Tarefa criada.');
+                    setEditingTask(null);
+                    void loadTasks();
+                    onChanged(editingTask ? 'Tarefa atualizada.' : 'Tarefa criada.');
                   }}
                 />
               )}
