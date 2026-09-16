@@ -39,6 +39,10 @@ const EMPTY_DATA: LandingPageData = {
   colorButtons: '#661C16',
   colorTitlePrimary: '#FFFFFF',
   colorTitleSecondary: '#232C43',
+  colorTextPrimary: '#FFFFFF',
+  colorTextSecondary: '#6B7280',
+  colorLinkPrimary: '#FFFFFF',
+  colorLinkSecondary: '#661C16',
 };
 import styles from './LandingPage.module.css';
 
@@ -438,6 +442,10 @@ export default function LandingPageConfig() {
                   colorButtons: '#661C16',
                   colorTitlePrimary: '#FFFFFF',
                   colorTitleSecondary: '#232C43',
+                  colorTextPrimary: '#FFFFFF',
+                  colorTextSecondary: '#6B7280',
+                  colorLinkPrimary: '#FFFFFF',
+                  colorLinkSecondary: '#661C16',
                 }));
               }}
             >
@@ -533,6 +541,50 @@ export default function LandingPageConfig() {
                 <ColorPicker
                   value={data.colorTitleSecondary || '#232C43'}
                   onChange={v => set('colorTitleSecondary', v)}
+                />
+              </Field>
+            </div>
+
+            <div className={styles.row2} style={{ marginTop: 16 }}>
+              <Field
+                label="TEXTOS 1"
+                tooltip="Aplica-se aos parágrafos (<p>) das seções: Hero, Diferenciais, Artigos e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorTextPrimary || '#FFFFFF'}
+                  onChange={v => set('colorTextPrimary', v)}
+                />
+              </Field>
+
+              <Field
+                label="TEXTOS 2"
+                tooltip="Aplica-se aos parágrafos (<p>) das seções: Escritório, Áreas, Contato e Sobre"
+              >
+                <ColorPicker
+                  value={data.colorTextSecondary || '#6B7280'}
+                  onChange={v => set('colorTextSecondary', v)}
+                />
+              </Field>
+            </div>
+
+            <div className={styles.row2} style={{ marginTop: 16 }}>
+              <Field
+                label="LINKS 1"
+                tooltip="Aplica-se aos links (<a>) das seções: Navbar, Artigos ('Leia o artigo') e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorLinkPrimary || '#FFFFFF'}
+                  onChange={v => set('colorLinkPrimary', v)}
+                />
+              </Field>
+
+              <Field
+                label="LINKS 2"
+                tooltip="Aplica-se aos links textuais (<a>): 'Saiba Mais →' (Escritório e Sobre) e link de Termos (Contato)"
+              >
+                <ColorPicker
+                  value={data.colorLinkSecondary || '#661C16'}
+                  onChange={v => set('colorLinkSecondary', v)}
                 />
               </Field>
             </div>

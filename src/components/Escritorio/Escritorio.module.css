@@ -56,14 +56,14 @@
 }
 
 .body {
-  color: var(--gray);
+  color: var(--text-secondary, var(--gray));
   line-height: 1.8;
   margin-bottom: 16px;
   font-size: .97rem;
 }
 
 .linkSaiba {
-  color: var(--crimson);
+  color: var(--link-secondary, var(--crimson));
   font-weight: 700;
   font-size: .95rem;
   display: inline-flex;

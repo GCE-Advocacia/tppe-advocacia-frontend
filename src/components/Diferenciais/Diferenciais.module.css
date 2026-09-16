@@ -40,7 +40,7 @@
 }
 
 .cardDesc {
-  color: rgba(255,255,255,.6);
+  color: var(--text-primary, rgba(255,255,255,.6));
   line-height: 1.75;
   font-size: .93rem;
 }

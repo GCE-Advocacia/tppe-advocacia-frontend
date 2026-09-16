@@ -47,7 +47,7 @@
 }
 
 .itemDesc {
-  color: var(--gray);
+  color: var(--text-secondary, var(--gray));
   line-height: 1.7;
   font-size: .92rem;
 }

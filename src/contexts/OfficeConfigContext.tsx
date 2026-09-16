@@ -43,6 +43,18 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
     if (config?.color_title_secondary) {
       root.style.setProperty('--title-secondary', config.color_title_secondary);
     }
+    if (config?.color_text_primary) {
+      root.style.setProperty('--text-primary', config.color_text_primary);
+    }
+    if (config?.color_text_secondary) {
+      root.style.setProperty('--text-secondary', config.color_text_secondary);
+    }
+    if (config?.color_link_primary) {
+      root.style.setProperty('--link-primary', config.color_link_primary);
+    }
+    if (config?.color_link_secondary) {
+      root.style.setProperty('--link-secondary', config.color_link_secondary);
+    }
   }, [
     config?.color,
     config?.color_bg_primary,
@@ -51,6 +63,10 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
     config?.color_buttons,
     config?.color_title_primary,
     config?.color_title_secondary,
+    config?.color_text_primary,
+    config?.color_text_secondary,
+    config?.color_link_primary,
+    config?.color_link_secondary,
   ]);
 
   return <Ctx.Provider value={{ config, loading }}>{children}</Ctx.Provider>;
