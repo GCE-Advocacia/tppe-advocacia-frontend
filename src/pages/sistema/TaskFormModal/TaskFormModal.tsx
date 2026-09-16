@@ -68,6 +68,9 @@ function errorMessage(error: unknown): string {
 // ============================================================
 type TaskFormModalProps = {
   task?: Task | null;
+  // quando o modal abre de dentro da ficha de um processo, a tarefa
+  // ja nasce vinculada a ele e o campo fica travado
+  initialProcessId?: number;
   onClose: () => void;
   onSaved: (task: Task) => void;
 };
@@ -75,10 +78,12 @@ type TaskFormModalProps = {
 // janela do formulário
 export default function TaskFormModal({
   task,
+  initialProcessId,
   onClose,
   onSaved,
 }: TaskFormModalProps) {
   const isEditing = Boolean(task);
+  const processLocked = !isEditing && initialProcessId !== undefined;
 
   const [form, setForm] = useState<TaskForm>(EMPTY_FORM);
   // carregando pra enviar
@@ -110,10 +115,11 @@ export default function TaskFormModal({
         processId: task.process_id ?? '',
       });
       // se nao existia tarefa cria do zero, comeca com empty form
+      // ja com o processo preenchido quando veio da ficha de um
     } else {
-      setForm(EMPTY_FORM);
+      setForm({ ...EMPTY_FORM, processId: initialProcessId ?? '' });
     }
-  }, []);
+  }, [task, initialProcessId]);
 
   // ============================================================
   // busca no backend as opções
@@ -212,12 +218,17 @@ export default function TaskFormModal({
 
           <label className={styles.fullField}>
             <span>Processo vinculado</span>
-            <select value={form.processId} onChange={event => updateForm('processId', event.target.value ? Number(event.target.value) : '')}>
+            <select
+              value={form.processId}
+              disabled={processLocked}
+              onChange={event => updateForm('processId', event.target.value ? Number(event.target.value) : '')}
+            >
               <option value="">Nenhum processo</option>
               {processes.map(process => (
                 <option value={process.id} key={process.id}>{process.number} · {process.action_type}</option>
               ))}
             </select>
+            {processLocked && <small>Tarefa criada dentro deste processo.</small>}
           </label>
         </div>
 

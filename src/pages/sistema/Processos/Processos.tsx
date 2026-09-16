@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CloudDownload,
   ExternalLink,
+  ListChecks,
   MessageSquareText,
   Pencil,
   Plus,
@@ -837,20 +838,20 @@ function ProcessDetailsModal({
                 </div>
               </section>
 
-                {/* front do campo tarefas e botao */}
-              <section className={styles.notesSection}>
-                <div className={styles.deadlinesHeader}>
-                  <h3>Tarefas</h3>
+              {/* front do campo tarefas e botao */}
+              <section className={styles.tasksSection}>
+                <div className={styles.tasksHeader}>
+                  <h3><ListChecks size={16} /> Tarefas</h3>
                   <button onClick={() => setShowTaskForm(true)}>
                     <Plus size={15} />
                     Nova tarefa
                   </button>
                 </div>
-                <div className={styles.deadlinesList}>
+                <div className={styles.tasksList}>
                   {tasks.map(task => (
-                    <article className={styles.deadlineCard} key={task.id}>
-                      <div className={styles.deadlineCardMain}>
-                        <span className={styles.deadlineStatus}>
+                    <article className={styles.taskCard} key={task.id}>
+                      <div className={styles.taskCardMain}>
+                        <span className={`${styles.taskStatus} ${styles[`task${task.status}`]}`}>
                           {TASK_STATUS_LABELS[task.status]}
                         </span>
                         <strong>{task.title}</strong>
@@ -954,6 +955,7 @@ function ProcessDetailsModal({
               {showTaskForm && (
                 <TaskFormModal
                   task={null}
+                  initialProcessId={processId}
                   onClose={() => setShowTaskForm(false)}
                   onSaved={() => {
                     setShowTaskForm(false);
