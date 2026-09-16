@@ -35,6 +35,8 @@ export interface OfficeConfigAPI {
   color_bg_secondary: string | null;
   color_bg_sobre: string | null;
   color_buttons: string | null;
+  color_buttons_hover: string | null;
+  color_buttons_text: string | null;
   color_title_primary: string | null;
   color_title_secondary: string | null;
   color_text_primary: string | null;
@@ -86,6 +88,8 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorBgSecondary: api.color_bg_secondary ?? '#F5F3EF',
     colorBgSobre: api.color_bg_sobre ?? '#FFFFFF',
     colorButtons: api.color_buttons ?? '#661C16',
+    colorButtonsHover: api.color_buttons_hover ?? '#A52020',
+    colorButtonsText: api.color_buttons_text ?? '#FFFFFF',
     colorTitlePrimary: api.color_title_primary ?? '#FFFFFF',
     colorTitleSecondary: api.color_title_secondary ?? '#232C43',
     colorTextPrimary: api.color_text_primary ?? '#FFFFFF',
@@ -124,6 +128,8 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_bg_secondary: ui.colorBgSecondary || null,
     color_bg_sobre: ui.colorBgSobre || null,
     color_buttons: ui.colorButtons || null,
+    color_buttons_hover: ui.colorButtonsHover || null,
+    color_buttons_text: ui.colorButtonsText || null,
     color_title_primary: ui.colorTitlePrimary || null,
     color_title_secondary: ui.colorTitleSecondary || null,
     color_text_primary: ui.colorTextPrimary || null,

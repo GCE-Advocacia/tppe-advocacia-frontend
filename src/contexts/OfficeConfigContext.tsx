@@ -37,6 +37,12 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
     if (config?.color_buttons) {
       root.style.setProperty('--btn-primary-bg', config.color_buttons);
     }
+    if (config?.color_buttons_hover) {
+      root.style.setProperty('--btn-primary-hover', config.color_buttons_hover);
+    }
+    if (config?.color_buttons_text) {
+      root.style.setProperty('--btn-primary-text', config.color_buttons_text);
+    }
     if (config?.color_title_primary) {
       root.style.setProperty('--title-primary', config.color_title_primary);
     }
@@ -61,6 +67,8 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
     config?.color_bg_secondary,
     config?.color_bg_sobre,
     config?.color_buttons,
+    config?.color_buttons_hover,
+    config?.color_buttons_text,
     config?.color_title_primary,
     config?.color_title_secondary,
     config?.color_text_primary,

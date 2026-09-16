@@ -59,7 +59,7 @@
   flex-shrink: 0;
   aspect-ratio: 200 / 51;
   background: var(--btn-primary-bg, var(--crimson));
-  color: #FFF;
+  color: var(--btn-primary-text, #FFF);
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 600;
@@ -68,7 +68,7 @@
   border-radius: 4px;
   transition: background .2s;
 }
-.btnAgendar:hover { background: var(--crimson-light); }
+.btnAgendar:hover { background: var(--btn-primary-hover, var(--crimson-light)); }
 
 /* Hamburger e drawer permanecem iguais */
 .hamburger {
@@ -129,7 +129,7 @@
   display: block;
   margin-top: 16px;
   background: var(--btn-primary-bg, var(--crimson));
-  color: var(--white);
+  color: var(--btn-primary-text, var(--white));
   text-align: center;
   padding: 12px;
   border-radius: 4px;
@@ -137,7 +137,7 @@
   font-size: .95rem;
   transition: background .2s;
 }
-.drawerBtn:hover { background: var(--crimson-light); }
+.drawerBtn:hover { background: var(--btn-primary-hover, var(--crimson-light)); }
 
 @media (max-width: 900px) {
   .nav        { height: 72px; }

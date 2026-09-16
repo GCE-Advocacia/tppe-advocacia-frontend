@@ -75,7 +75,7 @@
   justify-content: center;
   align-items: center;
   background: var(--btn-primary-bg, var(--crimson));
-  color: var(--white);
+  color: var(--btn-primary-text, var(--white));
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 600;
@@ -83,7 +83,7 @@
   transition: background .2s, transform .15s;
 }
 .btnPrimary:hover {
-  background: var(--crimson-light);
+  background: var(--btn-primary-hover, var(--crimson-light));
   transform: translateY(-1px);
 }
 

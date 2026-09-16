@@ -53,6 +53,8 @@ export interface LandingPageData {
   colorBgSecondary: string;
   colorBgSobre: string;
   colorButtons: string;
+  colorButtonsHover: string;
+  colorButtonsText: string;
   colorTitlePrimary: string;
   colorTitleSecondary: string;
   colorTextPrimary: string;

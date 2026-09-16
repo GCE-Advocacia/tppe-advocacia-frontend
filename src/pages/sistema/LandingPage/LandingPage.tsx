@@ -37,6 +37,8 @@ const EMPTY_DATA: LandingPageData = {
   colorBgSecondary: '#F5F3EF',
   colorBgSobre: '#FFFFFF',
   colorButtons: '#661C16',
+  colorButtonsHover: '#A52020',
+  colorButtonsText: '#FFFFFF',
   colorTitlePrimary: '#FFFFFF',
   colorTitleSecondary: '#232C43',
   colorTextPrimary: '#FFFFFF',
@@ -440,6 +442,8 @@ export default function LandingPageConfig() {
                   colorBgSecondary: '#F5F3EF',
                   colorBgSobre: '#FFFFFF',
                   colorButtons: '#661C16',
+                  colorButtonsHover: '#A52020',
+                  colorButtonsText: '#FFFFFF',
                   colorTitlePrimary: '#FFFFFF',
                   colorTitleSecondary: '#232C43',
                   colorTextPrimary: '#FFFFFF',
@@ -503,14 +507,36 @@ export default function LandingPageConfig() {
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
               2. Cores dos Botões
             </h3>
-            <div style={{ maxWidth: 'calc(50% - 12px)' }}>
+            <div className={styles.row2}>
               <Field
-                label="BOTÕES DE AÇÃO"
-                tooltip="Aplica-se aos botões principais: 'Agendar Consulta', 'Fale Conosco', 'Falar no WhatsApp' e 'Enviar Mensagem' (o botão 'Conheça o Escritório' possui estilo vazado/outline sobre o Background 1)"
+                label="FUNDO DOS BOTÕES"
+                tooltip="Aplica-se à cor de fundo dos botões principais: 'Agendar Consulta', 'Fale Conosco', 'Falar no WhatsApp' e 'Enviar Mensagem' (o botão 'Conheça o Escritório' possui estilo vazado sobre o Background 1)"
               >
                 <ColorPicker
                   value={data.colorButtons || '#661C16'}
                   onChange={v => set('colorButtons', v)}
+                />
+              </Field>
+
+              <Field
+                label="HOVER DOS BOTÕES"
+                tooltip="Aplica-se à cor de fundo ao passar o mouse (hover) sobre os botões principais"
+              >
+                <ColorPicker
+                  value={data.colorButtonsHover || '#A52020'}
+                  onChange={v => set('colorButtonsHover', v)}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
+              <Field
+                label="TEXTO DOS BOTÕES"
+                tooltip="Aplica-se à cor do texto/fonte interno dos botões principais"
+              >
+                <ColorPicker
+                  value={data.colorButtonsText || '#FFFFFF'}
+                  onChange={v => set('colorButtonsText', v)}
                 />
               </Field>
             </div>
