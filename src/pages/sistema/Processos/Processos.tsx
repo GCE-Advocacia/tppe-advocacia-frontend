@@ -52,7 +52,7 @@ import {
   syncProcessWithDataJud,
   updateProcessNote,
 } from '../../../services/processes';
-import { Task, TaskStatus, listTasks } from '../../../services/tasks';
+import { Task, TaskStatus, deleteTask, listTasks } from '../../../services/tasks';
 import styles from './Processos.module.css';
 // taskformmodal
 import TaskFormModal from '../TaskFormModal/TaskFormModal';
@@ -512,6 +512,10 @@ function ProcessDetailsModal({
   const [tasks, setTasks] = useState<Task[]>([]);
   // tarefa aberta para edicao a partir da lista
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  // tarefa escolhida para exclusao, segura a confirmacao antes de apagar
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [taskDeleteSubmitting, setTaskDeleteSubmitting] = useState(false);
+  const [taskDeleteError, setTaskDeleteError] = useState('');
 
   async function loadDetails() {
     setLoading(true);
@@ -543,6 +547,24 @@ function ProcessDetailsModal({
       setTasks(tasksResponse.data);
     } catch (requestError) {
       setFeedback({ message: errorMessage(requestError), kind: 'error' });
+    }
+  }
+
+  // apaga a tarefa confirmada e recarrega so a lista da ficha
+  async function handleDeleteTask() {
+    if (!deletingTask) return;
+    setTaskDeleteSubmitting(true);
+    setTaskDeleteError('');
+    try {
+      const title = deletingTask.title;
+      await deleteTask(deletingTask.id);
+      setDeletingTask(null);
+      await loadTasks();
+      onChanged(`Tarefa "${title}" excluída.`);
+    } catch (requestError) {
+      setTaskDeleteError(errorMessage(requestError));
+    } finally {
+      setTaskDeleteSubmitting(false);
     }
   }
 
@@ -875,9 +897,19 @@ function ProcessDetailsModal({
                           <strong>{formatDate(task.due_date)}</strong>
                         </div>
                       )}
-                      <button onClick={() => setEditingTask(task)} title="Editar tarefa" aria-label="Editar tarefa">
-                        <Pencil size={15} />
-                      </button>
+                      <div className={styles.taskCardActions}>
+                        <button onClick={() => setEditingTask(task)} title="Editar tarefa" aria-label="Editar tarefa">
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          className={styles.taskDeleteButton}
+                          onClick={() => { setDeletingTask(task); setTaskDeleteError(''); }}
+                          title="Excluir tarefa"
+                          aria-label="Excluir tarefa"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </article>
                   ))}
                   {tasks.length === 0 && (
@@ -992,6 +1024,50 @@ function ProcessDetailsModal({
                     onChanged(editingTask ? 'Tarefa atualizada.' : 'Tarefa criada.');
                   }}
                 />
+              )}
+
+              {/* confirmacao antes de apagar a tarefa de vez */}
+              {deletingTask && (
+                <div className={styles.overlay} onClick={() => setDeletingTask(null)}>
+                  <div className={styles.modal} onClick={event => event.stopPropagation()}>
+                    <div className={styles.modalHeader}>
+                      <div>
+                        <p className={styles.modalEyebrow}>Tarefa do processo</p>
+                        <h2 className={styles.modalTitle}>Excluir tarefa</h2>
+                        <p className={styles.modalSub}>Esta ação não pode ser desfeita.</p>
+                      </div>
+                      <button className={styles.modalClose} onClick={() => setDeletingTask(null)} aria-label="Fechar">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className={styles.modalBody}>
+                      {taskDeleteError && <p className={styles.formError}>{taskDeleteError}</p>}
+                      <p className={styles.deleteConfirm}>
+                        A tarefa “{deletingTask.title}” será removida deste processo e do quadro de tarefas.
+                      </p>
+                    </div>
+                    <div className={styles.modalFooter}>
+                      <span />
+                      <div className={styles.modalFooterRight}>
+                        <button
+                          className={styles.btnCancel}
+                          onClick={() => setDeletingTask(null)}
+                          disabled={taskDeleteSubmitting}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          className={styles.btnDelete}
+                          onClick={() => void handleDeleteTask()}
+                          disabled={taskDeleteSubmitting}
+                        >
+                          <Trash2 size={15} />
+                          {taskDeleteSubmitting ? 'Excluindo...' : 'Excluir tarefa'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}
