@@ -855,7 +855,14 @@ function ProcessDetailsModal({
                           {TASK_STATUS_LABELS[task.status]}
                         </span>
                         <strong>{task.title}</strong>
+                        <p>{task.assigned_to_name ?? 'Sem responsável'}</p>
                       </div>
+                      {task.due_date && (
+                        <div className={styles.taskDue}>
+                          <span>Prazo</span>
+                          <strong>{formatDate(task.due_date)}</strong>
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>
