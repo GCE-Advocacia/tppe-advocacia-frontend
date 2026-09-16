@@ -51,6 +51,7 @@ import {
   syncProcessWithDataJud,
   updateProcessNote,
 } from '../../../services/processes';
+import { Task, TaskStatus, listTasks } from '../../../services/tasks';
 import styles from './Processos.module.css';
 // taskformmodal
 import TaskFormModal from '../TaskFormModal/TaskFormModal';
@@ -59,6 +60,13 @@ const PER_PAGE = 10;
 const STATUS_OPTIONS: ProcessStatus[] = ['ATIVO', 'SUSPENSO', 'ARQUIVADO', 'ENCERRADO'];
 const TRIBUNAL_SUGGESTIONS = ['tjdft', 'tjsp', 'tjrj', 'trf1', 'trf2', 'trf3', 'trf4', 'trf5', 'trf6'];
 
+
+const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  TODO: 'A fazer',
+  IN_PROGRESS: 'Em andamento',
+  BLOCKED: 'Bloqueada',
+  DONE: 'Concluida',
+};
 
 const STATUS_STYLE: Record<ProcessStatus, { bg: string; color: string }> = {
   ATIVO: { bg: '#e8f5e9', color: '#2e7d32' },
@@ -499,21 +507,25 @@ function ProcessDetailsModal({
   const [noteEditSubmitting, setNoteEditSubmitting] = useState(false);
   // controlar se o modo criar tarefa ta aberto
   const [showTaskForm, setShowTaskForm] = useState(false);
+  // tarefas ja cadastradas neste processo
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   async function loadDetails() {
     setLoading(true);
     try {
-      const [processResponse, movementsResponse, deadlinesResponse, notesResponse] = await Promise.all([
+      const [processResponse, movementsResponse, deadlinesResponse, notesResponse, tasksResponse] = await Promise.all([
         getProcess(processId),
         listMovements(processId),
         listProcessDeadlines(processId),
         listProcessNotes(processId),
+        listTasks({ process_id: processId, limit: 100 }),
       ]);
       setProcess(processResponse);
       setNextStatus(processResponse.status);
       setMovements(movementsResponse.data);
       setDeadlines(deadlinesResponse.data);
       setNotes(notesResponse.data);
+      setTasks(tasksResponse.data);
     } catch (requestError) {
       setFeedback({ message: errorMessage(requestError), kind: 'error' });
     } finally {
@@ -833,6 +845,18 @@ function ProcessDetailsModal({
                     <Plus size={15} />
                     Nova tarefa
                   </button>
+                </div>
+                <div className={styles.deadlinesList}>
+                  {tasks.map(task => (
+                    <article className={styles.deadlineCard} key={task.id}>
+                      <div className={styles.deadlineCardMain}>
+                        <span className={styles.deadlineStatus}>
+                          {TASK_STATUS_LABELS[task.status]}
+                        </span>
+                        <strong>{task.title}</strong>
+                      </div>
+                    </article>
+                  ))}
                 </div>
               </section>
 
