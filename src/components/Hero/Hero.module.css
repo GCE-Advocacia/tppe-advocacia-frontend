@@ -1,5 +1,5 @@
 .hero {
-  background: var(--navy);
+  background: var(--bg-primary, var(--navy));
   display: flex;
   width: 100%;
   min-height: 100vh;
@@ -38,13 +38,14 @@
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.5);
+  color: var(--text-primary, rgba(255,255,255,.5));
+  opacity: 0.8;
   margin-bottom: 16px;
 }
 
 .title {
   width: 569px;
-  color: var(--white);
+  color: var(--title-primary, var(--white));
   font-family: 'Montserrat';
   font-style: normal;
   font-size: 64px;
@@ -54,7 +55,7 @@
 }
 
 .subtitle {
-  color: rgba(241, 241, 241, 0.70);
+  color: var(--text-primary, rgba(241, 241, 241, 0.70));
   font-family: 'Montserrat', sans-serif;
   font-size: 17.6px;
   font-weight: 400;
@@ -73,8 +74,8 @@
   padding: 18px 31.148px 18px 32px;
   justify-content: center;
   align-items: center;
-  background: var(--crimson);
-  color: var(--white);
+  background: var(--btn-primary-bg, var(--crimson));
+  color: var(--btn-primary-text, var(--white));
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
   font-weight: 600;
@@ -82,7 +83,7 @@
   transition: background .2s, transform .15s;
 }
 .btnPrimary:hover {
-  background: var(--crimson-light);
+  background: var(--btn-primary-hover, var(--crimson-light));
   transform: translateY(-1px);
 }
 

@@ -1,5 +1,5 @@
 .section {
-  background: var(--navy);
+  background: var(--bg-primary, var(--navy));
   padding: 64px 0 100px;
 }
 
@@ -12,7 +12,7 @@
 .heading {
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 3vw, 2.4rem);
-  color: var(--white);
+  color: var(--title-primary, var(--white));
   font-weight: 700;
   text-align: center;
   margin-bottom: 64px;
@@ -40,7 +40,7 @@
 }
 
 .cardDesc {
-  color: rgba(255,255,255,.6);
+  color: var(--text-primary, rgba(255,255,255,.6));
   line-height: 1.75;
   font-size: .93rem;
 }

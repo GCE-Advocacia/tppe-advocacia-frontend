@@ -1,4 +1,4 @@
-.footer { background: var(--navy-dark); padding: 40px 0; }
+.footer { background: var(--bg-primary, var(--navy-dark)); padding: 40px 0; }
 
 .inner {
   padding: 0 var(--px);
@@ -13,7 +13,7 @@
 
 .links { display: flex; gap: 24px; list-style: none; }
 
-.link { color: rgba(255,255,255,.5); font-size: .85rem; transition: color .2s; }
+.link { color: var(--link-primary, rgba(255,255,255,.5)); font-size: .85rem; transition: color .2s; }
 .link:hover { color: var(--white); }
 
 .social { display: flex; gap: 20px; }
@@ -23,7 +23,7 @@
   padding: 20px var(--px) 0;
   position: relative;
   display: flex; justify-content: space-between;
-  font-size: .75rem; color: rgba(255,255,255,.3);
+  font-size: .75rem; color: var(--text-primary, rgba(255,255,255,.3));
 }
 
 .bottom::before {

@@ -16,7 +16,7 @@
   border-radius: 12px;
   margin-bottom: 24px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .cardHeader {
@@ -54,13 +54,78 @@
 .field:last-child { margin-bottom: 0; }
 
 .fieldLabel {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: .7rem;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--gray);
   margin-bottom: 8px;
+}
+
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  z-index: 10;
+}
+
+.tooltipWrapper:hover {
+  z-index: 50;
+}
+
+.tooltipIcon {
+  color: #9ca3af;
+  transition: color 0.15s ease;
+}
+
+.tooltipWrapper:hover .tooltipIcon {
+  color: var(--navy);
+}
+
+.tooltipText {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: -10px;
+  transform: translateY(4px);
+  background: #1e293b;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1.4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  width: max-content;
+  max-width: 280px;
+  text-align: left;
+  pointer-events: none;
+  z-index: 100;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.tooltipText::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+}
+
+.tooltipWrapper:hover .tooltipText {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .input {
@@ -374,6 +439,69 @@
   transition: background .2s;
 }
 .btnSave:hover { background: var(--navy-mid); }
+
+/* ── Color Picker ── */
+.colorPickerContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.colorInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fafafa;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: border-color .2s, background .2s;
+}
+
+.colorInputWrapper:focus-within {
+  border-color: var(--navy);
+  background: var(--white);
+}
+
+.colorInput {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+}
+
+.colorTextInput {
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  width: 85px;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.colorHint {
+  font-size: 0.85rem;
+  color: var(--gray);
+}
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
