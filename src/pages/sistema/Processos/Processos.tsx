@@ -880,6 +880,9 @@ function ProcessDetailsModal({
                       </button>
                     </article>
                   ))}
+                  {tasks.length === 0 && (
+                    <p className={styles.tasksEmpty}>Nenhuma tarefa cadastrada neste processo.</p>
+                  )}
                 </div>
               </section>
 

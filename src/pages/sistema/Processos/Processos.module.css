@@ -350,6 +350,7 @@
 .taskDue strong { color: var(--navy); font-size: .68rem; }
 .taskCard > button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #dfe2e8; border-radius: 5px; color: var(--navy); background: var(--white); cursor: pointer; }
 .taskCard > button:hover { background: #edf0f4; }
+.tasksEmpty { padding: 18px; border: 1px dashed #d6dae1; border-radius: 7px; color: var(--gray); text-align: center; font-size: .7rem; }
 .taskStatus { display: inline-flex; padding: 3px 6px; border-radius: 4px; font-size: .57rem; font-weight: 700; text-transform: uppercase; }
 .taskTODO { color: #606976; background: #eef0f3; }
 .taskIN_PROGRESS { color: #315e96; background: #e7f0fa; }
