@@ -455,24 +455,6 @@ export default function Pagamentos() {
             Vencimentos dos clientes no mês, com a situação de cada cobrança.
           </p>
         </div>
-        <div className={styles.headerRight}>
-          <div className={styles.monthNav}>
-            <button className={styles.monthBtn} onClick={prevMonth} aria-label="Mês anterior">
-              <ChevronLeft size={16} />
-            </button>
-            <span className={styles.monthLabel}>{MESES[month]} {year}</span>
-            <button className={styles.monthBtn} onClick={nextMonth} aria-label="Próximo mês">
-              <ChevronRight size={16} />
-            </button>
-          </div>
-          <button className={styles.btnSecondary} onClick={irParaHoje}>Hoje</button>
-          <button
-            className={styles.btnPrimary}
-            onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
-          >
-            <Plus size={16} /> Novo Vencimento
-          </button>
-        </div>
       </div>
 
       {pageError && <p className={styles.pageError} role="alert">{pageError}</p>}
@@ -507,18 +489,41 @@ export default function Pagamentos() {
         })}
       </div>
 
-      <div className={styles.filtros} role="group" aria-label="Filtrar por situação">
-        {FILTROS.map(f => (
-          <button
-            key={f.value}
-            className={`${styles.filtroBtn} ${filtro === f.value ? styles.filtroAtivo : ''}`}
-            onClick={() => setFiltro(f.value)}
-            aria-pressed={filtro === f.value}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '16px' }}>
+  <div className={styles.filtros} role="group" aria-label="Filtrar por situação">
+    {FILTROS.map(f => (
+      <button
+        key={f.value}
+        className={`${styles.filtroBtn} ${filtro === f.value ? styles.filtroAtivo : ''}`}
+        onClick={() => setFiltro(f.value)}
+        aria-pressed={filtro === f.value}
+      >
+        {f.label}
+      </button>
+    ))}
+  </div>
+
+  <div className={styles.headerRight} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+    <div className={styles.monthNav}>
+      <button className={styles.monthBtn} onClick={prevMonth} aria-label="Mês anterior">
+        <ChevronLeft size={16} />
+      </button>
+      <span className={styles.monthLabel}>{MESES[month]} {year}</span>
+      <button className={styles.monthBtn} onClick={nextMonth} aria-label="Próximo mês">
+        <ChevronRight size={16} />
+      </button>
+    </div>
+    <button className={styles.btnSecondary} onClick={irParaHoje}>Hoje</button>
+    <button
+      className={styles.btnPrimary}
+      onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
+    >
+      <Plus size={16} /> Novo Vencimento
+    </button>
+  </div>
+</div>
+
+     
 
       <div className={`${styles.calendar} ${styles.reveal}`} style={{ animationDelay: '120ms' }}>
         <div className={styles.calHeader}>
