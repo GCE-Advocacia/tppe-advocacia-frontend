@@ -13,6 +13,7 @@ import {
   Bell,
   Activity,
   CalendarX2,
+  Wallet,
   User,
   PanelLeftClose,
   PanelLeftOpen,
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
   { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
   { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
+  { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
 ];
 
 export default function Sidebar() {
