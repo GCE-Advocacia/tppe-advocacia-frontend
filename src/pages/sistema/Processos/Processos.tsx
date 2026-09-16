@@ -52,10 +52,13 @@ import {
   updateProcessNote,
 } from '../../../services/processes';
 import styles from './Processos.module.css';
+// taskformmodal
+import TaskFormModal from '../TaskFormModal/TaskFormModal';
 
 const PER_PAGE = 10;
 const STATUS_OPTIONS: ProcessStatus[] = ['ATIVO', 'SUSPENSO', 'ARQUIVADO', 'ENCERRADO'];
 const TRIBUNAL_SUGGESTIONS = ['tjdft', 'tjsp', 'tjrj', 'trf1', 'trf2', 'trf3', 'trf4', 'trf5', 'trf6'];
+
 
 const STATUS_STYLE: Record<ProcessStatus, { bg: string; color: string }> = {
   ATIVO: { bg: '#e8f5e9', color: '#2e7d32' },
@@ -494,6 +497,8 @@ function ProcessDetailsModal({
   const [noteSubmitting, setNoteSubmitting] = useState(false);
   const [editingNote, setEditingNote] = useState<{ id: number; content: string } | null>(null);
   const [noteEditSubmitting, setNoteEditSubmitting] = useState(false);
+  // controlar se o modo criar tarefa ta aberto
+  const [showTaskForm, setShowTaskForm] = useState(false);
 
   async function loadDetails() {
     setLoading(true);
@@ -820,11 +825,23 @@ function ProcessDetailsModal({
                 </div>
               </section>
 
+                {/* front do campo tarefas e botao */}
+              <section className={styles.notesSection}>
+                <div className={styles.deadlinesHeader}>
+                  <h3>Tarefas</h3>
+                  <button onClick={() => setShowTaskForm(true)}>
+                    <Plus size={15} />
+                    Nova tarefa
+                  </button>
+                </div>
+              </section>
+
               <section className={styles.notesSection}>
                 <div className={styles.notesHeader}>
                   <h3><MessageSquareText size={16} /> Anotações internas</h3>
                   <span>{notes.length} anotação(ões)</span>
                 </div>
+                
                 <form
                   className={styles.noteForm}
                   onSubmit={event => { event.preventDefault(); void handleCreateNote(); }}
@@ -906,6 +923,18 @@ function ProcessDetailsModal({
                   deadline={deadlineEditor === 'new' ? null : deadlineEditor}
                   onCancel={() => setDeadlineEditor(null)}
                   onChanged={message => void handleDeadlineChanged(message)}
+                />
+              )}
+
+               {/* renderizar */}
+              {showTaskForm && (
+                <TaskFormModal
+                  task={null}
+                  onClose={() => setShowTaskForm(false)}
+                  onSaved={() => {
+                    setShowTaskForm(false);
+                    onChanged('Tarefa criada.');
+                  }}
                 />
               )}
             </>
