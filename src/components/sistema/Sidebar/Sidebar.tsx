@@ -13,7 +13,6 @@ import {
   Bell,
   Activity,
   CalendarX2,
-  Wallet,
   User,
   PanelLeftClose,
   PanelLeftOpen,
