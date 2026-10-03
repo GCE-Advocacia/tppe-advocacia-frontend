@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Palette, Plus, Pencil, Trash2, Check, X, Loader2, Copy, ArrowRight
 } from 'lucide-react';
@@ -6,7 +6,9 @@ import type { LandingPageData, LandingPageTheme, ThemeCreatePayload } from '../.
 import {
   createTheme,
   updateTheme,
-  deleteTheme
+  deleteTheme,
+  getThemeQuota,
+  type ThemeQuota
 } from '../../../../services/officeConfigService';
 import styles from './ThemeGallery.module.css';
 
@@ -80,8 +82,30 @@ export default function ThemeGallery({
   const [themeToDelete, setThemeToDelete] = useState<LandingPageTheme | null>(null);
   const [deletingTheme, setDeletingTheme] = useState(false);
 
-  const customCount = themes.filter(t => !t.is_predefined).length;
-  const isLimitReached = customCount >= 6 || themes.length >= 10;
+  // Cota dinâmica fornecida pelo backend
+  const [quota, setQuota] = useState<ThemeQuota | null>(null);
+
+  const fetchQuota = useCallback(async () => {
+    try {
+      const q = await getThemeQuota();
+      setQuota(q);
+    } catch {
+      // fallback silencioso
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchQuota();
+    }
+  }, [isOpen, fetchQuota, themes]);
+
+  const customCount = quota ? quota.custom_count : themes.filter(t => !t.is_predefined).length;
+  const maxCustom = quota?.max_custom ?? 6;
+  const maxTotal = quota?.max_total ?? 10;
+  const isLimitReached = quota
+    ? quota.is_limit_reached
+    : customCount >= maxCustom || themes.length >= maxTotal;
 
   function isThemeActive(theme: LandingPageTheme) {
     if (activeThemeId !== undefined) {
@@ -229,6 +253,7 @@ export default function ThemeGallery({
         });
       }
       await onRefreshThemes();
+      await fetchQuota();
       setModalMode(null);
     } catch (err) {
       setModalError(err instanceof Error ? err.message : 'Erro ao salvar tema.');
@@ -243,6 +268,7 @@ export default function ThemeGallery({
     try {
       await deleteTheme(themeToDelete.id);
       await onRefreshThemes();
+      await fetchQuota();
       setThemeToDelete(null);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Erro ao excluir tema.');
@@ -291,7 +317,7 @@ export default function ThemeGallery({
               </p>
             </div>
             <span className={`${styles.quotaBadge} ${isLimitReached ? styles.quotaBadgeFull : ''}`}>
-              {customCount}/6 personalizados (Total: {themes.length}/10)
+              {customCount}/{maxCustom} personalizados (Total: {themes.length}/{maxTotal})
             </span>
           </div>
 
@@ -299,7 +325,11 @@ export default function ThemeGallery({
             type="button"
             className={styles.btnNewTheme}
             disabled={isLimitReached}
-            title={isLimitReached ? 'Limite máximo de 6 temas personalizados atingido.' : 'Salvar combinação atual como novo tema'}
+            title={
+              isLimitReached
+                ? `Limite máximo atingido (${maxCustom} personalizados / ${maxTotal} total).`
+                : 'Salvar combinação atual como novo tema'
+            }
             onClick={() => openCreateFromLandingModal()}
           >
             <Plus size={16} />
@@ -323,7 +353,6 @@ export default function ThemeGallery({
                     {theme.description && <p className={styles.cardDesc}>{theme.description}</p>}
                   </div>
                   <div className={styles.badgeGroup}>
-                    {active && <span className={styles.badgeActive}>✓ Em Uso</span>}
                     <span
                       className={`${styles.typeBadge} ${
                         theme.is_predefined ? styles.badgePredefined : styles.badgeCustom
@@ -348,36 +377,6 @@ export default function ThemeGallery({
                   <span style={{ backgroundColor: theme.color_text_secondary }} title="Textos 2" />
                   <span style={{ backgroundColor: theme.color_link_primary }} title="Links 1" />
                   <span style={{ backgroundColor: theme.color_link_secondary }} title="Links 2" />
-                </div>
-
-                {/* Visual Swatch Bar */}
-                <div className={styles.swatchBar} title="Amostra de cores principais do tema">
-                  <div
-                    className={styles.swatchCircle}
-                    style={{ backgroundColor: theme.color_bg_primary }}
-                    title={`Fundo 1: ${theme.color_bg_primary}`}
-                  />
-                  <div
-                    className={styles.swatchCircle}
-                    style={{ backgroundColor: theme.color_buttons }}
-                    title={`Botões: ${theme.color_buttons}`}
-                  />
-                  <div
-                    className={styles.swatchCircle}
-                    style={{ backgroundColor: theme.color_title_secondary }}
-                    title={`Títulos: ${theme.color_title_secondary}`}
-                  />
-                  <div
-                    className={styles.swatchCircle}
-                    style={{ backgroundColor: theme.color_link_secondary }}
-                    title={`Links: ${theme.color_link_secondary}`}
-                  />
-                  <div
-                    className={styles.swatchCircle}
-                    style={{ backgroundColor: theme.color_bg_secondary }}
-                    title={`Fundo 2: ${theme.color_bg_secondary}`}
-                  />
-                  <span className={styles.swatchLabel}>Paleta</span>
                 </div>
 
                 {/* Card Actions */}

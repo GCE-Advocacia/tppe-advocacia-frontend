@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
-  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
+  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info, RotateCcw,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
 import {
@@ -52,6 +52,7 @@ const EMPTY_DATA: LandingPageData = {
   colorTextSecondary: '#6B7280',
   colorLinkPrimary: '#FFFFFF',
   colorLinkSecondary: '#661C16',
+  themeId: null,
 };
 import styles from './LandingPage.module.css';
 
@@ -199,6 +200,10 @@ export default function LandingPageConfig() {
         };
         setSaved(merged);
         setData(merged);
+        if (merged.themeId) {
+          setSelectedThemeId(merged.themeId);
+          setBaseThemeId(merged.themeId);
+        }
       })
       .catch(() => { setLoadError('Não foi possível carregar as configurações. Recarregue a página.'); })
       .finally(() => setLoading(false));
@@ -210,7 +215,10 @@ export default function LandingPageConfig() {
 
   const discard = () => {
     setData(saved);
-    setSelectedThemeId(null);
+    setSelectedThemeId(saved.themeId ?? null);
+    if (saved.themeId) {
+      setBaseThemeId(saved.themeId);
+    }
   };
 
   const save = async () => {
@@ -220,6 +228,10 @@ export default function LandingPageConfig() {
       const updated = await updateOfficeConfig(data);
       setSaved(updated);
       setData(updated);
+      if (updated.themeId) {
+        setSelectedThemeId(updated.themeId);
+        setBaseThemeId(updated.themeId);
+      }
     } catch (err) {
       setSaveError(
         err instanceof ApiError ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
@@ -252,44 +264,106 @@ export default function LandingPageConfig() {
   }, [fetchThemes]);
 
   const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
+  const [baseThemeId, setBaseThemeId] = useState<number | null>(null);
+
+  const isColorMatching = useCallback((t: LandingPageTheme, currentColors: LandingPageData) => {
+    return (
+      t.color_bg_primary.toLowerCase() === (currentColors.colorBgPrimary || '').toLowerCase() &&
+      t.color_bg_secondary.toLowerCase() === (currentColors.colorBgSecondary || '').toLowerCase() &&
+      t.color_bg_sobre.toLowerCase() === (currentColors.colorBgSobre || '').toLowerCase() &&
+      t.color_buttons.toLowerCase() === (currentColors.colorButtons || '').toLowerCase() &&
+      t.color_buttons_hover.toLowerCase() === (currentColors.colorButtonsHover || '').toLowerCase() &&
+      t.color_buttons_text.toLowerCase() === (currentColors.colorButtonsText || '').toLowerCase() &&
+      t.color_title_primary.toLowerCase() === (currentColors.colorTitlePrimary || '').toLowerCase() &&
+      t.color_title_secondary.toLowerCase() === (currentColors.colorTitleSecondary || '').toLowerCase() &&
+      t.color_text_primary.toLowerCase() === (currentColors.colorTextPrimary || '').toLowerCase() &&
+      t.color_text_secondary.toLowerCase() === (currentColors.colorTextSecondary || '').toLowerCase() &&
+      t.color_link_primary.toLowerCase() === (currentColors.colorLinkPrimary || '').toLowerCase() &&
+      t.color_link_secondary.toLowerCase() === (currentColors.colorLinkSecondary || '').toLowerCase()
+    );
+  }, []);
+
+  // Tema de referência original (baseTheme): o último tema deliberadamente selecionado ou associado
+  const baseTheme = useMemo(() => {
+    if (baseThemeId) {
+      const found = themes.find(t => t.id === baseThemeId);
+      if (found) return found;
+    }
+    if (data.themeId) {
+      const found = themes.find(t => t.id === data.themeId);
+      if (found) return found;
+    }
+    const matched = themes.find(t => isColorMatching(t, data));
+    if (matched) return matched;
+    return themes.find(t => t.is_predefined) || themes[0] || null;
+  }, [baseThemeId, themes, data, isColorMatching]);
+
+  // Inicializa baseThemeId quando os temas estiverem disponíveis
+  useEffect(() => {
+    if (!baseThemeId && baseTheme) {
+      setBaseThemeId(baseTheme.id);
+    }
+  }, [baseThemeId, baseTheme]);
+
+  // Reconcilia themeId salvo e local caso o banco de dados possua theme_id nulo (legado/inicial),
+  // mas as cores salvas coincidam 100% com um tema cadastrado (ex: Clássico Navy pré-definido)
+  useEffect(() => {
+    if (themes.length > 0 && saved.themeId === null) {
+      const match = themes.find(t => isColorMatching(t, saved));
+      if (match) {
+        setSaved(s => (s.themeId === null ? { ...s, themeId: match.id } : s));
+        setData(d => (d.themeId === null ? { ...d, themeId: match.id } : d));
+        setSelectedThemeId(prev => (prev === null ? match.id : prev));
+        setBaseThemeId(prev => (prev === null ? match.id : prev));
+      }
+    }
+  }, [themes, saved, isColorMatching]);
+
+  const updateColor = useCallback((key: keyof LandingPageData, value: string) => {
+    setData(d => {
+      const next: LandingPageData = { ...d, [key]: value };
+      if (key === 'colorBgPrimary') {
+        next.color = value;
+      }
+      if (baseTheme && isColorMatching(baseTheme, next)) {
+        next.themeId = baseTheme.id;
+      } else {
+        next.themeId = null;
+      }
+      return next;
+    });
+  }, [baseTheme, isColorMatching]);
 
   const matchedTheme = useMemo(() => {
-    const isMatch = (t: LandingPageTheme) =>
-      t.color_bg_primary.toLowerCase() === (data.colorBgPrimary || '').toLowerCase() &&
-      t.color_bg_secondary.toLowerCase() === (data.colorBgSecondary || '').toLowerCase() &&
-      t.color_bg_sobre.toLowerCase() === (data.colorBgSobre || '').toLowerCase() &&
-      t.color_buttons.toLowerCase() === (data.colorButtons || '').toLowerCase() &&
-      t.color_buttons_hover.toLowerCase() === (data.colorButtonsHover || '').toLowerCase() &&
-      t.color_buttons_text.toLowerCase() === (data.colorButtonsText || '').toLowerCase() &&
-      t.color_title_primary.toLowerCase() === (data.colorTitlePrimary || '').toLowerCase() &&
-      t.color_title_secondary.toLowerCase() === (data.colorTitleSecondary || '').toLowerCase() &&
-      t.color_text_primary.toLowerCase() === (data.colorTextPrimary || '').toLowerCase() &&
-      t.color_text_secondary.toLowerCase() === (data.colorTextSecondary || '').toLowerCase() &&
-      t.color_link_primary.toLowerCase() === (data.colorLinkPrimary || '').toLowerCase() &&
-      t.color_link_secondary.toLowerCase() === (data.colorLinkSecondary || '').toLowerCase();
-
-    // 1. Se o usuário selecionou expressamente um tema e as cores ainda coincidem:
-    if (selectedThemeId) {
-      const selected = themes.find(t => t.id === selectedThemeId);
-      if (selected && isMatch(selected)) {
+    // 1. Se houver themeId definido no formulário ou selecionado pelo usuário:
+    const activeId = data.themeId ?? selectedThemeId;
+    if (activeId) {
+      const selected = themes.find(t => t.id === activeId);
+      if (selected && isColorMatching(selected, data)) {
         return selected;
       }
     }
 
-    // 2. Caso contrário, apenas temas pré-definidos do sistema podem ser inferidos automaticamente
-    // (temas personalizados criados ou duplicados na biblioteca nunca são auto-selecionados)
-    const matchingPredefined = themes.filter(t => t.is_predefined && isMatch(t));
+    // 2. Se as cores ainda coincidem exatamente com o baseTheme:
+    if (baseTheme && isColorMatching(baseTheme, data)) {
+      return baseTheme;
+    }
+
+    // 3. Caso contrário, apenas temas pré-definidos do sistema podem ser inferidos automaticamente
+    const matchingPredefined = themes.filter(t => t.is_predefined && isColorMatching(t, data));
     if (matchingPredefined.length > 0) {
       return matchingPredefined[0];
     }
 
     return null;
-  }, [themes, data, selectedThemeId]);
+  }, [themes, data, selectedThemeId, baseTheme, isColorMatching]);
 
   const handleThemeSelected = useCallback((theme: LandingPageTheme) => {
+    setBaseThemeId(theme.id);
     setSelectedThemeId(theme.id);
     setData(d => ({
       ...d,
+      themeId: theme.id,
       color: theme.color,
       colorBgPrimary: theme.color_bg_primary,
       colorBgSecondary: theme.color_bg_secondary,
@@ -347,25 +421,34 @@ export default function LandingPageConfig() {
     }
   };
 
-  const restoreDefaultColors = () => {
-    setSelectedThemeId(null);
+  // Verifica se as cores em edição divergiram do baseTheme
+  const isBaseThemeModified = useMemo(() => {
+    if (!baseTheme) return false;
+    return !isColorMatching(baseTheme, data);
+  }, [baseTheme, data, isColorMatching]);
+
+  // Restaura as cores salvas do baseTheme (seja pré-definido ou personalizado)
+  const restoreBaseThemeColors = useCallback(() => {
+    if (!baseTheme) return;
+    setSelectedThemeId(baseTheme.id);
     setData(d => ({
       ...d,
-      color: '#232C43',
-      colorBgPrimary: '#232C43',
-      colorBgSecondary: '#F5F3EF',
-      colorBgSobre: '#FFFFFF',
-      colorButtons: '#661C16',
-      colorButtonsHover: '#A52020',
-      colorButtonsText: '#FFFFFF',
-      colorTitlePrimary: '#FFFFFF',
-      colorTitleSecondary: '#232C43',
-      colorTextPrimary: '#FFFFFF',
-      colorTextSecondary: '#6B7280',
-      colorLinkPrimary: '#FFFFFF',
-      colorLinkSecondary: '#661C16',
+      themeId: baseTheme.id,
+      color: baseTheme.color,
+      colorBgPrimary: baseTheme.color_bg_primary,
+      colorBgSecondary: baseTheme.color_bg_secondary,
+      colorBgSobre: baseTheme.color_bg_sobre,
+      colorButtons: baseTheme.color_buttons,
+      colorButtonsHover: baseTheme.color_buttons_hover,
+      colorButtonsText: baseTheme.color_buttons_text,
+      colorTitlePrimary: baseTheme.color_title_primary,
+      colorTitleSecondary: baseTheme.color_title_secondary,
+      colorTextPrimary: baseTheme.color_text_primary,
+      colorTextSecondary: baseTheme.color_text_secondary,
+      colorLinkPrimary: baseTheme.color_link_primary,
+      colorLinkSecondary: baseTheme.color_link_secondary,
     }));
-  };
+  }, [baseTheme]);
 
   // Diferencial inline edit
   const [editingDif, setEditingDif] = useState<number | null>(null);
@@ -568,7 +651,7 @@ export default function LandingPageConfig() {
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
-          <div className={styles.themeSelectorBar}>
+          <div className={styles.themeSelectorBar} style={{alignItems: 'center'}}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)' }}>
                 Tema Base:
@@ -614,10 +697,16 @@ export default function LandingPageConfig() {
               <button
                 type="button"
                 className={styles.btnSecondarySmall}
-                onClick={restoreDefaultColors}
-                title="Restaurar paleta para as cores originais da plataforma"
+                onClick={restoreBaseThemeColors}
+                disabled={!isBaseThemeModified}
+                title={
+                  isBaseThemeModified
+                    ? `Restaurar as 12 cores para a versão salva de "${baseTheme?.name || 'tema base'}"`
+                    : 'As cores atuais já coincidem com a versão salva deste tema'
+                }
               >
-                ↺ Restaurar Padrão
+                <RotateCcw size={13} />
+                Restaurar Padrão do Tema
               </button>
             </div>
           </div>
@@ -636,10 +725,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorBgPrimary || '#232C43'}
-                  onChange={v => {
-                    set('colorBgPrimary', v);
-                    set('color', v);
-                  }}
+                  onChange={v => updateColor('colorBgPrimary', v)}
                 />
               </Field>
 
@@ -649,7 +735,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorBgSecondary || '#F5F3EF'}
-                  onChange={v => set('colorBgSecondary', v)}
+                  onChange={v => updateColor('colorBgSecondary', v)}
                 />
               </Field>
             </div>
@@ -661,7 +747,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorBgSobre || '#FFFFFF'}
-                  onChange={v => set('colorBgSobre', v)}
+                  onChange={v => updateColor('colorBgSobre', v)}
                 />
               </Field>
             </div>
@@ -681,7 +767,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorButtons || '#661C16'}
-                  onChange={v => set('colorButtons', v)}
+                  onChange={v => updateColor('colorButtons', v)}
                 />
               </Field>
 
@@ -691,7 +777,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorButtonsHover || '#A52020'}
-                  onChange={v => set('colorButtonsHover', v)}
+                  onChange={v => updateColor('colorButtonsHover', v)}
                 />
               </Field>
             </div>
@@ -703,7 +789,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorButtonsText || '#FFFFFF'}
-                  onChange={v => set('colorButtonsText', v)}
+                  onChange={v => updateColor('colorButtonsText', v)}
                 />
               </Field>
             </div>
@@ -723,7 +809,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorTitlePrimary || '#FFFFFF'}
-                  onChange={v => set('colorTitlePrimary', v)}
+                  onChange={v => updateColor('colorTitlePrimary', v)}
                 />
               </Field>
 
@@ -733,7 +819,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorTitleSecondary || '#232C43'}
-                  onChange={v => set('colorTitleSecondary', v)}
+                  onChange={v => updateColor('colorTitleSecondary', v)}
                 />
               </Field>
             </div>
@@ -745,7 +831,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorTextPrimary || '#FFFFFF'}
-                  onChange={v => set('colorTextPrimary', v)}
+                  onChange={v => updateColor('colorTextPrimary', v)}
                 />
               </Field>
 
@@ -755,7 +841,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorTextSecondary || '#6B7280'}
-                  onChange={v => set('colorTextSecondary', v)}
+                  onChange={v => updateColor('colorTextSecondary', v)}
                 />
               </Field>
             </div>
@@ -767,7 +853,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorLinkPrimary || '#FFFFFF'}
-                  onChange={v => set('colorLinkPrimary', v)}
+                  onChange={v => updateColor('colorLinkPrimary', v)}
                 />
               </Field>
 
@@ -777,7 +863,7 @@ export default function LandingPageConfig() {
               >
                 <ColorPicker
                   value={data.colorLinkSecondary || '#661C16'}
-                  onChange={v => set('colorLinkSecondary', v)}
+                  onChange={v => updateColor('colorLinkSecondary', v)}
                 />
               </Field>
             </div>

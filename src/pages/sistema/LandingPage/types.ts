@@ -61,6 +61,7 @@ export interface LandingPageData {
   colorTextSecondary: string;
   colorLinkPrimary: string;
   colorLinkSecondary: string;
+  themeId?: number | null;
 }
 
 export interface LandingPageTheme {

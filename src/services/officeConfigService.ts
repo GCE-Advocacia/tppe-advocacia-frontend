@@ -43,6 +43,7 @@ export interface OfficeConfigAPI {
   color_text_secondary: string | null;
   color_link_primary: string | null;
   color_link_secondary: string | null;
+  theme_id?: number | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
@@ -96,6 +97,7 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorTextSecondary: api.color_text_secondary ?? '#6B7280',
     colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
     colorLinkSecondary: api.color_link_secondary ?? '#661C16',
+    themeId: api.theme_id ?? null,
   };
 }
 
@@ -136,6 +138,7 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_text_secondary: ui.colorTextSecondary || null,
     color_link_primary: ui.colorLinkPrimary || null,
     color_link_secondary: ui.colorLinkSecondary || null,
+    theme_id: ui.themeId ?? null,
   };
 }
 
@@ -198,6 +201,21 @@ export async function applyTheme(id: number): Promise<LandingPageData> {
     authenticated: true,
   });
   return apiToUI(res.data);
+}
+
+export interface ThemeQuota {
+  max_total: number;
+  max_custom: number;
+  total_count: number;
+  custom_count: number;
+  is_limit_reached: boolean;
+}
+
+export async function getThemeQuota(): Promise<ThemeQuota> {
+  const res = await apiRequest<SuccessResponse<ThemeQuota>>('/office-config/themes/quota', {
+    authenticated: true,
+  });
+  return res.data;
 }
 
 const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
