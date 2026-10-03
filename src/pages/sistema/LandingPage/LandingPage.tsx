@@ -1,13 +1,20 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
   Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
-import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
-import type { LandingPageData, Diferencial, AreaAtuacao } from './types';
+import {
+  getOfficeConfigUI,
+  updateOfficeConfig,
+  uploadMedia,
+  getThemes,
+  createTheme
+} from '../../../services/officeConfigService';
+import type { LandingPageData, Diferencial, AreaAtuacao, LandingPageTheme } from './types';
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
 import ColorPicker from '../../../components/sistema/shared/ColorPicker';
+import ThemeGallery from '../../../components/sistema/shared/ThemeGallery';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -201,7 +208,10 @@ export default function LandingPageConfig() {
     setData(d => ({ ...d, [key]: value }));
   }, []);
 
-  const discard = () => setData(saved);
+  const discard = () => {
+    setData(saved);
+    setSelectedThemeId(null);
+  };
 
   const save = async () => {
     setSaving(true);
@@ -217,6 +227,144 @@ export default function LandingPageConfig() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // ── Gestão de Temas e Cores (US09 v2.1) ──
+  const [showThemeGalleryModal, setShowThemeGalleryModal] = useState(false);
+  const [themes, setThemes] = useState<LandingPageTheme[]>([]);
+  const [showSaveCurrentModal, setShowSaveCurrentModal] = useState(false);
+  const [newThemeName, setNewThemeName] = useState('');
+  const [newThemeDesc, setNewThemeDesc] = useState('');
+  const [savingNewTheme, setSavingNewTheme] = useState(false);
+  const [saveNewError, setSaveNewError] = useState<string | null>(null);
+
+  const fetchThemes = useCallback(async () => {
+    try {
+      const list = await getThemes();
+      setThemes(list);
+    } catch {
+      // falha silenciosa
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchThemes();
+  }, [fetchThemes]);
+
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
+
+  const matchedTheme = useMemo(() => {
+    const isMatch = (t: LandingPageTheme) =>
+      t.color_bg_primary.toLowerCase() === (data.colorBgPrimary || '').toLowerCase() &&
+      t.color_bg_secondary.toLowerCase() === (data.colorBgSecondary || '').toLowerCase() &&
+      t.color_bg_sobre.toLowerCase() === (data.colorBgSobre || '').toLowerCase() &&
+      t.color_buttons.toLowerCase() === (data.colorButtons || '').toLowerCase() &&
+      t.color_buttons_hover.toLowerCase() === (data.colorButtonsHover || '').toLowerCase() &&
+      t.color_buttons_text.toLowerCase() === (data.colorButtonsText || '').toLowerCase() &&
+      t.color_title_primary.toLowerCase() === (data.colorTitlePrimary || '').toLowerCase() &&
+      t.color_title_secondary.toLowerCase() === (data.colorTitleSecondary || '').toLowerCase() &&
+      t.color_text_primary.toLowerCase() === (data.colorTextPrimary || '').toLowerCase() &&
+      t.color_text_secondary.toLowerCase() === (data.colorTextSecondary || '').toLowerCase() &&
+      t.color_link_primary.toLowerCase() === (data.colorLinkPrimary || '').toLowerCase() &&
+      t.color_link_secondary.toLowerCase() === (data.colorLinkSecondary || '').toLowerCase();
+
+    // 1. Se o usuário selecionou expressamente um tema e as cores ainda coincidem:
+    if (selectedThemeId) {
+      const selected = themes.find(t => t.id === selectedThemeId);
+      if (selected && isMatch(selected)) {
+        return selected;
+      }
+    }
+
+    // 2. Caso contrário, apenas temas pré-definidos do sistema podem ser inferidos automaticamente
+    // (temas personalizados criados ou duplicados na biblioteca nunca são auto-selecionados)
+    const matchingPredefined = themes.filter(t => t.is_predefined && isMatch(t));
+    if (matchingPredefined.length > 0) {
+      return matchingPredefined[0];
+    }
+
+    return null;
+  }, [themes, data, selectedThemeId]);
+
+  const handleThemeSelected = useCallback((theme: LandingPageTheme) => {
+    setSelectedThemeId(theme.id);
+    setData(d => ({
+      ...d,
+      color: theme.color,
+      colorBgPrimary: theme.color_bg_primary,
+      colorBgSecondary: theme.color_bg_secondary,
+      colorBgSobre: theme.color_bg_sobre,
+      colorButtons: theme.color_buttons,
+      colorButtonsHover: theme.color_buttons_hover,
+      colorButtonsText: theme.color_buttons_text,
+      colorTitlePrimary: theme.color_title_primary,
+      colorTitleSecondary: theme.color_title_secondary,
+      colorTextPrimary: theme.color_text_primary,
+      colorTextSecondary: theme.color_text_secondary,
+      colorLinkPrimary: theme.color_link_primary,
+      colorLinkSecondary: theme.color_link_secondary,
+    }));
+  }, []);
+
+  const handleSelectFromLibrary = useCallback((theme: LandingPageTheme) => {
+    handleThemeSelected(theme);
+    setShowThemeGalleryModal(false);
+  }, [handleThemeSelected]);
+
+  const handleSaveCurrentAsTheme = async () => {
+    if (!newThemeName.trim()) {
+      setSaveNewError('Informe um nome para o tema.');
+      return;
+    }
+    setSavingNewTheme(true);
+    setSaveNewError(null);
+    try {
+      await createTheme({
+        name: newThemeName.trim(),
+        description: newThemeDesc.trim() || null,
+        color: data.color || '#232C43',
+        color_bg_primary: data.colorBgPrimary || '#232C43',
+        color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
+        color_bg_sobre: data.colorBgSobre || '#FFFFFF',
+        color_buttons: data.colorButtons || '#661C16',
+        color_buttons_hover: data.colorButtonsHover || '#A52020',
+        color_buttons_text: data.colorButtonsText || '#FFFFFF',
+        color_title_primary: data.colorTitlePrimary || '#FFFFFF',
+        color_title_secondary: data.colorTitleSecondary || '#232C43',
+        color_text_primary: data.colorTextPrimary || '#FFFFFF',
+        color_text_secondary: data.colorTextSecondary || '#6B7280',
+        color_link_primary: data.colorLinkPrimary || '#FFFFFF',
+        color_link_secondary: data.colorLinkSecondary || '#661C16',
+      });
+      await fetchThemes();
+      setShowSaveCurrentModal(false);
+      setNewThemeName('');
+      setNewThemeDesc('');
+    } catch (err) {
+      setSaveNewError(err instanceof Error ? err.message : 'Erro ao criar tema.');
+    } finally {
+      setSavingNewTheme(false);
+    }
+  };
+
+  const restoreDefaultColors = () => {
+    setSelectedThemeId(null);
+    setData(d => ({
+      ...d,
+      color: '#232C43',
+      colorBgPrimary: '#232C43',
+      colorBgSecondary: '#F5F3EF',
+      colorBgSobre: '#FFFFFF',
+      colorButtons: '#661C16',
+      colorButtonsHover: '#A52020',
+      colorButtonsText: '#FFFFFF',
+      colorTitlePrimary: '#FFFFFF',
+      colorTitleSecondary: '#232C43',
+      colorTextPrimary: '#FFFFFF',
+      colorTextSecondary: '#6B7280',
+      colorLinkPrimary: '#FFFFFF',
+      colorLinkSecondary: '#661C16',
+    }));
   };
 
   // Diferencial inline edit
@@ -416,46 +564,65 @@ export default function LandingPageConfig() {
         </div>
       </SectionCard>
 
-      {/* ── Identidade Visual / Cores ── */}
+      {/* ── Identidade Visual / Cores (US09 v2.1) ── */}
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Botão para restaurar cores originais */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              style={{
-                background: 'none',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                padding: '6px 14px',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                color: 'var(--navy)',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-              }}
-              onClick={() => {
-                setData(d => ({
-                  ...d,
-                  color: '#232C43',
-                  colorBgPrimary: '#232C43',
-                  colorBgSecondary: '#F5F3EF',
-                  colorBgSobre: '#FFFFFF',
-                  colorButtons: '#661C16',
-                  colorButtonsHover: '#A52020',
-                  colorButtonsText: '#FFFFFF',
-                  colorTitlePrimary: '#FFFFFF',
-                  colorTitleSecondary: '#232C43',
-                  colorTextPrimary: '#FFFFFF',
-                  colorTextSecondary: '#6B7280',
-                  colorLinkPrimary: '#FFFFFF',
-                  colorLinkSecondary: '#661C16',
-                }));
-              }}
-            >
-              ↺ Restaurar Cores Padrão
-            </button>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
+          <div className={styles.themeSelectorBar}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)' }}>
+                Tema Base:
+              </span>
+              {matchedTheme ? (
+                <span className={styles.themeActiveBadge}>
+                  <Palette size={14} />
+                  {matchedTheme.name}
+                </span>
+              ) : (
+                <span className={styles.themeCustomBadge}>
+                  (Combinação personalizada)
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className={styles.btnPrimaryTheme}
+                onClick={() => setShowThemeGalleryModal(true)}
+                title="Abrir a galeria de temas para explorar e selecionar uma paleta"
+              >
+                <BookOpen size={15} />
+                Explorar Biblioteca de Temas...
+              </button>
+
+              <button
+                type="button"
+                className={styles.btnSecondarySmall}
+                onClick={() => {
+                  setNewThemeName('');
+                  setNewThemeDesc('');
+                  setSaveNewError(null);
+                  setShowSaveCurrentModal(true);
+                }}
+                title="Salvar esta combinação de cores como um novo tema na biblioteca"
+              >
+                <Star size={13} />
+                Salvar como Novo Tema
+              </button>
+
+              <button
+                type="button"
+                className={styles.btnSecondarySmall}
+                onClick={restoreDefaultColors}
+                title="Restaurar paleta para as cores originais da plataforma"
+              >
+                ↺ Restaurar Padrão
+              </button>
+            </div>
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
           {/* 1 - Cores de Fundo */}
           <div>
@@ -616,7 +783,115 @@ export default function LandingPageConfig() {
             </div>
           </div>
         </div>
+        </div>
       </SectionCard>
+
+      {/* Modal da Galeria de Temas da Landing Page */}
+      <ThemeGallery
+        isOpen={showThemeGalleryModal}
+        onClose={() => setShowThemeGalleryModal(false)}
+        themes={themes}
+        onRefreshThemes={fetchThemes}
+        onSelectTheme={handleSelectFromLibrary}
+        currentLandingColors={data}
+        activeThemeId={matchedTheme?.id ?? null}
+      />
+
+      {/* Modal: Salvar Cores Atuais na Biblioteca */}
+      {showSaveCurrentModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowSaveCurrentModal(false)}>
+          <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Salvar Tema na Biblioteca</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setShowSaveCurrentModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+                As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado na sua biblioteca.
+              </p>
+
+              <div className={styles.palettePreviewMini}>
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorBgPrimary || '#232C43' }} title="Background 1" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorBgSecondary || '#F5F3EF' }} title="Background 2" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorBgSobre || '#FFFFFF' }} title="Background Sobre" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorButtons || '#661C16' }} title="Botões" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorButtonsHover || '#A52020' }} title="Hover Botões" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorButtonsText || '#FFFFFF' }} title="Texto Botões" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorTitlePrimary || '#FFFFFF' }} title="Títulos 1" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorTitleSecondary || '#232C43' }} title="Títulos 2" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorTextPrimary || '#FFFFFF' }} title="Textos 1" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorTextSecondary || '#6B7280' }} title="Textos 2" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorLinkPrimary || '#FFFFFF' }} title="Links 1" />
+                <span className={styles.palettePreviewMiniSegment} style={{ background: data.colorLinkSecondary || '#661C16' }} title="Links 2" />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Nome do Tema *</label>
+                <input
+                  type="text"
+                  className={styles.textInput}
+                  placeholder="Ex: Corporativo Noturno, Minimalista Ouro..."
+                  value={newThemeName}
+                  onChange={e => setNewThemeName(e.target.value)}
+                  maxLength={50}
+                  autoFocus
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Descrição (Opcional)</label>
+                <textarea
+                  className={styles.textareaInput}
+                  rows={2}
+                  placeholder="Breve descrição da identidade deste tema..."
+                  value={newThemeDesc}
+                  onChange={e => setNewThemeDesc(e.target.value)}
+                />
+              </div>
+
+              {saveNewError && (
+                <p className={styles.modalError}>{saveNewError}</p>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={() => setShowSaveCurrentModal(false)}
+                disabled={savingNewTheme}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.btnConfirm}
+                onClick={handleSaveCurrentAsTheme}
+                disabled={savingNewTheme || !newThemeName.trim()}
+              >
+                {savingNewTheme ? (
+                  <>
+                    <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Check size={14} />
+                    Salvar na Biblioteca
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Bottom bar ── */}
       <div className={`${styles.bottomBar} ${isDirty || saveError ? styles.bottomBarVisible : ''}`}>

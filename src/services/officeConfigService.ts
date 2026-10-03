@@ -1,6 +1,6 @@
 import { apiRequest, getAccessToken, clearAccessToken, ApiError } from './api';
 import type { SuccessResponse } from './api';
-import type { LandingPageData } from '../pages/sistema/LandingPage/types';
+import type { LandingPageData, LandingPageTheme, ThemeCreatePayload, ThemeUpdatePayload } from '../pages/sistema/LandingPage/types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -155,6 +155,46 @@ export async function updateOfficeConfig(ui: LandingPageData): Promise<LandingPa
   const res = await apiRequest<SuccessResponse<OfficeConfigAPI>>('/office-config', {
     method: 'PATCH',
     body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return apiToUI(res.data);
+}
+
+export async function getThemes(): Promise<LandingPageTheme[]> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme[]>>('/office-config/themes', {
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function createTheme(payload: ThemeCreatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>('/office-config/themes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function updateTheme(id: number, payload: ThemeUpdatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>(`/office-config/themes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function deleteTheme(id: number): Promise<void> {
+  await apiRequest<void>(`/office-config/themes/${id}`, {
+    method: 'DELETE',
+    authenticated: true,
+  });
+}
+
+export async function applyTheme(id: number): Promise<LandingPageData> {
+  const res = await apiRequest<SuccessResponse<OfficeConfigAPI>>(`/office-config/themes/${id}/apply`, {
+    method: 'POST',
     authenticated: true,
   });
   return apiToUI(res.data);
