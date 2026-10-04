@@ -3,11 +3,13 @@ import {
   Building2, Link2, Star, BookOpen, UserRound,
   Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
 } from 'lucide-react';
-import { ApiError } from '../../../services/api';
 import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
 import type { LandingPageData, Diferencial, AreaAtuacao } from './types';
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
 import ColorPicker from '../../../components/sistema/shared/ColorPicker';
+import LogoSettings from '../../../components/sistema/shared/Logo config/LogoSettings';
+import useBrandingDraft from '../../../components/sistema/shared/Logo config/useBrandingDraft';
+import { useOfficeConfigActions } from '../../../contexts/OfficeConfigContext';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -174,13 +176,16 @@ function Field({ label, tooltip, children }: FieldProps) {
 
 // ── main page ────────────────────────────────────────────
 export default function LandingPageConfig() {
+  const { applyConfig } = useOfficeConfigActions();
   const [saved,   setSaved]   = useState<LandingPageData>(EMPTY_DATA);
   const [data,    setData]    = useState<LandingPageData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving,  setSaving]  = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const isDirty = !deepEqual(data, saved);
+  const branding = useBrandingDraft();
+  const formDirty = !deepEqual(data, saved);
+  const isDirty = formDirty || branding.dirty;
 
   useEffect(() => {
     getOfficeConfigUI()
@@ -201,18 +206,22 @@ export default function LandingPageConfig() {
     setData(d => ({ ...d, [key]: value }));
   }, []);
 
-  const discard = () => setData(saved);
+  const discard = () => { setData(saved); branding.discard(); setSaveError(null); };
 
   const save = async () => {
+    if (saving || !isDirty || (branding.dirty && !branding.ready)) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const updated = await updateOfficeConfig(data);
-      setSaved(updated);
-      setData(updated);
+      await branding.save();
+      if (formDirty) {
+        const updated = await updateOfficeConfig(data, applyConfig);
+        setSaved(updated);
+        setData(updated);
+      }
     } catch (err) {
       setSaveError(
-        err instanceof ApiError ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
+        err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
       );
     } finally {
       setSaving(false);
@@ -248,6 +257,10 @@ export default function LandingPageConfig() {
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>Configuração da Landing Page</h1>
+
+      <SectionCard icon={<ImageIcon size={20} />} title="Logos e ícone do navegador">
+        <LogoSettings draft={branding} saving={saving} />
+      </SectionCard>
 
       {/* ── Dados Institucionais ── */}
       <SectionCard icon={<Building2 size={20} />} title="Dados Institucionais">
@@ -619,9 +632,9 @@ export default function LandingPageConfig() {
       </SectionCard>
 
       {/* ── Bottom bar ── */}
-      <div className={`${styles.bottomBar} ${isDirty || saveError ? styles.bottomBarVisible : ''}`}>
+      <div data-pending-changes={isDirty ? "true" : "false"} className={`${styles.bottomBar} ${isDirty || saveError ? styles.bottomBarVisible : ''}`}>
         {saveError && (
-          <span className={styles.bottomError}>{saveError}</span>
+          <span role="alert" className={styles.bottomError}>{saveError}</span>
         )}
         {!saveError && (
           <span className={styles.bottomMsg}>
@@ -632,7 +645,7 @@ export default function LandingPageConfig() {
           <button className={styles.btnDiscard} onClick={discard} disabled={saving}>
             <X size={15} /> Descartar
           </button>
-          <button className={styles.btnSave} onClick={save} disabled={saving}>
+          <button className={styles.btnSave} onClick={save} disabled={saving || !isDirty || (branding.dirty && !branding.ready)}>
             {saving
               ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Salvando...</>
               : <><Check size={15} /> Salvar alterações</>

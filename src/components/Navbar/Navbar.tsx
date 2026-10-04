@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BrandLogo from '../BrandLogo/BrandLogo';
 import styles from './Navbar.module.css';
 
 const NAV_LINKS = [
@@ -18,7 +19,7 @@ export default function Navbar() {
     <nav className={styles.nav}>
       <div className={styles.inner}>
         <a href="#" className={styles.logo}>
-          <img src="/logo.png" alt="Vitor França" className={styles.logoImg} />
+          <BrandLogo background="auto" className={styles.logoImg} />
         </a>
 
         <ul className={styles.links}>

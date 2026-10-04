@@ -26,8 +26,8 @@
 }
 
 .logoImg {
-  height: auto;
-  width: auto;
+  height: 88px;
+  width: 228px;
 }
 
 .links {
@@ -145,6 +145,6 @@
   .btnAgendar { display: none; }
   .hamburger  { display: flex; }
   .drawer     { display: block; top: 72px; padding: 24px 24px 32px; }
-  .logo       { width: min(160px, 50%); height: auto; }
-  .logoImg    { max-width: 100%; height: auto; }
+  .logo       { width: min(160px, 50%); height: 60px; }
+  .logoImg    { max-width: 100%; height: 60px; }
 }

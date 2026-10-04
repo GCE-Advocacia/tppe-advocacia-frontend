@@ -20,11 +20,12 @@ import {
 } from 'lucide-react';
 import { getSessionClaims } from '../../../services/api';
 import { logout } from '../../../services/auth';
+import BrandLogo from '../../BrandLogo/BrandLogo';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
   { label: 'Usuários',      href: '/sistema/usuarios',      icon: UserCog,      adminOnly: true  },
-  { label: 'Landing Page',  href: '/sistema/landing-page',  icon: Layout,       adminOnly: false },
+  { label: 'Landing Page',  href: '/sistema/landing-page',  icon: Layout,       adminOnly: true  },
   { label: 'Artigos',       href: '/sistema/artigos',        icon: FileText,     adminOnly: false },
   { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
   { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },
@@ -74,7 +75,7 @@ export default function Sidebar() {
 
         {/* Logo */}
         <div className={styles.logoArea}>
-          <img src="/logo.png" alt="Vitor França" className={styles.logo} />
+          <BrandLogo scope="system" className={styles.logo} />
           <button
             className={styles.collapseBtn}
             onClick={() => setCollapsed(prev => !prev)}
