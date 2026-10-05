@@ -25,6 +25,7 @@ const EMPTY_AREAS: AreaAtuacao[] = [
 ];
 
 const EMPTY_DATA: LandingPageData = {
+  
   email: '', endereco: '', telefone: '',
   linkedin: '', instagram: '', whatsapp: '', website: '',
   heroTitulo: '', heroSubtexto: '', heroImagem: '', heroImagemPos: { x: 50, y: 50 },
