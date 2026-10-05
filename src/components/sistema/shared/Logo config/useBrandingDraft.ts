@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useOfficeConfig, useOfficeConfigActions } from '../../../../contexts/OfficeConfigContext';
+import { useBranding, useBrandingActions } from '../../../../contexts/BrandingContext';
 import {
   LOGO_FIELDS, DEFAULT_LOGO_FIELDS, previewOfficeLogo, resetOfficeLogo, updateLogoSettings, setOfficeLogoDefault,
   uploadOfficeLogo, validateLogoFile,
@@ -20,8 +20,8 @@ const LABELS: Record<LogoSlot, string> = {
 
 /** Images and sharing choices are drafts until the page's Save action is used. */
 export default function useBrandingDraft() {
-  const { config, loading } = useOfficeConfig();
-  const { applyConfig } = useOfficeConfigActions();
+  const { config, loading } = useBranding();
+  const { applyConfig } = useBrandingActions();
   const [assets, setAssets] = useState<Drafts>({});
   const [errors, setErrors] = useState<Partial<Record<LogoSlot, string>>>({});
   const [choices, setChoices] = useState<Partial<LogoPreferences>>({});

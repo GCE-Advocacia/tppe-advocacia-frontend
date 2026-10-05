@@ -461,19 +461,30 @@ test('keeps logo previews and the pending bar usable on mobile', async t => {
   assert.ok(navbarLogo.width <= 160 && navbarLogo.height <= 60);
 });
 
-test('preserves landing colors without applying them to the system or login', async t => {
+test('logo changes preserve the existing color settings and landing color behavior', async t => {
   const { page, state } = await setup(t);
-  state.config = { ...state.config, color: '#119933', color_bg_primary: '#14395A', color_buttons: '#8C2B40' };
+  const colors = { color: '#119933', color_bg_primary: '#14395A', color_buttons: '#8C2B40' };
+  state.config = { ...state.config, ...colors };
   await openSettings(page);
   await chooseImage(page);
   await saveAll(page);
-  assert.equal(await page.locator('[data-landing-theme]').count(), 0);
+  await asset(page).getByRole('checkbox', { name: 'Usar esta imagem como padrão' }).check();
+  await saveAll(page);
+  await chooseImage(page, 'replacement.png');
+  await saveAll(page);
+  await asset(page).getByRole('button', { name: 'Restaurar logo padrão', exact: true }).click();
+  await saveAll(page);
+  assert.equal(state.generalUpdates.length, 0, 'Logo actions must not save color settings');
+  for (const [field, value] of Object.entries(colors)) assert.equal(state.config[field], value);
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
   await page.goto(baseURL);
-  await page.waitForFunction(() => document.querySelector('[data-landing-theme]')?.style.getPropertyValue('--bg-primary') === '#14395A');
+  // Keep the original OfficeConfigProvider behavior from main: variables on <html>.
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--bg-primary') === '#14395A');
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), colors.color);
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--btn-primary-bg')), colors.color_buttons);
   await page.goto(`${baseURL}/login`);
   await expectLogo(page, state.config.logo_url, 1);
-  assert.equal(await page.locator('[data-landing-theme]').count(), 0);
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
 });
 
 test('denies unauthenticated and non-admin access without redirect loops', async t => {

@@ -9,7 +9,7 @@ import ImagePositionModal from '../../../components/sistema/shared/ImagePosition
 import ColorPicker from '../../../components/sistema/shared/ColorPicker';
 import LogoSettings from '../../../components/sistema/shared/Logo config/LogoSettings';
 import useBrandingDraft from '../../../components/sistema/shared/Logo config/useBrandingDraft';
-import { useOfficeConfigActions } from '../../../contexts/OfficeConfigContext';
+import { useBrandingActions } from '../../../contexts/BrandingContext';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -176,7 +176,7 @@ function Field({ label, tooltip, children }: FieldProps) {
 
 // ── main page ────────────────────────────────────────────
 export default function LandingPageConfig() {
-  const { applyConfig } = useOfficeConfigActions();
+  const { applyConfig } = useBrandingActions();
   const [saved,   setSaved]   = useState<LandingPageData>(EMPTY_DATA);
   const [data,    setData]    = useState<LandingPageData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);

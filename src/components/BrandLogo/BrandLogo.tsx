@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useOfficeConfig } from '../../contexts/OfficeConfigContext';
+import { useBranding } from '../../contexts/BrandingContext';
 import type { OfficeConfigAPI } from '../../services/officeConfigService';
 import styles from './BrandLogo.module.css';
 
@@ -42,7 +42,7 @@ interface BrandLogoProps {
 }
 
 export default function BrandLogo({ className = '', background = 'dark', scope = 'landing' }: BrandLogoProps) {
-  const { config } = useOfficeConfig();
+  const { config } = useBranding();
   const [failedSource, setFailedSource] = useState<string | null>(null);
   const surface = background === 'auto'
     ? landingBackground(config?.color_bg_primary || config?.color || '#232C43') : background;

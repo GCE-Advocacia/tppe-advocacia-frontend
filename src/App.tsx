@@ -35,6 +35,7 @@ import Sobre from './components/Sobre/Sobre';
 import Artigos from './components/Artigos/Artigos';
 import Contato from './components/Contato/Contato';
 import Footer from './components/Footer/Footer';
+import { BrandingProvider } from './contexts/BrandingContext';
 import { OfficeConfigProvider } from './contexts/OfficeConfigContext';
 import ArtigoPage from './pages/public/ArtigoPage';
 
@@ -84,7 +85,7 @@ function GoogleCalendarRedirect() {
 
 export default function App() {
   return (
-    <>
+    <BrandingProvider>
     <BrowserRouter>
       <ScrollToHash />
       <Routes>
@@ -102,8 +103,8 @@ export default function App() {
             <Route index element={<Navigate to="leads" replace />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Usuarios />} />
+              <Route path="landing-page" element={<LandingPageConfig />} />
             </Route>
-            <Route path="landing-page" element={<LandingPageConfig />} />
             <Route path="artigos" element={<Artigos_ />} />
             <Route element={<AdminRoute />}>
               <Route path="leads" element={<Leads />} />
@@ -129,6 +130,6 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
-    </>
+    </BrandingProvider>
   );
 }
