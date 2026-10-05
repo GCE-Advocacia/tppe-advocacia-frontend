@@ -30,7 +30,12 @@ export type SessionClaims = {
   sub: string;
   role: 'ADMIN' | 'USER';
   exp: number;
+  can_view_payments?: boolean;
 };
+
+export function canViewPayments(claims: SessionClaims | null): boolean {
+  return claims?.role === 'ADMIN' || claims?.can_view_payments === true;
+}
 
 export class ApiError extends Error {
   status: number;

@@ -18,7 +18,7 @@ import {
   PanelLeftOpen,
   LogOut,
 } from 'lucide-react';
-import { getSessionClaims } from '../../../services/api';
+import { canViewPayments, getSessionClaims } from '../../../services/api';
 import { logout } from '../../../services/auth';
 import styles from './Sidebar.module.css';
 
@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
   { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },
   { label: 'Agenda',        href: '/sistema/agenda',         icon: CalendarDays, adminOnly: false },
-  { label: 'Pagamentos',    href: '/sistema/pagamentos',     icon: Wallet,       adminOnly: true  },
+  { label: 'Pagamentos',    href: '/sistema/pagamentos',     icon: Wallet,       adminOnly: false, visible: canViewPayments },
   { label: 'Processos',     href: '/sistema/processos',      icon: Briefcase,    adminOnly: false },
   { label: 'Tarefas',       href: '/sistema/tarefas',        icon: LayoutList,   adminOnly: false },
   { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
@@ -86,7 +86,7 @@ export default function Sidebar() {
 
         {/* Nav links */}
         <nav className={styles.nav}>
-          {NAV_ITEMS.filter(item => !item.adminOnly || isAdmin).map(({ label, href, icon: Icon }) => (
+          {NAV_ITEMS.filter(item => (item.visible ? item.visible(claims) : !item.adminOnly || isAdmin)).map(({ label, href, icon: Icon }) => (
             <NavLink
               key={href}
               to={href}

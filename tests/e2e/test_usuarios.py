@@ -7,6 +7,27 @@ from selenium.webdriver.support.select import Select
 from conftest import BASE_URL, pause
 
 USUARIOS_URL = f"{BASE_URL}/sistema/usuarios"
+CHECKBOX_PERMISSAO = (By.ID, "usuario-pode-ver-vencimentos")
+
+
+def js_click(driver, element):
+    driver.execute_script("arguments[0].click();", element)
+
+
+def _editar_linha(driver, wait, email):
+    linha = wait.until(EC.presence_of_element_located(
+        (By.XPATH, f"//tbody/tr[td[normalize-space()='{email}']]")
+    ))
+    js_click(driver, linha.find_element(By.CSS_SELECTOR, "button[title='Editar']"))
+    checkbox = wait.until(EC.presence_of_element_located(CHECKBOX_PERMISSAO))
+    pause()
+    return checkbox
+
+
+def _salvar_edicao(driver, wait):
+    js_click(driver, driver.find_element(By.XPATH, "//button[contains(., 'Salvar')]"))
+    wait.until(EC.invisibility_of_element_located(CHECKBOX_PERMISSAO))
+    pause()
 
 
 class TestGerenciarUsuarios:
@@ -150,6 +171,32 @@ class TestGerenciarUsuarios:
             (By.XPATH, "//*[contains(text(),'Desativar Usuário')]")
         ))
         pause()
+
+    def test_permissao_visualizar_vencimentos_persiste(self, logged_in, wait):
+        """US01 — Admin concede/revoga 'Pode visualizar vencimentos' a um funcionário"""
+        logged_in.get(USUARIOS_URL)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table")))
+        pause()
+        linhas_usuario = logged_in.find_elements(
+            By.XPATH, "//tbody/tr[.//span[normalize-space()='Usuário']]"
+        )
+        if not linhas_usuario:
+            pytest.skip("Nenhum funcionário (papel USER) na primeira página")
+        email = linhas_usuario[0].find_element(By.XPATH, "./td[2]").text.strip()
+
+        checkbox = _editar_linha(logged_in, wait, email)
+        assert checkbox.is_enabled()
+        original = checkbox.is_selected()
+        js_click(logged_in, checkbox)
+        _salvar_edicao(logged_in, wait)
+
+        logged_in.get(USUARIOS_URL)
+        checkbox = _editar_linha(logged_in, wait, email)
+        assert checkbox.is_selected() is not original
+
+        # Restaura o estado inicial para não afetar outros testes
+        js_click(logged_in, checkbox)
+        _salvar_edicao(logged_in, wait)
 
 
 class TestRegistrosAuditoria:

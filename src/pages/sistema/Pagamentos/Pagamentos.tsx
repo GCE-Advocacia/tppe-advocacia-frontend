@@ -10,7 +10,7 @@ import {
   type Payment, type PaymentWrite, type PaymentSituation,
 } from '../../../services/payments';
 import { listClients, type ClientListItem } from '../../../services/clients';
-import { ApiError } from '../../../services/api';
+import { ApiError, getSessionClaims } from '../../../services/api';
 import styles from './Pagamentos.module.css';
 
 // ── Constants ──────────────────────────────────────────────
@@ -89,7 +89,7 @@ function formToPayload(form: FormState): PaymentWrite {
   };
 }
 
-// ── Modal de cadastro / edição ─────────────────────────────
+// ── Modal de cadastro / edição / visualização ──────────────
 interface VencimentoModalProps {
   titulo: string;
   initial: FormState;
@@ -97,7 +97,8 @@ interface VencimentoModalProps {
   saving: boolean;
   error: string;
   onCancel: () => void;
-  onSave: (form: FormState) => void;
+  /** Sem onSave o modal abre somente para visualização. */
+  onSave?: (form: FormState) => void;
   onDelete?: () => void;
 }
 
@@ -106,6 +107,7 @@ function VencimentoModal({
 }: VencimentoModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [confirmando, setConfirmando] = useState(false);
+  const readOnly = !onSave;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
@@ -142,7 +144,7 @@ function VencimentoModal({
 
         <form
           className={styles.modalBody}
-          onSubmit={e => { e.preventDefault(); if (valid && !saving) onSave(form); }}
+          onSubmit={e => { e.preventDefault(); if (onSave && valid && !saving) onSave(form); }}
         >
           {error && <p className={styles.formError} role="alert">{error}</p>}
 
@@ -154,6 +156,7 @@ function VencimentoModal({
               value={form.client_id ?? ''}
               onChange={e => update('client_id', e.target.value ? Number(e.target.value) : null)}
               required
+              disabled={readOnly}
             >
               <option value="">Selecione o cliente</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -171,6 +174,7 @@ function VencimentoModal({
                 value={form.payment_date}
                 onChange={e => update('payment_date', e.target.value)}
                 required
+                disabled={readOnly}
               />
             </div>
             <div className={styles.mField}>
@@ -183,6 +187,7 @@ function VencimentoModal({
                 onChange={e => update('amount', e.target.value)}
                 placeholder="1.500,00"
                 aria-invalid={valorInvalido}
+                disabled={readOnly}
               />
               {valorInvalido
                 ? <span className={styles.mError}>Informe um valor válido, ex: 1.500,00.</span>
@@ -199,6 +204,7 @@ function VencimentoModal({
               value={form.description}
               onChange={e => update('description', e.target.value)}
               placeholder="Ex: 2ª parcela dos honorários contratuais"
+              disabled={readOnly}
             />
           </div>
 
@@ -226,10 +232,16 @@ function VencimentoModal({
               )
             )}
             <div className={styles.footerRight}>
-              <button type="button" className={styles.btnGhost} onClick={onCancel}>Cancelar</button>
-              <button type="submit" className={styles.btnPrimary} disabled={!valid || saving}>
-                {saving ? 'Salvando...' : 'Salvar'}
-              </button>
+              {readOnly ? (
+                <button type="button" className={styles.btnGhost} onClick={onCancel}>Fechar</button>
+              ) : (
+                <>
+                  <button type="button" className={styles.btnGhost} onClick={onCancel}>Cancelar</button>
+                  <button type="submit" className={styles.btnPrimary} disabled={!valid || saving}>
+                    {saving ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </form>
@@ -246,7 +258,7 @@ interface DaySheetProps {
   todayYMD: string;
   onClose: () => void;
   onEdit: (p: Payment) => void;
-  onNew: (date: string) => void;
+  onNew?: (date: string) => void;
 }
 
 function DaySheet({ date, payments, clientName, todayYMD, onClose, onEdit, onNew }: DaySheetProps) {
@@ -277,9 +289,11 @@ function DaySheet({ date, payments, clientName, todayYMD, onClose, onEdit, onNew
             );
           })}
         </div>
-        <button className={styles.daySheetAdd} onClick={() => onNew(date)}>
-          <Plus size={16} /> Novo vencimento neste dia
-        </button>
+        {onNew && (
+          <button className={styles.daySheetAdd} onClick={() => onNew(date)}>
+            <Plus size={16} /> Novo vencimento neste dia
+          </button>
+        )}
       </div>
     </div>
   );
@@ -309,6 +323,7 @@ type ModalState =
 export default function Pagamentos() {
   const today = useMemo(() => new Date(), []);
   const todayYMD = localYMD(today);
+  const isAdmin = getSessionClaims()?.role === 'ADMIN';
 
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -335,8 +350,12 @@ export default function Pagamentos() {
       ]);
       setPayments(paymentList);
       setClients(clientRes.data);
-    } catch {
-      setPageError('Não foi possível carregar os pagamentos deste mês.');
+    } catch (e) {
+      setPageError(
+        e instanceof ApiError && e.status === 403
+          ? 'Você não tem permissão para visualizar vencimentos.'
+          : 'Não foi possível carregar os pagamentos deste mês.',
+      );
     } finally {
       setLoading(false);
     }
@@ -431,6 +450,7 @@ export default function Pagamentos() {
       setDaySheet({ date: ymd, payments: doDia });
       return;
     }
+    if (!isAdmin) return;
     setFormError('');
     setModal({ kind: 'novo', date: ymd });
   }
@@ -514,12 +534,14 @@ export default function Pagamentos() {
       </button>
     </div>
     <button className={styles.btnSecondary} onClick={irParaHoje}>Hoje</button>
-    <button
-      className={styles.btnPrimary}
-      onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
-    >
-      <Plus size={16} /> Novo Vencimento
-    </button>
+    {isAdmin && (
+      <button
+        className={styles.btnPrimary}
+        onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
+      >
+        <Plus size={16} /> Novo Vencimento
+      </button>
+    )}
   </div>
 </div>
 
@@ -608,12 +630,14 @@ export default function Pagamentos() {
               ? 'Cadastre o primeiro vencimento de um cliente para ele aparecer no calendário.'
               : 'Nenhum pagamento com essa situação em ' + MESES[month].toLowerCase() + '.'}
           </p>
-          <button
-            className={styles.btnPrimary}
-            onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
-          >
-            <Plus size={16} /> Novo Vencimento
-          </button>
+          {isAdmin && (
+            <button
+              className={styles.btnPrimary}
+              onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
+            >
+              <Plus size={16} /> Novo Vencimento
+            </button>
+          )}
         </div>
       )}
 
@@ -642,16 +666,27 @@ export default function Pagamentos() {
       )}
 
       {modal?.kind === 'editar' && (
-        <VencimentoModal
-          titulo="Editar Vencimento"
-          initial={paymentToForm(modal.payment)}
-          clients={clients}
-          saving={saving}
-          error={formError}
-          onCancel={() => setModal(null)}
-          onSave={form => void handleSave(form)}
-          onDelete={() => void handleDelete()}
-        />
+        isAdmin ? (
+          <VencimentoModal
+            titulo="Editar Vencimento"
+            initial={paymentToForm(modal.payment)}
+            clients={clients}
+            saving={saving}
+            error={formError}
+            onCancel={() => setModal(null)}
+            onSave={form => void handleSave(form)}
+            onDelete={() => void handleDelete()}
+          />
+        ) : (
+          <VencimentoModal
+            titulo="Visualizar Vencimento"
+            initial={paymentToForm(modal.payment)}
+            clients={clients}
+            saving={false}
+            error=""
+            onCancel={() => setModal(null)}
+          />
+        )
       )}
 
       {daySheet && (
@@ -662,7 +697,7 @@ export default function Pagamentos() {
           todayYMD={todayYMD}
           onClose={() => setDaySheet(null)}
           onEdit={p => { setDaySheet(null); setFormError(''); setModal({ kind: 'editar', payment: p }); }}
-          onNew={date => { setDaySheet(null); setFormError(''); setModal({ kind: 'novo', date }); }}
+          onNew={isAdmin ? date => { setDaySheet(null); setFormError(''); setModal({ kind: 'novo', date }); } : undefined}
         />
       )}
     </div>
