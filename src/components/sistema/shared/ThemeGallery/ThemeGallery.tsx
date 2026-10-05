@@ -85,31 +85,12 @@ export default function ThemeGallery({
   // Cota dinâmica fornecida pelo backend
   const [quota, setQuota] = useState<ThemeQuota | null>(null);
 
-  const fetchQuota = useCallback(async () => {
-    try {
-      const q = await getThemeQuota();
-      setQuota(q);
-    } catch {
-      // fallback silencioso
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchQuota();
-    }
-  }, [isOpen, fetchQuota, themes]);
-
-  const customCount = quota ? quota.custom_count : themes.filter(t => !t.is_predefined).length;
-  const maxCustom = quota?.max_custom ?? 6;
-  const maxTotal = quota?.max_total ?? 10;
-  const isLimitReached = quota
-    ? quota.is_limit_reached
-    : customCount >= maxCustom || themes.length >= maxTotal;
+  // Seleção de tema dentro do modal
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
 
   function isThemeActive(theme: LandingPageTheme) {
-    if (activeThemeId !== undefined) {
-      return activeThemeId !== null && theme.id === activeThemeId;
+    if (activeThemeId !== undefined && activeThemeId !== null) {
+      return theme.id === activeThemeId;
     }
     return (
       theme.color_bg_primary.toLowerCase() === (currentLandingColors.colorBgPrimary || '').toLowerCase() &&
@@ -126,6 +107,36 @@ export default function ThemeGallery({
       theme.color_link_secondary.toLowerCase() === (currentLandingColors.colorLinkSecondary || '').toLowerCase()
     );
   }
+
+  const fetchQuota = useCallback(async () => {
+    try {
+      const q = await getThemeQuota();
+      setQuota(q);
+    } catch {
+      // fallback silencioso
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchQuota();
+      if (activeThemeId) {
+        setSelectedThemeId(activeThemeId);
+      } else {
+        const active = themes.find(t => isThemeActive(t));
+        setSelectedThemeId(active ? active.id : (themes[0]?.id ?? null));
+      }
+    }
+  }, [isOpen, activeThemeId, themes, fetchQuota]);
+
+  const selectedTheme = themes.find(t => t.id === selectedThemeId) || null;
+
+  const customCount = quota ? quota.custom_count : themes.filter(t => !t.is_predefined).length;
+  const maxCustom = quota?.max_custom ?? 6;
+  const maxTotal = quota?.max_total ?? 10;
+  const isLimitReached = quota
+    ? quota.is_limit_reached
+    : customCount >= maxCustom || themes.length >= maxTotal;
 
   useEffect(() => {
     if (!isOpen) return;
@@ -313,11 +324,11 @@ export default function ThemeGallery({
             <div>
               <h3 className={styles.title}>Biblioteca de Temas</h3>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-                Clique em um tema para selecioná-lo e carregar suas cores no formulário da Landing Page.
+                Selecione um tema abaixo e clique em "Aplicar tema selecionado" para carregar suas cores no formulário da Landing Page.
               </p>
             </div>
             <span className={`${styles.quotaBadge} ${isLimitReached ? styles.quotaBadgeFull : ''}`}>
-              {customCount}/{maxCustom} personalizados (Total: {themes.length}/{maxTotal})
+              {customCount}/{maxCustom} temas personalizáveis
             </span>
           </div>
 
@@ -337,118 +348,143 @@ export default function ThemeGallery({
           </button>
         </div>
 
-        <div className={styles.grid}>
-          {themes.map(theme => {
-            const active = isThemeActive(theme);
-            return (
-              <div
-                key={theme.id}
-                className={`${styles.card} ${active ? styles.cardActive : ''}`}
-                onClick={() => onSelectTheme(theme)}
-                title="Clique para selecionar este tema na Landing Page"
-              >
-                <div className={styles.cardHeader}>
-                  <div>
-                    <h4 className={styles.cardName}>{theme.name}</h4>
-                    {theme.description && <p className={styles.cardDesc}>{theme.description}</p>}
+        {/* Área rolável com a grade de temas */}
+        <div className={styles.modalScrollArea}>
+          <div className={styles.grid}>
+            {themes.map(theme => {
+              const active = isThemeActive(theme);
+              const isSelected = selectedThemeId === theme.id;
+              return (
+                <div
+                  key={theme.id}
+                  className={`${styles.card} ${isSelected ? styles.cardSelected : ''} ${active ? styles.cardActive : ''}`}
+                  onClick={() => setSelectedThemeId(theme.id)}
+                  title="Clique para selecionar este tema"
+                >
+                  <div className={styles.cardHeader}>
+                    <div>
+                      <h4 className={styles.cardName}>{theme.name}</h4>
+                      {theme.description && <p className={styles.cardDesc}>{theme.description}</p>}
+                    </div>
+                    <div className={styles.badgeGroup}>
+                      {active && (
+                        <span className={styles.badgeActive} title="Tema atualmente aplicado na Landing Page">
+                          <Check size={11} /> Em Uso
+                        </span>
+                      )}
+                      <span
+                        className={`${styles.typeBadge} ${
+                          theme.is_predefined ? styles.badgePredefined : styles.badgeCustom
+                        }`}
+                      >
+                        {theme.is_predefined ? 'Padrão' : 'Personalizado'}
+                      </span>
+                    </div>
                   </div>
-                  <div className={styles.badgeGroup}>
-                    <span
-                      className={`${styles.typeBadge} ${
-                        theme.is_predefined ? styles.badgePredefined : styles.badgeCustom
-                      }`}
-                    >
-                      {theme.is_predefined ? 'Padrão' : 'Personalizado'}
-                    </span>
+
+                  {/* Ribbon contínuo de 12 cores */}
+                  <div className={styles.swatchStrip} title="Paleta completa de 12 cores">
+                    <span style={{ backgroundColor: theme.color_bg_primary }} title="Background 1" />
+                    <span style={{ backgroundColor: theme.color_bg_secondary }} title="Background 2" />
+                    <span style={{ backgroundColor: theme.color_bg_sobre }} title="Background Sobre" />
+                    <span style={{ backgroundColor: theme.color_buttons }} title="Botões" />
+                    <span style={{ backgroundColor: theme.color_buttons_hover }} title="Hover Botões" />
+                    <span style={{ backgroundColor: theme.color_buttons_text }} title="Texto Botões" />
+                    <span style={{ backgroundColor: theme.color_title_primary }} title="Títulos 1" />
+                    <span style={{ backgroundColor: theme.color_title_secondary }} title="Títulos 2" />
+                    <span style={{ backgroundColor: theme.color_text_primary }} title="Textos 1" />
+                    <span style={{ backgroundColor: theme.color_text_secondary }} title="Textos 2" />
+                    <span style={{ backgroundColor: theme.color_link_primary }} title="Links 1" />
+                    <span style={{ backgroundColor: theme.color_link_secondary }} title="Links 2" />
                   </div>
-                </div>
 
-                {/* Ribbon contínuo de 12 cores */}
-                <div className={styles.swatchStrip} title="Paleta completa de 12 cores">
-                  <span style={{ backgroundColor: theme.color_bg_primary }} title="Background 1" />
-                  <span style={{ backgroundColor: theme.color_bg_secondary }} title="Background 2" />
-                  <span style={{ backgroundColor: theme.color_bg_sobre }} title="Background Sobre" />
-                  <span style={{ backgroundColor: theme.color_buttons }} title="Botões" />
-                  <span style={{ backgroundColor: theme.color_buttons_hover }} title="Hover Botões" />
-                  <span style={{ backgroundColor: theme.color_buttons_text }} title="Texto Botões" />
-                  <span style={{ backgroundColor: theme.color_title_primary }} title="Títulos 1" />
-                  <span style={{ backgroundColor: theme.color_title_secondary }} title="Títulos 2" />
-                  <span style={{ backgroundColor: theme.color_text_primary }} title="Textos 1" />
-                  <span style={{ backgroundColor: theme.color_text_secondary }} title="Textos 2" />
-                  <span style={{ backgroundColor: theme.color_link_primary }} title="Links 1" />
-                  <span style={{ backgroundColor: theme.color_link_secondary }} title="Links 2" />
-                </div>
+                  {/* Card Actions: Feedback de seleção + utilitários */}
+                  <div className={styles.cardActions}>
+                    <div className={styles.cardSelectFeedback}>
+                      {isSelected ? (
+                        <span className={styles.selectedTag}>
+                          <Check size={13} /> Selecionado
+                        </span>
+                      ) : (
+                        <span className={styles.clickToSelectHint}>
+                          Clique para selecionar
+                        </span>
+                      )}
+                    </div>
 
-                {/* Card Actions */}
-                <div className={styles.cardActions}>
-                  {active ? (
-                    <button
-                      type="button"
-                      className={styles.btnSelected}
-                      disabled
-                      title="Este tema já é o que está ativo no formulário"
-                    >
-                      <Check size={14} />
-                      Tema Atual
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={styles.btnSelectTheme}
-                      title="Carrega as cores deste tema no formulário da Landing Page"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectTheme(theme);
-                      }}
-                    >
-                      <Check size={14} />
-                      Selecionar Tema
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    className={styles.btnIcon}
-                    title="Duplicar tema (copiar cores e definir novo nome/descrição)"
-                    disabled={isLimitReached}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDuplicateModal(theme);
-                    }}
-                  >
-                    <Copy size={14} />
-                  </button>
-
-                  {!theme.is_predefined && (
-                    <>
+                    <div className={styles.cardUtilButtons}>
                       <button
                         type="button"
                         className={styles.btnIcon}
-                        title="Editar informações e paleta deste tema"
+                        title="Duplicar tema (copiar cores e definir novo nome/descrição)"
+                        disabled={isLimitReached}
                         onClick={(e) => {
                           e.stopPropagation();
-                          openEditModal(theme);
+                          openDuplicateModal(theme);
                         }}
                       >
-                        <Pencil size={14} />
+                        <Copy size={14} />
                       </button>
-                      <button
-                        type="button"
-                        className={`${styles.btnIcon} ${styles.btnIconDanger}`}
-                        title="Excluir tema personalizado"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setThemeToDelete(theme);
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
-                  )}
+
+                      {!theme.is_predefined && (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.btnIcon}
+                            title="Editar informações e paleta deste tema"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(theme);
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.btnIcon} ${styles.btnIconDanger}`}
+                            title="Excluir tema personalizado"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setThemeToDelete(theme);
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Rodapé fixo do modal com tema selecionado e ações */}
+        <div className={styles.galleryFooter}>
+          <div className={styles.footerActions}>
+            <button
+              type="button"
+              className={styles.btnFooterCancel}
+              onClick={onClose}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={styles.btnFooterApply}
+              disabled={!selectedTheme}
+              onClick={() => {
+                if (selectedTheme) {
+                  onSelectTheme(selectedTheme);
+                  onClose();
+                }
+              }}
+            >
+              <Check size={16} />
+              Aplicar tema selecionado
+            </button>
+          </div>
         </div>
 
       {/* Modal: Duplicar / Editar / Salvar Tema (Apenas Nome e Descrição) */}

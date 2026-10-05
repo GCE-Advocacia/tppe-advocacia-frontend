@@ -272,25 +272,25 @@ export default function LandingPageConfig() {
 
   // Tema de referência original (baseTheme): o último tema deliberadamente selecionado ou associado
   const baseTheme = useMemo(() => {
-    if (baseThemeId) {
-      const found = themes.find(t => t.id === baseThemeId);
-      if (found) return found;
-    }
     if (data.themeId) {
       const found = themes.find(t => t.id === data.themeId);
+      if (found) return found;
+    }
+    if (baseThemeId) {
+      const found = themes.find(t => t.id === baseThemeId);
       if (found) return found;
     }
     const matched = themes.find(t => isColorMatching(t, data));
     if (matched) return matched;
     return themes.find(t => t.is_predefined) || themes[0] || null;
-  }, [baseThemeId, themes, data, isColorMatching]);
+  }, [data.themeId, baseThemeId, themes, data, isColorMatching]);
 
-  // Inicializa baseThemeId quando os temas estiverem disponíveis
+  // Inicializa baseThemeId apenas quando as configurações e temas estiverem disponíveis
   useEffect(() => {
-    if (!baseThemeId && baseTheme) {
+    if (!loading && !baseThemeId && baseTheme) {
       setBaseThemeId(baseTheme.id);
     }
-  }, [baseThemeId, baseTheme]);
+  }, [loading, baseThemeId, baseTheme]);
 
   // Reconcilia themeId salvo e local caso o banco de dados possua theme_id nulo (legado/inicial),
   // mas as cores salvas coincidam 100% com um tema cadastrado (ex: Clássico Navy pré-definido)
@@ -700,8 +700,8 @@ export default function LandingPageConfig() {
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
-          <div className={styles.themeSelectorBar} style={{ alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div className={styles.themeSelectorBar}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)' }}>
                 Tema Base:
               </span>
@@ -741,7 +741,7 @@ export default function LandingPageConfig() {
                 title="Abrir a galeria de temas para explorar e selecionar uma paleta"
               >
                 <BookOpen size={15} />
-                Explorar Biblioteca de Temas...
+                Biblioteca de Temas
               </button>
             </div>
           </div>
@@ -782,11 +782,6 @@ export default function LandingPageConfig() {
                 Salvar como uma cópia separada
               </button>
             </div>
-          )}
-          {baseTheme?.is_predefined && isBaseThemeModified && (
-            <p style={{ margin: '10px 0 20px 0', fontSize: '0.82rem', color: '#1e40af', background: '#eff6ff', padding: '8px 14px', borderRadius: 6, border: '1px solid #dbeafe' }}>
-              ℹ️ Você personalizou cores do tema de fábrica <strong>"{baseTheme.name}"</strong>. Ao clicar em <em>Salvar alterações</em> na barra inferior, você definirá o nome do seu novo tema personalizado para aplicá-lo.
-            </p>
           )}
 
 
@@ -959,7 +954,7 @@ export default function LandingPageConfig() {
         onRefreshThemes={fetchThemes}
         onSelectTheme={handleSelectFromLibrary}
         currentLandingColors={data}
-        activeThemeId={matchedTheme?.id ?? null}
+        activeThemeId={data.themeId ?? matchedTheme?.id ?? baseTheme?.id ?? null}
       />
 
       {/* Modal: Salvar Cores Atuais na Biblioteca */}

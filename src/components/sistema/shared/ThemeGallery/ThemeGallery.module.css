@@ -11,7 +11,9 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding-right: 44px;
+  padding: 24px 60px 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
 }
 
 .titleArea {
@@ -69,6 +71,12 @@
   cursor: not-allowed;
 }
 
+.modalScrollArea {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -77,7 +85,7 @@
 
 .card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -91,15 +99,19 @@
 }
 
 .card:hover {
-  border-color: var(--navy, #232C43);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.09);
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
 .cardActive {
-  border: 2px solid var(--navy, #232C43);
-  box-shadow: 0 4px 14px rgba(35, 44, 67, 0.12);
-  background: #f8faff;
+  background: #fbfdff;
+}
+
+.cardSelected {
+  border-color: var(--navy, #232C43);
+  box-shadow: 0 0 0 3px rgba(35, 44, 67, 0.16), 0 4px 14px rgba(35, 44, 67, 0.12);
+  background: #f8fafc;
 }
 
 .cardHeader {
@@ -136,6 +148,9 @@
 }
 
 .badgeActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -182,76 +197,43 @@
   height: 100%;
 }
 
-.swatchBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border-radius: 6px;
-  border: 1px solid #f1f5f9;
-}
-
-.swatchCircle {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
-}
-
-.swatchLabel {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  margin-left: auto;
-  font-weight: 500;
-}
-
 .cardActions {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.btnSelectTheme {
-  flex: 1;
+.cardSelectFeedback {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: var(--navy, #232C43);
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  padding: 7px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-body);
 }
 
-.btnSelectTheme:hover {
-  filter: brightness(1.15);
-}
-
-.btnSelected {
-  flex: 1;
-  display: flex;
+.selectedTag {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  border-radius: 6px;
-  padding: 7px 12px;
-  font-size: 0.8rem;
+  gap: 5px;
+  font-size: 0.76rem;
   font-weight: 700;
-  cursor: default;
-  font-family: var(--font-body);
+  color: var(--navy, #232C43);
+  background: #e2e8f0;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.clickToSelectHint {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.cardUtilButtons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btnIcon {
@@ -296,15 +278,14 @@
   position: relative;
   background: #ffffff;
   border-radius: 14px;
-  padding: 24px;
+  padding: 0;
   width: 95%;
   max-width: 1040px;
-  max-height: 88vh;
-  overflow-y: auto;
+  max-height: 90vh;
+  overflow: hidden;
   box-shadow: 0 25px 35px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 18px;
 }
 
 .closeModalBtn {
@@ -329,6 +310,101 @@
   background: #f1f5f9;
   color: #0f172a;
   border-color: #cbd5e1;
+}
+
+.galleryFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.footerInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footerLabel {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.footerSelectedName {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--navy, #232C43);
+}
+
+.footerActiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  color: #047857;
+  font-weight: 600;
+  background: #ecfdf5;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #a7f3d0;
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btnFooterCancel {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+
+.btnFooterCancel:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.btnFooterApply {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--navy, #232C43);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+
+.btnFooterApply:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btnFooterApply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Submodais (Editor e Exclusão) */
