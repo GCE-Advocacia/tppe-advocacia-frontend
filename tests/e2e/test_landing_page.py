@@ -648,3 +648,51 @@ class TestPreviewArtigo:
         ))
         pause()
         assert "Criar Artigo" in logged_in.page_source
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestTemasLandingPage:
+    """US-09 — Selecionar temas pré-definidos e gerenciar temas personalizados"""
+
+    def test_secao_temas_e_regua_visiveis(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Tema base')]")
+        ))
+        pause()
+        assert "Tema base" in logged_in.page_source
+        assert logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Explorar Biblioteca de Temas')]"
+        ).is_displayed()
+        assert logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Salvar como Novo Tema')]"
+        ).is_displayed()
+
+    def test_abrir_modal_biblioteca_de_temas(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Explorar Biblioteca de Temas')]")
+        ))
+        pause()
+        logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Explorar Biblioteca de Temas')]"
+        ).click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Biblioteca de Temas')]")
+        ))
+        pause()
+        assert "Biblioteca de Temas" in logged_in.page_source
+        assert "Padrão" in logged_in.page_source
+
+    def test_botao_restaurar_desabilitado_quando_inalterado(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(.,'Restaurar Padrão do Tema')]")
+        ))
+        pause()
+        btn_restaurar = logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Restaurar Padrão do Tema')]"
+        )
+        assert btn_restaurar.get_attribute("disabled") is not None
+
