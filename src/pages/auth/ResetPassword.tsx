@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { ApiError } from '../../services/api';
 import { confirmPasswordReset } from '../../services/auth';
+import BrandLogo from '../../components/BrandLogo/BrandLogo';
 import styles from './Auth.module.css';
 
 function InputField({
@@ -62,7 +63,7 @@ export default function ResetPassword() {
     return (
       <div className={styles.bg}>
         <div className={styles.logo}>
-          <img src="/logo-dark.png" alt="Vitor França" className={styles.logoImg} />
+          <BrandLogo scope="system" background="light" className={styles.logoImg} />
         </div>
         <div className={styles.card}>
           <div className={styles.cardBar} />
@@ -121,7 +122,7 @@ export default function ResetPassword() {
   return (
     <div className={styles.bg}>
       <div className={styles.logo}>
-        <img src="/logo-dark.png" alt="Vitor França" className={styles.logoImg} />
+        <BrandLogo scope="system" background="light" className={styles.logoImg} />
       </div>
       <div className={styles.card}>
         <div className={styles.cardBar} />
