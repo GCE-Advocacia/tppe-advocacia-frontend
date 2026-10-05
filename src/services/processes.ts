@@ -1,4 +1,5 @@
 import {
+  apiDownload,
   apiRequest,
   PaginatedResponse,
   SuccessResponse,
@@ -201,6 +202,61 @@ export async function updateProcessNote(
     },
   );
   return response.data;
+}
+
+export type ProcessDocument = {
+  id: number;
+  process_id: number;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by: number | null;
+  uploaded_by_name: string | null;
+  created_at: string;
+};
+
+export const DOCUMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png,.docx';
+export const DOCUMENT_MAX_SIZE_MB = 20;
+
+export async function listProcessDocuments(
+  processId: number,
+): Promise<PaginatedResponse<ProcessDocument>> {
+  return apiRequest(`/processes/${processId}/documents?limit=100`);
+}
+
+export async function uploadProcessDocument(
+  processId: number,
+  file: File,
+): Promise<ProcessDocument> {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await apiRequest<SuccessResponse<ProcessDocument>>(
+    `/processes/${processId}/documents`,
+    { method: 'POST', body: form },
+  );
+  return response.data;
+}
+
+export async function downloadProcessDocument(
+  processId: number,
+  doc: ProcessDocument,
+): Promise<void> {
+  const blob = await apiDownload(`/processes/${processId}/documents/${doc.id}/download`);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = doc.original_name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function deleteProcessDocument(
+  processId: number,
+  documentId: number,
+): Promise<void> {
+  await apiRequest<void>(`/processes/${processId}/documents/${documentId}`, {
+    method: 'DELETE',
+  });
 }
 
 export type BulkSyncResult = {
