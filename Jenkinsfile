@@ -35,7 +35,7 @@ pipeline {
                 
                 # Injeta a URL oficial da sua API aqui!
                 docker build \
-                  --build-arg VITE_API_URL="http://api.cryptoskate.org" \
+                  --build-arg VITE_API_URL="https://api.cryptoskate.org" \
                   -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
                   -t $REGISTRY/$IMAGE_NAME:homolog-latest .
                 
