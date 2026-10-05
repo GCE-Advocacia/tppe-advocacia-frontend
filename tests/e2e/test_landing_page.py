@@ -657,15 +657,12 @@ class TestTemasLandingPage:
     def test_secao_temas_e_regua_visiveis(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//*[contains(text(),'Tema base')]")
+            (By.XPATH, "//*[contains(text(),'Tema Base') or contains(text(),'Tema base')]")
         ))
         pause()
-        assert "Tema base" in logged_in.page_source
+        assert "Tema Base" in logged_in.page_source or "Tema base" in logged_in.page_source
         assert logged_in.find_element(
             By.XPATH, "//button[contains(.,'Explorar Biblioteca de Temas')]"
-        ).is_displayed()
-        assert logged_in.find_element(
-            By.XPATH, "//button[contains(.,'Salvar como Novo Tema')]"
         ).is_displayed()
 
     def test_abrir_modal_biblioteca_de_temas(self, logged_in, wait):
@@ -685,14 +682,11 @@ class TestTemasLandingPage:
         assert "Biblioteca de Temas" in logged_in.page_source
         assert "Padrão" in logged_in.page_source
 
-    def test_botao_restaurar_desabilitado_quando_inalterado(self, logged_in, wait):
+    def test_barra_inferior_descartar_oculta_quando_inalterado(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//button[contains(.,'Restaurar Padrão do Tema')]")
+            (By.XPATH, "//*[contains(text(),'Tema Base') or contains(text(),'Tema base')]")
         ))
         pause()
-        btn_restaurar = logged_in.find_element(
-            By.XPATH, "//button[contains(.,'Restaurar Padrão do Tema')]"
-        )
-        assert btn_restaurar.get_attribute("disabled") is not None
+        assert not _bottombar_visivel(logged_in)
 

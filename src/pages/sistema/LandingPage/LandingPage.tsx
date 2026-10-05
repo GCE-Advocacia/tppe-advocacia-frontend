@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
-  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info, RotateCcw,
+  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
 import {
@@ -9,7 +9,10 @@ import {
   updateOfficeConfig,
   uploadMedia,
   getThemes,
-  createTheme
+  createTheme,
+  updateTheme,
+  getThemeQuota,
+  type ThemeQuota,
 } from '../../../services/officeConfigService';
 import type { LandingPageData, Diferencial, AreaAtuacao, LandingPageTheme } from './types';
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
@@ -221,25 +224,8 @@ export default function LandingPageConfig() {
     }
   };
 
-  const save = async () => {
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const updated = await updateOfficeConfig(data);
-      setSaved(updated);
-      setData(updated);
-      if (updated.themeId) {
-        setSelectedThemeId(updated.themeId);
-        setBaseThemeId(updated.themeId);
-      }
-    } catch (err) {
-      setSaveError(
-        err instanceof ApiError ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+  const [themeQuota, setThemeQuota] = useState<ThemeQuota | null>(null);
+  const [isForkingPredefined, setIsForkingPredefined] = useState(false);
 
   // ── Gestão de Temas e Cores (US09 v2.1) ──
   const [showThemeGalleryModal, setShowThemeGalleryModal] = useState(false);
@@ -252,8 +238,9 @@ export default function LandingPageConfig() {
 
   const fetchThemes = useCallback(async () => {
     try {
-      const list = await getThemes();
+      const [list, quota] = await Promise.all([getThemes(), getThemeQuota()]);
       setThemes(list);
+      setThemeQuota(quota);
     } catch {
       // falha silenciosa
     }
@@ -319,15 +306,26 @@ export default function LandingPageConfig() {
     }
   }, [themes, saved, isColorMatching]);
 
+  // Verifica se as cores em edição divergiram do baseTheme
+  const isBaseThemeModified = useMemo(() => {
+    if (!baseTheme) return false;
+    return !isColorMatching(baseTheme, data);
+  }, [baseTheme, data, isColorMatching]);
+
   const updateColor = useCallback((key: keyof LandingPageData, value: string) => {
     setData(d => {
       const next: LandingPageData = { ...d, [key]: value };
       if (key === 'colorBgPrimary') {
         next.color = value;
       }
-      if (baseTheme && isColorMatching(baseTheme, next)) {
+      if (baseTheme && !baseTheme.is_predefined) {
+        // Se estiver editando um tema personalizado, mantém a referência ao tema para atualizá-lo ao salvar
+        next.themeId = baseTheme.id;
+      } else if (baseTheme && isColorMatching(baseTheme, next)) {
+        // Se for pré-definido e as cores ainda coincidirem 100%, mantém o ID do tema de fábrica
         next.themeId = baseTheme.id;
       } else {
+        // Se for pré-definido e divergiu, desvincula temporariamente (exige novo tema ao salvar)
         next.themeId = null;
       }
       return next;
@@ -385,6 +383,75 @@ export default function LandingPageConfig() {
     setShowThemeGalleryModal(false);
   }, [handleThemeSelected]);
 
+  const save = async () => {
+    setSaveError(null);
+
+    // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
+    // Como a Landing Page exige pertencer a um tema e pré-definidos são imutáveis,
+    // interceptamos para salvar como novo tema personalizado.
+    if ((!baseTheme || baseTheme.is_predefined || data.themeId === null) && isBaseThemeModified) {
+      const maxCustom = themeQuota?.max_custom ?? 6;
+      const customCount = themeQuota ? themeQuota.custom_count : themes.filter(t => !t.is_predefined).length;
+      if (customCount >= maxCustom) {
+        setSaveError(
+          `Limite máximo de ${maxCustom} temas personalizados atingido. Para salvar essas alterações, exclua um tema existente na biblioteca.`
+        );
+        return;
+      }
+      setIsForkingPredefined(true);
+      setNewThemeName(baseTheme ? `${baseTheme.name} (Personalizado)` : '');
+      setNewThemeDesc('');
+      setSaveNewError(null);
+      setShowSaveCurrentModal(true);
+      return;
+    }
+
+    // CENÁRIO 1: Tema personalizado em edição OU alteração apenas de outros campos (texto, imagens, etc.)
+    setSaving(true);
+    try {
+      // Se for um tema personalizado com cores modificadas, atualiza o modelo do tema no banco primeiro
+      if (baseTheme && !baseTheme.is_predefined && isBaseThemeModified) {
+        await updateTheme(baseTheme.id, {
+          name: baseTheme.name,
+          description: baseTheme.description,
+          color: data.color || '#232C43',
+          color_bg_primary: data.colorBgPrimary || '#232C43',
+          color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
+          color_bg_sobre: data.colorBgSobre || '#FFFFFF',
+          color_buttons: data.colorButtons || '#661C16',
+          color_buttons_hover: data.colorButtonsHover || '#A52020',
+          color_buttons_text: data.colorButtonsText || '#FFFFFF',
+          color_title_primary: data.colorTitlePrimary || '#FFFFFF',
+          color_title_secondary: data.colorTitleSecondary || '#232C43',
+          color_text_primary: data.colorTextPrimary || '#FFFFFF',
+          color_text_secondary: data.colorTextSecondary || '#6B7280',
+          color_link_primary: data.colorLinkPrimary || '#FFFFFF',
+          color_link_secondary: data.colorLinkSecondary || '#661C16',
+        });
+      }
+
+      // Persiste a Landing Page em office_config mantendo o theme_id ativo
+      const payloadData: LandingPageData = {
+        ...data,
+        themeId: baseTheme ? baseTheme.id : data.themeId,
+      };
+      const updated = await updateOfficeConfig(payloadData);
+      setSaved(updated);
+      setData(updated);
+      if (updated.themeId) {
+        setSelectedThemeId(updated.themeId);
+        setBaseThemeId(updated.themeId);
+      }
+      await fetchThemes();
+    } catch (err) {
+      setSaveError(
+        err instanceof ApiError ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveCurrentAsTheme = async () => {
     if (!newThemeName.trim()) {
       setSaveNewError('Informe um nome para o tema.');
@@ -393,7 +460,7 @@ export default function LandingPageConfig() {
     setSavingNewTheme(true);
     setSaveNewError(null);
     try {
-      await createTheme({
+      const created = await createTheme({
         name: newThemeName.trim(),
         description: newThemeDesc.trim() || null,
         color: data.color || '#232C43',
@@ -410,8 +477,17 @@ export default function LandingPageConfig() {
         color_link_primary: data.colorLinkPrimary || '#FFFFFF',
         color_link_secondary: data.colorLinkSecondary || '#661C16',
       });
+
+      // Vincula o novo tema à Landing Page e persiste em office_config
+      const updated = await updateOfficeConfig({ ...data, themeId: created.id });
+      setSaved(updated);
+      setData(updated);
+      setBaseThemeId(created.id);
+      setSelectedThemeId(created.id);
+
       await fetchThemes();
       setShowSaveCurrentModal(false);
+      setIsForkingPredefined(false);
       setNewThemeName('');
       setNewThemeDesc('');
     } catch (err) {
@@ -421,34 +497,7 @@ export default function LandingPageConfig() {
     }
   };
 
-  // Verifica se as cores em edição divergiram do baseTheme
-  const isBaseThemeModified = useMemo(() => {
-    if (!baseTheme) return false;
-    return !isColorMatching(baseTheme, data);
-  }, [baseTheme, data, isColorMatching]);
 
-  // Restaura as cores salvas do baseTheme (seja pré-definido ou personalizado)
-  const restoreBaseThemeColors = useCallback(() => {
-    if (!baseTheme) return;
-    setSelectedThemeId(baseTheme.id);
-    setData(d => ({
-      ...d,
-      themeId: baseTheme.id,
-      color: baseTheme.color,
-      colorBgPrimary: baseTheme.color_bg_primary,
-      colorBgSecondary: baseTheme.color_bg_secondary,
-      colorBgSobre: baseTheme.color_bg_sobre,
-      colorButtons: baseTheme.color_buttons,
-      colorButtonsHover: baseTheme.color_buttons_hover,
-      colorButtonsText: baseTheme.color_buttons_text,
-      colorTitlePrimary: baseTheme.color_title_primary,
-      colorTitleSecondary: baseTheme.color_title_secondary,
-      colorTextPrimary: baseTheme.color_text_primary,
-      colorTextSecondary: baseTheme.color_text_secondary,
-      colorLinkPrimary: baseTheme.color_link_primary,
-      colorLinkSecondary: baseTheme.color_link_secondary,
-    }));
-  }, [baseTheme]);
 
   // Diferencial inline edit
   const [editingDif, setEditingDif] = useState<number | null>(null);
@@ -651,8 +700,8 @@ export default function LandingPageConfig() {
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
-          <div className={styles.themeSelectorBar} style={{alignItems: 'center'}}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div className={styles.themeSelectorBar} style={{ alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy)' }}>
                 Tema Base:
               </span>
@@ -660,10 +709,26 @@ export default function LandingPageConfig() {
                 <span className={styles.themeActiveBadge}>
                   <Palette size={14} />
                   {matchedTheme.name}
+                  {matchedTheme.is_predefined && (
+                    <span style={{ fontSize: '0.72rem', opacity: 0.8, marginLeft: 4 }}>• Pré-definido</span>
+                  )}
+                </span>
+              ) : baseTheme && !baseTheme.is_predefined ? (
+                <span
+                  className={styles.themeActiveBadge}
+                  style={{ background: '#fef3c7', color: '#92400e', borderColor: '#fde68a' }}
+                  title="Alterações pendentes. Ao clicar em 'Salvar alterações', este tema personalizado e a Landing Page serão atualizados juntos."
+                >
+                  <Palette size={14} />
+                  {baseTheme.name}
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, marginLeft: 4 }}>• em edição</span>
                 </span>
               ) : (
-                <span className={styles.themeCustomBadge}>
-                  (Combinação personalizada)
+                <span
+                  className={styles.themeCustomBadge}
+                  title="Cores modificadas a partir de tema de fábrica. Ao clicar em 'Salvar alterações', você criará um novo tema personalizado."
+                >
+                  {baseTheme ? `Baseado em: ${baseTheme.name} (modificado)` : '(Cores personalizadas)'}
                 </span>
               )}
             </div>
@@ -678,38 +743,52 @@ export default function LandingPageConfig() {
                 <BookOpen size={15} />
                 Explorar Biblioteca de Temas...
               </button>
+            </div>
+          </div>
 
+          {/* Dicas contextuais informando o que o botão de salvar fará */}
+          {baseTheme && !baseTheme.is_predefined && isBaseThemeModified && (
+            <div style={{ margin: '10px 0 20px 0', fontSize: '0.82rem', color: '#92400e', background: '#fffbeb', padding: '8px 14px', borderRadius: 6, border: '1px solid #fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+              <span>
+                ✏️ Você está editando o tema personalizado <strong>"{baseTheme.name}"</strong>. Ao clicar em <em>Salvar alterações</em>, o modelo e a Landing Page serão atualizados juntos.
+              </span>
               <button
                 type="button"
-                className={styles.btnSecondarySmall}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#b45309',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  padding: 0,
+                  fontFamily: 'inherit',
+                }}
                 onClick={() => {
-                  setNewThemeName('');
+                  const maxCustom = themeQuota?.max_custom ?? 6;
+                  const customCount = themeQuota ? themeQuota.custom_count : themes.filter(t => !t.is_predefined).length;
+                  if (customCount >= maxCustom) {
+                    setSaveError(`Limite máximo de ${maxCustom} temas personalizados atingido. Exclua um tema na biblioteca para liberar espaço.`);
+                    return;
+                  }
+                  setIsForkingPredefined(false);
+                  setNewThemeName(`${baseTheme.name} (Cópia)`);
                   setNewThemeDesc('');
                   setSaveNewError(null);
                   setShowSaveCurrentModal(true);
                 }}
-                title="Salvar esta combinação de cores como um novo tema na biblioteca"
               >
-                <Star size={13} />
-                Salvar como Novo Tema
-              </button>
-
-              <button
-                type="button"
-                className={styles.btnSecondarySmall}
-                onClick={restoreBaseThemeColors}
-                disabled={!isBaseThemeModified}
-                title={
-                  isBaseThemeModified
-                    ? `Restaurar as 12 cores para a versão salva de "${baseTheme?.name || 'tema base'}"`
-                    : 'As cores atuais já coincidem com a versão salva deste tema'
-                }
-              >
-                <RotateCcw size={13} />
-                Restaurar Padrão do Tema
+                Salvar como uma cópia separada
               </button>
             </div>
-          </div>
+          )}
+          {baseTheme?.is_predefined && isBaseThemeModified && (
+            <p style={{ margin: '10px 0 20px 0', fontSize: '0.82rem', color: '#1e40af', background: '#eff6ff', padding: '8px 14px', borderRadius: 6, border: '1px solid #dbeafe' }}>
+              ℹ️ Você personalizou cores do tema de fábrica <strong>"{baseTheme.name}"</strong>. Ao clicar em <em>Salvar alterações</em> na barra inferior, você definirá o nome do seu novo tema personalizado para aplicá-lo.
+            </p>
+          )}
+
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
@@ -885,14 +964,16 @@ export default function LandingPageConfig() {
 
       {/* Modal: Salvar Cores Atuais na Biblioteca */}
       {showSaveCurrentModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowSaveCurrentModal(false)}>
+        <div className={styles.modalOverlay} onClick={() => { setShowSaveCurrentModal(false); setIsForkingPredefined(false); }}>
           <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Salvar Tema na Biblioteca</h3>
+              <h3 className={styles.modalTitle}>
+                {isForkingPredefined ? 'Novo Tema Personalizado' : 'Salvar Tema na Biblioteca'}
+              </h3>
               <button
                 type="button"
                 className={styles.modalClose}
-                onClick={() => setShowSaveCurrentModal(false)}
+                onClick={() => { setShowSaveCurrentModal(false); setIsForkingPredefined(false); }}
               >
                 <X size={18} />
               </button>
@@ -900,7 +981,14 @@ export default function LandingPageConfig() {
 
             <div className={styles.modalBody}>
               <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado na sua biblioteca.
+                {isForkingPredefined ? (
+                  <>
+                    Você personalizou as cores a partir do tema de fábrica <strong>"{baseTheme?.name || 'pré-definido'}"</strong>.
+                    Informe um nome para criar o novo tema personalizado:
+                  </>
+                ) : (
+                  'As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado na sua biblioteca.'
+                )}
               </p>
 
               <div className={styles.palettePreviewMini}>
@@ -951,7 +1039,7 @@ export default function LandingPageConfig() {
               <button
                 type="button"
                 className={styles.btnCancel}
-                onClick={() => setShowSaveCurrentModal(false)}
+                onClick={() => { setShowSaveCurrentModal(false); setIsForkingPredefined(false); }}
                 disabled={savingNewTheme}
               >
                 Cancelar
@@ -970,7 +1058,7 @@ export default function LandingPageConfig() {
                 ) : (
                   <>
                     <Check size={14} />
-                    Salvar na Biblioteca
+                    {isForkingPredefined ? 'Salvar alterações' : 'Salvar na Biblioteca'}
                   </>
                 )}
               </button>
