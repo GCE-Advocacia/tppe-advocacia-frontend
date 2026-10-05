@@ -30,6 +30,19 @@ export interface OfficeConfigAPI {
   lawyer_image_position: string | null;
   differentials: { title: string; description: string }[];
   areas_of_practice: { title: string; description: string }[];
+  color: string | null;
+  color_bg_primary: string | null;
+  color_bg_secondary: string | null;
+  color_bg_sobre: string | null;
+  color_buttons: string | null;
+  color_buttons_hover: string | null;
+  color_buttons_text: string | null;
+  color_title_primary: string | null;
+  color_title_secondary: string | null;
+  color_text_primary: string | null;
+  color_text_secondary: string | null;
+  color_link_primary: string | null;
+  color_link_secondary: string | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
@@ -70,6 +83,19 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
       titulo: a.title,
       descricao: a.description,
     })),
+    color: api.color ?? '#232C43',
+    colorBgPrimary: api.color_bg_primary ?? '#232C43',
+    colorBgSecondary: api.color_bg_secondary ?? '#F5F3EF',
+    colorBgSobre: api.color_bg_sobre ?? '#FFFFFF',
+    colorButtons: api.color_buttons ?? '#661C16',
+    colorButtonsHover: api.color_buttons_hover ?? '#A52020',
+    colorButtonsText: api.color_buttons_text ?? '#FFFFFF',
+    colorTitlePrimary: api.color_title_primary ?? '#FFFFFF',
+    colorTitleSecondary: api.color_title_secondary ?? '#232C43',
+    colorTextPrimary: api.color_text_primary ?? '#FFFFFF',
+    colorTextSecondary: api.color_text_secondary ?? '#6B7280',
+    colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
+    colorLinkSecondary: api.color_link_secondary ?? '#661C16',
   };
 }
 
@@ -97,6 +123,19 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     lawyer_image_position: `${Math.round(ui.advogadoImagemPos.x)},${Math.round(ui.advogadoImagemPos.y)}`,
     differentials: ui.diferenciais.map(d => ({ title: d.titulo, description: d.descricao })),
     areas_of_practice: ui.areas.map(a => ({ title: a.titulo, description: a.descricao })),
+    color: ui.color || null,
+    color_bg_primary: ui.colorBgPrimary || null,
+    color_bg_secondary: ui.colorBgSecondary || null,
+    color_bg_sobre: ui.colorBgSobre || null,
+    color_buttons: ui.colorButtons || null,
+    color_buttons_hover: ui.colorButtonsHover || null,
+    color_buttons_text: ui.colorButtonsText || null,
+    color_title_primary: ui.colorTitlePrimary || null,
+    color_title_secondary: ui.colorTitleSecondary || null,
+    color_text_primary: ui.colorTextPrimary || null,
+    color_text_secondary: ui.colorTextSecondary || null,
+    color_link_primary: ui.colorLinkPrimary || null,
+    color_link_secondary: ui.colorLinkSecondary || null,
   };
 }
 

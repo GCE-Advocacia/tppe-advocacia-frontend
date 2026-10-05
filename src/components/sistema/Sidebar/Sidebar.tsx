@@ -7,6 +7,7 @@ import {
   UserPlus,
   UsersRound,
   CalendarDays,
+  Wallet,
   Briefcase,
   LayoutList,
   Bell,
@@ -28,11 +29,13 @@ const NAV_ITEMS = [
   { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
   { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },
   { label: 'Agenda',        href: '/sistema/agenda',         icon: CalendarDays, adminOnly: false },
+  { label: 'Pagamentos',    href: '/sistema/pagamentos',     icon: Wallet,       adminOnly: true  },
   { label: 'Processos',     href: '/sistema/processos',      icon: Briefcase,    adminOnly: false },
   { label: 'Tarefas',       href: '/sistema/tarefas',        icon: LayoutList,   adminOnly: false },
   { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
   { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
   { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
+  { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
 ];
 
 export default function Sidebar() {

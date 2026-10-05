@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Building2, Link2, Star, BookOpen, UserRound,
-  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2,
+  Shield, MapPin, ImageIcon, Pencil, Check, X, Loader2, Palette, Info,
 } from 'lucide-react';
 import { ApiError } from '../../../services/api';
 import { getOfficeConfigUI, updateOfficeConfig, uploadMedia } from '../../../services/officeConfigService';
 import type { LandingPageData, Diferencial, AreaAtuacao } from './types';
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
+import ColorPicker from '../../../components/sistema/shared/ColorPicker';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -31,6 +32,19 @@ const EMPTY_DATA: LandingPageData = {
   advogadoTitulo: '', advogadoOab: '', advogadoConteudo: '', advogadoImagem: '', advogadoImagemPos: { x: 50, y: 50 },
   diferenciais: EMPTY_DIFERENCIAIS,
   areas: EMPTY_AREAS,
+  color: '#232C43',
+  colorBgPrimary: '#232C43',
+  colorBgSecondary: '#F5F3EF',
+  colorBgSobre: '#FFFFFF',
+  colorButtons: '#661C16',
+  colorButtonsHover: '#A52020',
+  colorButtonsText: '#FFFFFF',
+  colorTitlePrimary: '#FFFFFF',
+  colorTitleSecondary: '#232C43',
+  colorTextPrimary: '#FFFFFF',
+  colorTextSecondary: '#6B7280',
+  colorLinkPrimary: '#FFFFFF',
+  colorLinkSecondary: '#661C16',
 };
 import styles from './LandingPage.module.css';
 
@@ -140,11 +154,19 @@ function SectionCard({ icon, title, children }: SectionCardProps) {
   );
 }
 
-interface FieldProps { label: string; children: React.ReactNode; }
-function Field({ label, children }: FieldProps) {
+interface FieldProps { label: string; tooltip?: string; children: React.ReactNode; }
+function Field({ label, tooltip, children }: FieldProps) {
   return (
     <div className={styles.field}>
-      <label className={styles.fieldLabel}>{label}</label>
+      <label className={styles.fieldLabel}>
+        <span>{label}</span>
+        {tooltip && (
+          <span className={styles.tooltipWrapper} tabIndex={0} aria-label={tooltip}>
+            <Info size={13} className={styles.tooltipIcon} />
+            <span className={styles.tooltipText}>{tooltip}</span>
+          </span>
+        )}
+      </label>
       {children}
     </div>
   );
@@ -391,6 +413,208 @@ export default function LandingPageConfig() {
               )}
             </div>
           ))}
+        </div>
+      </SectionCard>
+
+      {/* ── Identidade Visual / Cores ── */}
+      <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Botão para restaurar cores originais */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              style={{
+                background: 'none',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                padding: '6px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: 'var(--navy)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+              }}
+              onClick={() => {
+                setData(d => ({
+                  ...d,
+                  color: '#232C43',
+                  colorBgPrimary: '#232C43',
+                  colorBgSecondary: '#F5F3EF',
+                  colorBgSobre: '#FFFFFF',
+                  colorButtons: '#661C16',
+                  colorButtonsHover: '#A52020',
+                  colorButtonsText: '#FFFFFF',
+                  colorTitlePrimary: '#FFFFFF',
+                  colorTitleSecondary: '#232C43',
+                  colorTextPrimary: '#FFFFFF',
+                  colorTextSecondary: '#6B7280',
+                  colorLinkPrimary: '#FFFFFF',
+                  colorLinkSecondary: '#661C16',
+                }));
+              }}
+            >
+              ↺ Restaurar Cores Padrão
+            </button>
+          </div>
+
+          {/* 1 - Cores de Fundo */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              1. Cores de Fundo
+            </h3>
+            <div className={styles.row2}>
+              <Field
+                label="BACKGROUND 1"
+                tooltip="Aplica-se às seções: Navbar, Hero (inclui o fundo do botão vazado 'Conheça o Escritório'), Diferenciais, Artigos e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorBgPrimary || '#232C43'}
+                  onChange={v => {
+                    set('colorBgPrimary', v);
+                    set('color', v);
+                  }}
+                />
+              </Field>
+
+              <Field
+                label="BACKGROUND 2"
+                tooltip="Aplica-se às seções: Escritório, Áreas e Contato"
+              >
+                <ColorPicker
+                  value={data.colorBgSecondary || '#F5F3EF'}
+                  onChange={v => set('colorBgSecondary', v)}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
+              <Field
+                label="BACKGROUND 3"
+                tooltip="Aplica-se à seção: Sobre o Advogado"
+              >
+                <ColorPicker
+                  value={data.colorBgSobre || '#FFFFFF'}
+                  onChange={v => set('colorBgSobre', v)}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0' }} />
+
+          {/* 2 - Cores dos Botões */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              2. Cores dos Botões
+            </h3>
+            <div className={styles.row2}>
+              <Field
+                label="FUNDO DOS BOTÕES"
+                tooltip="Aplica-se à cor de fundo dos botões principais: 'Agendar Consulta', 'Fale Conosco', 'Falar no WhatsApp' e 'Enviar Mensagem' (o botão 'Conheça o Escritório' possui estilo vazado sobre o Background 1)"
+              >
+                <ColorPicker
+                  value={data.colorButtons || '#661C16'}
+                  onChange={v => set('colorButtons', v)}
+                />
+              </Field>
+
+              <Field
+                label="HOVER DOS BOTÕES"
+                tooltip="Aplica-se à cor de fundo ao passar o mouse (hover) sobre os botões principais"
+              >
+                <ColorPicker
+                  value={data.colorButtonsHover || '#A52020'}
+                  onChange={v => set('colorButtonsHover', v)}
+                />
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
+              <Field
+                label="TEXTO DOS BOTÕES"
+                tooltip="Aplica-se à cor do texto/fonte interno dos botões principais"
+              >
+                <ColorPicker
+                  value={data.colorButtonsText || '#FFFFFF'}
+                  onChange={v => set('colorButtonsText', v)}
+                />
+              </Field>
+            </div>
+          </div>
+
+          <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0' }} />
+
+          {/* 3 - Cores das Fontes */}
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>
+              3. Cores das Fontes
+            </h3>
+            <div className={styles.row2}>
+              <Field
+                label="TÍTULOS 1"
+                tooltip="Aplica-se aos títulos das seções: Hero, Diferenciais, Artigos e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorTitlePrimary || '#FFFFFF'}
+                  onChange={v => set('colorTitlePrimary', v)}
+                />
+              </Field>
+
+              <Field
+                label="TÍTULOS 2"
+                tooltip="Aplica-se aos títulos das seções: Escritório, Áreas, Contato e Sobre"
+              >
+                <ColorPicker
+                  value={data.colorTitleSecondary || '#232C43'}
+                  onChange={v => set('colorTitleSecondary', v)}
+                />
+              </Field>
+            </div>
+
+            <div className={styles.row2} style={{ marginTop: 16 }}>
+              <Field
+                label="TEXTOS 1"
+                tooltip="Aplica-se aos parágrafos (<p>) das seções: Hero, Diferenciais, Artigos e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorTextPrimary || '#FFFFFF'}
+                  onChange={v => set('colorTextPrimary', v)}
+                />
+              </Field>
+
+              <Field
+                label="TEXTOS 2"
+                tooltip="Aplica-se aos parágrafos (<p>) das seções: Escritório, Áreas, Contato e Sobre"
+              >
+                <ColorPicker
+                  value={data.colorTextSecondary || '#6B7280'}
+                  onChange={v => set('colorTextSecondary', v)}
+                />
+              </Field>
+            </div>
+
+            <div className={styles.row2} style={{ marginTop: 16 }}>
+              <Field
+                label="LINKS 1"
+                tooltip="Aplica-se aos links (<a>) das seções: Navbar, Artigos ('Leia o artigo') e Rodapé"
+              >
+                <ColorPicker
+                  value={data.colorLinkPrimary || '#FFFFFF'}
+                  onChange={v => set('colorLinkPrimary', v)}
+                />
+              </Field>
+
+              <Field
+                label="LINKS 2"
+                tooltip="Aplica-se aos links textuais (<a>): 'Saiba Mais →' (Escritório e Sobre) e link de Termos (Contato)"
+              >
+                <ColorPicker
+                  value={data.colorLinkSecondary || '#661C16'}
+                  onChange={v => set('colorLinkSecondary', v)}
+                />
+              </Field>
+            </div>
+          </div>
         </div>
       </SectionCard>
 

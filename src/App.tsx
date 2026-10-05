@@ -46,11 +46,13 @@ import Notificacoes from './pages/sistema/Notificacoes/Notificacoes';
 import Leads from './pages/sistema/Leads';
 import Clientes from './pages/sistema/Clientes';
 import Agenda from './pages/sistema/Agenda/Agenda';
+import Pagamentos from './pages/sistema/Pagamentos/Pagamentos';
 import Processos from './pages/sistema/Processos/Processos';
 import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
 import Feriados from './pages/sistema/Feriados/Feriados';
+import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
 function LandingPage() {
   return (
@@ -108,6 +110,9 @@ export default function App() {
             </Route>
             <Route path="clientes" element={<Clientes />} />
             <Route path="agenda" element={<Agenda />} />
+            <Route element={<AdminRoute />}>
+              <Route path="pagamentos" element={<Pagamentos />} />
+            </Route>
             <Route path="processos" element={<Processos />} />
             <Route path="tarefas" element={<Tarefas />} />
             <Route path="notificacoes" element={<Notificacoes />} />
@@ -116,6 +121,9 @@ export default function App() {
             </Route>
             <Route element={<AdminRoute />}>
               <Route path="feriados" element={<Feriados />} />
+            </Route>
+            <Route element={<AdminRoute />}>
+              <Route path="financeiro" element={<Financeiro />} />
             </Route>
           </Route>
         </Route>
