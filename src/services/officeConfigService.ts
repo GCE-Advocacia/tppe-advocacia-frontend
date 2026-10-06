@@ -1,6 +1,6 @@
 import { apiRequest, getAccessToken, clearAccessToken, ApiError } from './api';
 import type { SuccessResponse } from './api';
-import type { LandingPageData } from '../pages/sistema/LandingPage/types';
+import type { LandingPageData, LandingPageTheme, ThemeCreatePayload, ThemeUpdatePayload } from '../pages/sistema/LandingPage/types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -56,6 +56,7 @@ export interface OfficeConfigAPI {
   color_text_secondary: string | null;
   color_link_primary: string | null;
   color_link_secondary: string | null;
+  theme_id?: number | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
@@ -109,6 +110,7 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorTextSecondary: api.color_text_secondary ?? '#6B7280',
     colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
     colorLinkSecondary: api.color_link_secondary ?? '#661C16',
+    themeId: api.theme_id ?? null,
   };
 }
 
@@ -149,6 +151,7 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_text_secondary: ui.colorTextSecondary || null,
     color_link_primary: ui.colorLinkPrimary || null,
     color_link_secondary: ui.colorLinkSecondary || null,
+    theme_id: ui.themeId ?? null,
   };
 }
 
@@ -172,6 +175,61 @@ export async function updateOfficeConfig(ui: LandingPageData, onUpdated?: (confi
   });
   onUpdated?.(res.data);
   return apiToUI(res.data);
+}
+
+export async function getThemes(): Promise<LandingPageTheme[]> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme[]>>('/office-config/themes', {
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function createTheme(payload: ThemeCreatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>('/office-config/themes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function updateTheme(id: number, payload: ThemeUpdatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>(`/office-config/themes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function deleteTheme(id: number): Promise<void> {
+  await apiRequest<void>(`/office-config/themes/${id}`, {
+    method: 'DELETE',
+    authenticated: true,
+  });
+}
+
+export async function applyTheme(id: number): Promise<LandingPageData> {
+  const res = await apiRequest<SuccessResponse<OfficeConfigAPI>>(`/office-config/themes/${id}/apply`, {
+    method: 'POST',
+    authenticated: true,
+  });
+  return apiToUI(res.data);
+}
+
+export interface ThemeQuota {
+  max_total: number;
+  max_custom: number;
+  total_count: number;
+  custom_count: number;
+  is_limit_reached: boolean;
+}
+
+export async function getThemeQuota(): Promise<ThemeQuota> {
+  const res = await apiRequest<SuccessResponse<ThemeQuota>>('/office-config/themes/quota', {
+    authenticated: true,
+  });
+  return res.data;
 }
 
 const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
