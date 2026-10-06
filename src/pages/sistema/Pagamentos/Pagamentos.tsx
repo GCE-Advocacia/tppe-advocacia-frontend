@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ChevronLeft, ChevronRight, Plus, X, Trash2,
-  AlertTriangle, CalendarClock, CheckCircle2, Wallet,
+  AlertTriangle, CalendarClock, CheckCircle2, Wallet, Bell, Mail, MailX,
 } from 'lucide-react';
 import {
   listPayments, createPayment, updatePayment, deletePayment,
   paymentSituation, paymentAmount, formatBRL,
+  getPaymentReminders, type PaymentReminder,
   SITUATION_LABEL, SITUATION_COLOR,
   type Payment, type PaymentWrite, type PaymentSituation,
 } from '../../../services/payments';
@@ -93,6 +94,7 @@ function formToPayload(form: FormState): PaymentWrite {
 interface VencimentoModalProps {
   titulo: string;
   initial: FormState;
+  paymentId?: number;
   clients: ClientListItem[];
   saving: boolean;
   error: string;
@@ -102,8 +104,92 @@ interface VencimentoModalProps {
   onDelete?: () => void;
 }
 
+// ── Histórico de Lembretes ─────────────────────────────────
+function HistoricoLembretes({ paymentId }: { paymentId: number }) {
+  const [reminders, setReminders] = useState<PaymentReminder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getPaymentReminders(paymentId)
+      .then(data => { if (active) setReminders(data); })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [paymentId]);
+
+  if (loading) {
+    return <p className={styles.mHelp}>Carregando histórico de lembretes...</p>;
+  }
+
+  if (reminders.length === 0) {
+    return (
+      <div className={styles.mField}>
+        <label className={styles.mLabel}>LEMBRETES DE E-MAIL</label>
+        <span className={styles.mHelp}>Nenhum lembrete disparado até o momento.</span>
+      </div>
+    );
+  }
+
+  const statusBadge = (r: PaymentReminder) => {
+    if (r.status === 'SENT') {
+      return (
+        <span style={{ color: '#1E7A46', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+          <Mail size={13} /> Enviado
+        </span>
+      );
+    }
+    if (r.status === 'NO_EMAIL') {
+      return (
+        <span style={{ color: '#B26A00', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+          <MailX size={13} /> Cliente sem e-mail
+        </span>
+      );
+    }
+    return (
+      <span style={{ color: '#A52020', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+        <AlertTriangle size={13} /> Falhou
+      </span>
+    );
+  };
+
+  return (
+    <div className={styles.mField} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: '8px' }}>
+      <label className={styles.mLabel} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Bell size={14} /> HISTÓRICO DE LEMBRETES AUTOMÁTICOS
+      </label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+        {reminders.map(r => (
+          <div
+            key={r.id}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              fontSize: '13px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <strong>{r.kind === 'D_MINUS_1' ? 'Lembrete D-1 (Véspera)' : 'Lembrete D-0 (Dia do Vencimento)'}</strong>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                {r.sent_at ? new Date(r.sent_at).toLocaleString('pt-BR') : 'Data não informada'}
+                {r.email && ` • ${r.email}`}
+              </div>
+            </div>
+            <div>{statusBadge(r)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VencimentoModal({
-  titulo, initial, clients, saving, error, onCancel, onSave, onDelete,
+  titulo, initial, paymentId, clients, saving, error, onCancel, onSave, onDelete,
 }: VencimentoModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [confirmando, setConfirmando] = useState(false);
@@ -207,6 +293,8 @@ function VencimentoModal({
               disabled={readOnly}
             />
           </div>
+
+          {paymentId && <HistoricoLembretes paymentId={paymentId} />}
 
           <div className={styles.modalFooter}>
             {onDelete && (
@@ -670,6 +758,7 @@ export default function Pagamentos() {
           <VencimentoModal
             titulo="Editar Vencimento"
             initial={paymentToForm(modal.payment)}
+            paymentId={modal.payment.id}
             clients={clients}
             saving={saving}
             error={formError}
@@ -681,6 +770,7 @@ export default function Pagamentos() {
           <VencimentoModal
             titulo="Visualizar Vencimento"
             initial={paymentToForm(modal.payment)}
+            paymentId={modal.payment.id}
             clients={clients}
             saving={false}
             error=""
