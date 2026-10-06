@@ -848,7 +848,8 @@ export default function LandingPageConfig() {
             >
               ↺ Restaurar Cores Padrão
             </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
           <div className={styles.themeSelectorBar}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -1089,6 +1090,7 @@ export default function LandingPageConfig() {
               </Field>
             </div>
           </div>
+        </div>
         </div>
         </div>
       </SectionCard>
