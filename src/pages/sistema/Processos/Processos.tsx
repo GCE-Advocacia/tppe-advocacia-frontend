@@ -56,6 +56,7 @@ import { Task, TaskStatus, deleteTask, listTasks } from '../../../services/tasks
 import styles from './Processos.module.css';
 // taskformmodal
 import TaskFormModal from '../TaskFormModal/TaskFormModal';
+import ProcessDocumentsSection from './ProcessDocumentsSection';
 
 const PER_PAGE = 10;
 const STATUS_OPTIONS: ProcessStatus[] = ['ATIVO', 'SUSPENSO', 'ARQUIVADO', 'ENCERRADO'];
@@ -160,6 +161,10 @@ function errorMessage(error: unknown): string {
     DATAJUD_PROCESS_NOT_FOUND: 'O processo não foi encontrado no tribunal informado.',
     DATAJUD_TRIBUNAL_ALIAS_REQUIRED: 'Informe o alias do tribunal antes de sincronizar.',
     DATAJUD_UNAVAILABLE: 'O DataJud está indisponível no momento. Tente novamente.',
+    FILE_TOO_LARGE: 'O arquivo ultrapassa o limite de 20 MB.',
+    INVALID_MIME_TYPE: 'Tipo de arquivo não permitido. Envie PDF, JPG, PNG ou DOCX.',
+    PROCESS_DOCUMENT_NOT_FOUND: 'Documento não encontrado. Atualize a página.',
+    FORBIDDEN: 'Você não tem permissão para esta ação.',
   };
   return (error.code && messages[error.code]) || error.message;
 }
@@ -917,6 +922,12 @@ function ProcessDetailsModal({
                   )}
                 </div>
               </section>
+
+              <ProcessDocumentsSection
+                processId={processId}
+                onSuccess={message => setFeedback({ message, kind: 'success' })}
+                onError={requestError => setFeedback({ message: errorMessage(requestError), kind: 'error' })}
+              />
 
               <section className={styles.notesSection}>
                 <div className={styles.notesHeader}>

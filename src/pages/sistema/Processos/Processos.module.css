@@ -297,6 +297,19 @@
 .noteEditSave { border: 1px solid var(--navy); background: var(--navy); color: var(--white); border-radius: 5px; padding: 0 10px; min-height: 30px; font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .noteEditSave:disabled { opacity: .45; cursor: default; }
 .notesEmpty { padding: 18px; border: 1px dashed #d6dae1; border-radius: 7px; color: var(--gray); text-align: center; font-size: .7rem; }
+.documentsSection { border-top: 1px solid #eceef2; padding: 20px 0; margin-top: 4px; }
+.documentUpload { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 13px; }
+.documentUpload button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: 6px; padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.documentUpload button:disabled { opacity: .45; cursor: default; }
+.documentUpload small { color: var(--gray); font-size: .65rem; }
+.documentList { display: grid; gap: 8px; }
+.documentItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #f7f8fa; border-radius: 6px; color: var(--navy); }
+.documentInfo { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.documentInfo strong { font-size: .74rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.documentInfo span { color: var(--gray); font-size: .62rem; }
+.documentAction { display: grid; place-items: center; border: none; background: transparent; color: var(--gray); cursor: pointer; padding: 4px; border-radius: 4px; flex-shrink: 0; }
+.documentAction:hover { color: var(--navy); background: #e8edf5; }
+.documentAction:disabled { opacity: .45; cursor: default; }
 .deadlinesSection { border-top: 1px solid #eceef2; padding: 20px 0; }
 .deadlinesHeader { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
 .deadlinesHeader h3 { color: var(--navy); font-size: .95rem; }
