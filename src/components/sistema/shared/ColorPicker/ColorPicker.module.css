@@ -1,0 +1,338 @@
+/* ══════════════════════════════════════════════════════════════
+   Dice UI ColorPicker — CSS Modules Styles
+   ══════════════════════════════════════════════════════════════ */
+
+.triggerBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #111827;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.triggerBtn:hover:not(:disabled) {
+  border-color: #9ca3af;
+}
+
+.triggerBtn:focus-visible {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px rgba(35, 44, 67, 0.15);
+}
+
+.triggerBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.triggerText {
+  font-family: monospace, var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Swatch */
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* Content / Popover */
+.content {
+  z-index: 9999;
+  width: 276px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  animation: popIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Area 2D (Saturation & Value) */
+.area {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+.areaLayers {
+  position: absolute;
+  inset: 0;
+}
+
+.areaHueBase {
+  position: absolute;
+  inset: 0;
+}
+
+.areaWhiteGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #ffffff, transparent);
+}
+
+.areaBlackGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #000000, transparent);
+}
+
+.areaThumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Sliders Row */
+.slidersRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sliderSliders {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Slider Radix Root */
+.sliderRoot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 12px;
+}
+
+.hueTrack {
+  position: relative;
+  flex-grow: 1;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+}
+
+.alphaTrack {
+  position: relative;
+  flex-grow: 1;
+  height: 12px;
+  border-radius: 6px;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+  overflow: hidden;
+}
+
+.alphaColorOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
+
+.sliderRange {
+  position: absolute;
+  height: 100%;
+}
+
+.sliderThumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.1s ease;
+}
+
+.sliderThumb:focus-visible {
+  transform: scale(1.15);
+}
+
+/* Eye Dropper button */
+.eyeDropperBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #4b5563;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.eyeDropperBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+.eyeDropperBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Format Row */
+.formatRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formatSelect {
+  flex-shrink: 0;
+  width: 68px;
+  height: 32px;
+  padding: 0 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  background: #f9fafb;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  outline: none;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.formatSelect:focus {
+  border-color: var(--navy);
+}
+
+.inputGroupWrapper {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.formatInput {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 4px;
+  border: 1px solid #d1d5db;
+  font-family: monospace, var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1f2937;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* Remove setas do input number */
+.formatInput::-webkit-inner-spin-button,
+.formatInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.formatInput[type=number] {
+  -moz-appearance: textfield;
+}
+
+.formatInput:focus {
+  border-color: var(--navy);
+  z-index: 1;
+}
+
+.inputIsolated {
+  width: 100%;
+  min-width: 0;
+  border-radius: 5px;
+}
+
+.inputFirst {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-right: none;
+}
+
+.inputMiddle {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+  border-right: none;
+}
+
+.inputLast {
+  flex-shrink: 0;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+

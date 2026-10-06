@@ -8,6 +8,7 @@ export interface ApiUser {
   email: string;
   role: UserRole;
   is_active: boolean;
+  can_view_payments: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -47,7 +48,10 @@ export function createUser(name: string, email: string) {
   });
 }
 
-export function updateUser(id: number, patch: Partial<Pick<ApiUser, 'name' | 'email' | 'role' | 'is_active'>>) {
+export function updateUser(
+  id: number,
+  patch: Partial<Pick<ApiUser, 'name' | 'email' | 'role' | 'is_active' | 'can_view_payments'>>,
+) {
   return apiRequest<SuccessResponse<ApiUser>>(`/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),

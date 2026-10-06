@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CloudDownload,
   ExternalLink,
+  ListChecks,
   MessageSquareText,
   Pencil,
   Plus,
@@ -51,11 +52,22 @@ import {
   syncProcessWithDataJud,
   updateProcessNote,
 } from '../../../services/processes';
+import { Task, TaskStatus, deleteTask, listTasks } from '../../../services/tasks';
 import styles from './Processos.module.css';
+// taskformmodal
+import TaskFormModal from '../TaskFormModal/TaskFormModal';
 
 const PER_PAGE = 10;
 const STATUS_OPTIONS: ProcessStatus[] = ['ATIVO', 'SUSPENSO', 'ARQUIVADO', 'ENCERRADO'];
 const TRIBUNAL_SUGGESTIONS = ['tjdft', 'tjsp', 'tjrj', 'trf1', 'trf2', 'trf3', 'trf4', 'trf5', 'trf6'];
+
+
+const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  TODO: 'A fazer',
+  IN_PROGRESS: 'Em andamento',
+  BLOCKED: 'Bloqueada',
+  DONE: 'Concluida',
+};
 
 const STATUS_STYLE: Record<ProcessStatus, { bg: string; color: string }> = {
   ATIVO: { bg: '#e8f5e9', color: '#2e7d32' },
@@ -494,25 +506,65 @@ function ProcessDetailsModal({
   const [noteSubmitting, setNoteSubmitting] = useState(false);
   const [editingNote, setEditingNote] = useState<{ id: number; content: string } | null>(null);
   const [noteEditSubmitting, setNoteEditSubmitting] = useState(false);
+  // controlar se o modo criar tarefa ta aberto
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  // tarefas ja cadastradas neste processo
+  const [tasks, setTasks] = useState<Task[]>([]);
+  // tarefa aberta para edicao a partir da lista
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  // tarefa escolhida para exclusao, segura a confirmacao antes de apagar
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
+  const [taskDeleteSubmitting, setTaskDeleteSubmitting] = useState(false);
+  const [taskDeleteError, setTaskDeleteError] = useState('');
 
   async function loadDetails() {
     setLoading(true);
     try {
-      const [processResponse, movementsResponse, deadlinesResponse, notesResponse] = await Promise.all([
+      const [processResponse, movementsResponse, deadlinesResponse, notesResponse, tasksResponse] = await Promise.all([
         getProcess(processId),
         listMovements(processId),
         listProcessDeadlines(processId),
         listProcessNotes(processId),
+        listTasks({ process_id: processId, limit: 100 }),
       ]);
       setProcess(processResponse);
       setNextStatus(processResponse.status);
       setMovements(movementsResponse.data);
       setDeadlines(deadlinesResponse.data);
       setNotes(notesResponse.data);
+      setTasks(tasksResponse.data);
     } catch (requestError) {
       setFeedback({ message: errorMessage(requestError), kind: 'error' });
     } finally {
       setLoading(false);
+    }
+  }
+
+  // recarrega so as tarefas, sem rebuscar o resto da ficha
+  async function loadTasks() {
+    try {
+      const tasksResponse = await listTasks({ process_id: processId, limit: 100 });
+      setTasks(tasksResponse.data);
+    } catch (requestError) {
+      setFeedback({ message: errorMessage(requestError), kind: 'error' });
+    }
+  }
+
+  // apaga a tarefa confirmada e recarrega so a lista da ficha
+  async function handleDeleteTask() {
+    if (!deletingTask) return;
+    setTaskDeleteSubmitting(true);
+    setTaskDeleteError('');
+    try {
+      const title = deletingTask.title;
+      await deleteTask(deletingTask.id);
+      setDeletingTask(null);
+      await loadTasks();
+      onChanged(`Tarefa "${title}" excluída.`);
+    } catch (requestError) {
+      setTaskDeleteError(errorMessage(requestError));
+    } finally {
+      setTaskDeleteSubmitting(false);
     }
   }
 
@@ -820,11 +872,58 @@ function ProcessDetailsModal({
                 </div>
               </section>
 
+              {/* front do campo tarefas e botao */}
+              <section className={styles.tasksSection}>
+                <div className={styles.tasksHeader}>
+                  <h3><ListChecks size={16} /> Tarefas</h3>
+                  <button onClick={() => setShowTaskForm(true)}>
+                    <Plus size={15} />
+                    Nova tarefa
+                  </button>
+                </div>
+                <div className={styles.tasksList}>
+                  {tasks.map(task => (
+                    <article className={styles.taskCard} key={task.id}>
+                      <div className={styles.taskCardMain}>
+                        <span className={`${styles.taskStatus} ${styles[`task${task.status}`]}`}>
+                          {TASK_STATUS_LABELS[task.status]}
+                        </span>
+                        <strong>{task.title}</strong>
+                        <p>{task.assigned_to_name ?? 'Sem responsável'}</p>
+                      </div>
+                      {task.due_date && (
+                        <div className={styles.taskDue}>
+                          <span>Prazo</span>
+                          <strong>{formatDate(task.due_date)}</strong>
+                        </div>
+                      )}
+                      <div className={styles.taskCardActions}>
+                        <button onClick={() => setEditingTask(task)} title="Editar tarefa" aria-label="Editar tarefa">
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          className={styles.taskDeleteButton}
+                          onClick={() => { setDeletingTask(task); setTaskDeleteError(''); }}
+                          title="Excluir tarefa"
+                          aria-label="Excluir tarefa"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                  {tasks.length === 0 && (
+                    <p className={styles.tasksEmpty}>Nenhuma tarefa cadastrada neste processo.</p>
+                  )}
+                </div>
+              </section>
+
               <section className={styles.notesSection}>
                 <div className={styles.notesHeader}>
                   <h3><MessageSquareText size={16} /> Anotações internas</h3>
                   <span>{notes.length} anotação(ões)</span>
                 </div>
+                
                 <form
                   className={styles.noteForm}
                   onSubmit={event => { event.preventDefault(); void handleCreateNote(); }}
@@ -907,6 +1006,68 @@ function ProcessDetailsModal({
                   onCancel={() => setDeadlineEditor(null)}
                   onChanged={message => void handleDeadlineChanged(message)}
                 />
+              )}
+
+               {/* renderizar */}
+              {(showTaskForm || editingTask) && (
+                <TaskFormModal
+                  task={editingTask}
+                  initialProcessId={processId}
+                  onClose={() => {
+                    setShowTaskForm(false);
+                    setEditingTask(null);
+                  }}
+                  onSaved={() => {
+                    setShowTaskForm(false);
+                    setEditingTask(null);
+                    void loadTasks();
+                    onChanged(editingTask ? 'Tarefa atualizada.' : 'Tarefa criada.');
+                  }}
+                />
+              )}
+
+              {/* confirmacao antes de apagar a tarefa de vez */}
+              {deletingTask && (
+                <div className={styles.overlay} onClick={() => setDeletingTask(null)}>
+                  <div className={styles.modal} onClick={event => event.stopPropagation()}>
+                    <div className={styles.modalHeader}>
+                      <div>
+                        <p className={styles.modalEyebrow}>Tarefa do processo</p>
+                        <h2 className={styles.modalTitle}>Excluir tarefa</h2>
+                        <p className={styles.modalSub}>Esta ação não pode ser desfeita.</p>
+                      </div>
+                      <button className={styles.modalClose} onClick={() => setDeletingTask(null)} aria-label="Fechar">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className={styles.modalBody}>
+                      {taskDeleteError && <p className={styles.formError}>{taskDeleteError}</p>}
+                      <p className={styles.deleteConfirm}>
+                        A tarefa “{deletingTask.title}” será removida deste processo e do quadro de tarefas.
+                      </p>
+                    </div>
+                    <div className={styles.modalFooter}>
+                      <span />
+                      <div className={styles.modalFooterRight}>
+                        <button
+                          className={styles.btnCancel}
+                          onClick={() => setDeletingTask(null)}
+                          disabled={taskDeleteSubmitting}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          className={styles.btnDelete}
+                          onClick={() => void handleDeleteTask()}
+                          disabled={taskDeleteSubmitting}
+                        >
+                          <Trash2 size={15} />
+                          {taskDeleteSubmitting ? 'Excluindo...' : 'Excluir tarefa'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}

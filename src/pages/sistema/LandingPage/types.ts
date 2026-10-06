@@ -46,4 +46,19 @@ export interface LandingPageData {
 
   // Áreas
   areas: AreaAtuacao[];
+
+  // Cores
+  color: string;
+  colorBgPrimary: string;
+  colorBgSecondary: string;
+  colorBgSobre: string;
+  colorButtons: string;
+  colorButtonsHover: string;
+  colorButtonsText: string;
+  colorTitlePrimary: string;
+  colorTitleSecondary: string;
+  colorTextPrimary: string;
+  colorTextSecondary: string;
+  colorLinkPrimary: string;
+  colorLinkSecondary: string;
 }

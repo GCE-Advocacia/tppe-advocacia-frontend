@@ -14,6 +14,9 @@ SLOW = float(os.getenv("SLOW", "0"))
 BASE_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 TEST_EMAIL = os.getenv("TEST_EMAIL", "admin@advocacia.com")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "senha123")
+# Funcionário (papel USER) usado nos testes de permissão; sem valor padrão.
+TEST_USER_EMAIL = os.getenv("TEST_USER_EMAIL")
+TEST_USER_PASSWORD = os.getenv("TEST_USER_PASSWORD")
 
 
 @pytest.fixture(scope="session")
@@ -42,15 +45,15 @@ def pause():
         time.sleep(SLOW)
 
 
-def do_login(driver, wait):
+def do_login(driver, wait, email=TEST_EMAIL, password=TEST_PASSWORD):
     driver.get(f"{BASE_URL}/login")
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='email']")))
     pause()
 
     driver.find_element(By.CSS_SELECTOR, "input[type='email']").clear()
-    driver.find_element(By.CSS_SELECTOR, "input[type='email']").send_keys(TEST_EMAIL)
+    driver.find_element(By.CSS_SELECTOR, "input[type='email']").send_keys(email)
     pause()
-    driver.find_element(By.CSS_SELECTOR, "input[type='password']").send_keys(TEST_PASSWORD)
+    driver.find_element(By.CSS_SELECTOR, "input[type='password']").send_keys(password)
     pause()
     driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
@@ -66,5 +69,15 @@ def do_logout(driver):
 @pytest.fixture
 def logged_in(driver, wait):
     do_login(driver, wait)
+    yield driver
+    do_logout(driver)
+
+
+@pytest.fixture
+def logged_in_user(driver, wait):
+    """Sessão de funcionário (papel USER) definida por TEST_USER_EMAIL/TEST_USER_PASSWORD."""
+    if not TEST_USER_EMAIL or not TEST_USER_PASSWORD:
+        pytest.skip("TEST_USER_EMAIL/TEST_USER_PASSWORD não definidos")
+    do_login(driver, wait, TEST_USER_EMAIL, TEST_USER_PASSWORD)
     yield driver
     do_logout(driver)
