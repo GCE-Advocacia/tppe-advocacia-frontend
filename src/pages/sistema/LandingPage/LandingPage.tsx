@@ -18,6 +18,9 @@ import type { LandingPageData, Diferencial, AreaAtuacao, LandingPageTheme } from
 import ImagePositionModal from '../../../components/sistema/shared/ImagePositionModal';
 import ColorPicker from '../../../components/sistema/shared/ColorPicker';
 import ThemeGallery from '../../../components/sistema/shared/ThemeGallery';
+import LogoSettings from '../../../components/sistema/shared/Logo config/LogoSettings';
+import useBrandingDraft from '../../../components/sistema/shared/Logo config/useBrandingDraft';
+import { useBrandingActions } from '../../../contexts/BrandingContext';
 
 const EMPTY_DIFERENCIAIS: Diferencial[] = [
   { id: 1, titulo: '', descricao: '' },
@@ -185,13 +188,16 @@ function Field({ label, tooltip, children }: FieldProps) {
 
 // ── main page ────────────────────────────────────────────
 export default function LandingPageConfig() {
+  const { applyConfig } = useBrandingActions();
   const [saved,   setSaved]   = useState<LandingPageData>(EMPTY_DATA);
   const [data,    setData]    = useState<LandingPageData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving,  setSaving]  = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const isDirty = !deepEqual(data, saved);
+  const branding = useBrandingDraft();
+  const formDirty = !deepEqual(data, saved);
+  const isDirty = formDirty || branding.dirty;
 
   useEffect(() => {
     getOfficeConfigUI()
@@ -218,6 +224,8 @@ export default function LandingPageConfig() {
 
   const discard = () => {
     setData(saved);
+    branding.discard();
+    setSaveError(null);
     setSelectedThemeId(saved.themeId ?? null);
     if (saved.themeId) {
       setBaseThemeId(saved.themeId);
@@ -384,6 +392,8 @@ export default function LandingPageConfig() {
   }, [handleThemeSelected]);
 
   const save = async () => {
+    if (saving || !isDirty || (branding.dirty && !branding.ready)) return;
+    setSaving(true);
     setSaveError(null);
 
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
@@ -409,43 +419,46 @@ export default function LandingPageConfig() {
     // CENÁRIO 1: Tema personalizado em edição OU alteração apenas de outros campos (texto, imagens, etc.)
     setSaving(true);
     try {
-      // Se for um tema personalizado com cores modificadas, atualiza o modelo do tema no banco primeiro
-      if (baseTheme && !baseTheme.is_predefined && isBaseThemeModified) {
-        await updateTheme(baseTheme.id, {
-          name: baseTheme.name,
-          description: baseTheme.description,
-          color: data.color || '#232C43',
-          color_bg_primary: data.colorBgPrimary || '#232C43',
-          color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
-          color_bg_sobre: data.colorBgSobre || '#FFFFFF',
-          color_buttons: data.colorButtons || '#661C16',
-          color_buttons_hover: data.colorButtonsHover || '#A52020',
-          color_buttons_text: data.colorButtonsText || '#FFFFFF',
-          color_title_primary: data.colorTitlePrimary || '#FFFFFF',
-          color_title_secondary: data.colorTitleSecondary || '#232C43',
-          color_text_primary: data.colorTextPrimary || '#FFFFFF',
-          color_text_secondary: data.colorTextSecondary || '#6B7280',
-          color_link_primary: data.colorLinkPrimary || '#FFFFFF',
-          color_link_secondary: data.colorLinkSecondary || '#661C16',
-        });
-      }
+      await branding.save();
+      if (formDirty) {
+        // Se for um tema personalizado com cores modificadas, atualiza o modelo do tema no banco primeiro
+        if (baseTheme && !baseTheme.is_predefined && isBaseThemeModified) {
+          await updateTheme(baseTheme.id, {
+            name: baseTheme.name,
+            description: baseTheme.description,
+            color: data.color || '#232C43',
+            color_bg_primary: data.colorBgPrimary || '#232C43',
+            color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
+            color_bg_sobre: data.colorBgSobre || '#FFFFFF',
+            color_buttons: data.colorButtons || '#661C16',
+            color_buttons_hover: data.colorButtonsHover || '#A52020',
+            color_buttons_text: data.colorButtonsText || '#FFFFFF',
+            color_title_primary: data.colorTitlePrimary || '#FFFFFF',
+            color_title_secondary: data.colorTitleSecondary || '#232C43',
+            color_text_primary: data.colorTextPrimary || '#FFFFFF',
+            color_text_secondary: data.colorTextSecondary || '#6B7280',
+            color_link_primary: data.colorLinkPrimary || '#FFFFFF',
+            color_link_secondary: data.colorLinkSecondary || '#661C16',
+          });
+        }
 
-      // Persiste a Landing Page em office_config mantendo o theme_id ativo
-      const payloadData: LandingPageData = {
-        ...data,
-        themeId: baseTheme ? baseTheme.id : data.themeId,
-      };
-      const updated = await updateOfficeConfig(payloadData);
-      setSaved(updated);
-      setData(updated);
-      if (updated.themeId) {
-        setSelectedThemeId(updated.themeId);
-        setBaseThemeId(updated.themeId);
+        // Persiste a Landing Page em office_config mantendo o theme_id ativo
+        const payloadData: LandingPageData = {
+          ...data,
+          themeId: baseTheme ? baseTheme.id : data.themeId,
+        };
+        const updated = await updateOfficeConfig(payloadData, applyConfig);
+        setSaved(updated);
+        setData(updated);
+        if (updated.themeId) {
+          setSelectedThemeId(updated.themeId);
+          setBaseThemeId(updated.themeId);
+        }
+        await fetchThemes();
       }
-      await fetchThemes();
     } catch (err) {
       setSaveError(
-        err instanceof ApiError ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
+        err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.',
       );
     } finally {
       setSaving(false);
@@ -460,6 +473,7 @@ export default function LandingPageConfig() {
     setSavingNewTheme(true);
     setSaveNewError(null);
     try {
+      await branding.save();
       const created = await createTheme({
         name: newThemeName.trim(),
         description: newThemeDesc.trim() || null,
@@ -479,7 +493,7 @@ export default function LandingPageConfig() {
       });
 
       // Vincula o novo tema à Landing Page e persiste em office_config
-      const updated = await updateOfficeConfig({ ...data, themeId: created.id });
+      const updated = await updateOfficeConfig({ ...data, themeId: created.id }, applyConfig);
       setSaved(updated);
       setData(updated);
       setBaseThemeId(created.id);
@@ -528,6 +542,10 @@ export default function LandingPageConfig() {
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>Configuração da Landing Page</h1>
+
+      <SectionCard icon={<ImageIcon size={20} />} title="Logos e ícone do navegador">
+        <LogoSettings draft={branding} saving={saving} />
+      </SectionCard>
 
       {/* ── Dados Institucionais ── */}
       <SectionCard icon={<Building2 size={20} />} title="Dados Institucionais">
@@ -1063,9 +1081,9 @@ export default function LandingPageConfig() {
       )}
 
       {/* ── Bottom bar ── */}
-      <div className={`${styles.bottomBar} ${isDirty || saveError ? styles.bottomBarVisible : ''}`}>
+      <div data-pending-changes={isDirty ? "true" : "false"} className={`${styles.bottomBar} ${isDirty || saveError ? styles.bottomBarVisible : ''}`}>
         {saveError && (
-          <span className={styles.bottomError}>{saveError}</span>
+          <span role="alert" className={styles.bottomError}>{saveError}</span>
         )}
         {!saveError && (
           <span className={styles.bottomMsg}>
@@ -1076,7 +1094,7 @@ export default function LandingPageConfig() {
           <button className={styles.btnDiscard} onClick={discard} disabled={saving}>
             <X size={15} /> Descartar
           </button>
-          <button className={styles.btnSave} onClick={save} disabled={saving}>
+          <button className={styles.btnSave} onClick={save} disabled={saving || !isDirty || (branding.dirty && !branding.ready)}>
             {saving
               ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Salvando...</>
               : <><Check size={15} /> Salvar alterações</>
