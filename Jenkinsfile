@@ -32,15 +32,14 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'REGISTRY_GITHUB', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
             sh '''
                 echo "$REG_PASS" | docker login $REGISTRY -u "$REG_USER" --password-stdin
-                
-                # Injeta a URL oficial da sua API aqui!
+            
                 docker build \
                   --build-arg VITE_API_URL="https://api.cryptoskate.org/api/v1" \
                   -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
                   -t $REGISTRY/$IMAGE_NAME:homolog-latest .
                 
                 docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
-                docker push $REGISTRY/$IMAGE_NAME:homolog-latest
+                docker push $REGISTRY/$IMAGE_NAME:prod-latest
             '''
         }
     }
@@ -48,7 +47,7 @@ pipeline {
 
         stage('Deploy Prod via Ansible') {
             when {
-                branch 'homol'
+                branch 'main'
             }
             steps {
                 withCredentials([
