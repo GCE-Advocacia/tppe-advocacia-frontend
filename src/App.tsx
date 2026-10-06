@@ -24,6 +24,8 @@ import Login from './pages/auth/Login';
 import ResetPassword from './pages/auth/ResetPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+import PaymentsViewRoute from './components/auth/PaymentsViewRoute';
+import { getSessionClaims } from './services/api';
 
 // Landing page components
 import Navbar from './components/Navbar/Navbar';
@@ -83,6 +85,12 @@ function GoogleCalendarRedirect() {
   return null;
 }
 
+// Leads é restrito a ADMIN; funcionários iriam para /sistema em loop.
+function SistemaIndexRedirect() {
+  const isAdmin = getSessionClaims()?.role === 'ADMIN';
+  return <Navigate to={isAdmin ? 'leads' : 'clientes'} replace />;
+}
+
 export default function App() {
   return (
     <BrandingProvider>
@@ -100,7 +108,7 @@ export default function App() {
         {/* Sistema */}
         <Route element={<ProtectedRoute />}>
           <Route path="/sistema" element={<SistemaLayout />}>
-            <Route index element={<Navigate to="leads" replace />} />
+            <Route index element={<SistemaIndexRedirect />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Usuarios />} />
               <Route path="landing-page" element={<LandingPageConfig />} />
@@ -111,7 +119,7 @@ export default function App() {
             </Route>
             <Route path="clientes" element={<Clientes />} />
             <Route path="agenda" element={<Agenda />} />
-            <Route element={<AdminRoute />}>
+            <Route element={<PaymentsViewRoute />}>
               <Route path="pagamentos" element={<Pagamentos />} />
             </Route>
             <Route path="processos" element={<Processos />} />
