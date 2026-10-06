@@ -27,7 +27,7 @@ pipeline {
         //     }
         // }
 
-        stage('Build & Push Image (Homolog)') {
+        stage('Build & Push Image') {
     steps {
         withCredentials([usernamePassword(credentialsId: 'REGISTRY_GITHUB', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
             sh '''
@@ -36,7 +36,7 @@ pipeline {
                 docker build \
                   --build-arg VITE_API_URL="https://api.cryptoskate.org/api/v1" \
                   -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG \
-                  -t $REGISTRY/$IMAGE_NAME:homolog-latest .
+                  -t $REGISTRY/$IMAGE_NAME:prod-latest .
                 
                 docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
                 docker push $REGISTRY/$IMAGE_NAME:prod-latest
