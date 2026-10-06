@@ -5,7 +5,7 @@ pipeline {
         ANSIBLE_HOST_KEY_CHECKING = 'False'
         REGISTRY = 'ghcr.io'
         IMAGE_NAME = 'gce-advocacia/tppe-advocacia-frontend'
-        IMAGE_TAG = "homolog-${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
+        IMAGE_TAG = "prod-${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
     }
 
     stages {
@@ -46,7 +46,7 @@ pipeline {
     }
 }
 
-        stage('Deploy Homolog via Ansible') {
+        stage('Deploy Prod via Ansible') {
             when {
                 branch 'homol'
             }
