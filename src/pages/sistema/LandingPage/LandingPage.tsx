@@ -746,7 +746,7 @@ export default function LandingPageConfig() {
                   className={styles.themeCustomBadge}
                   title="Cores modificadas a partir de tema de fábrica. Ao clicar em 'Salvar alterações', você criará um novo tema personalizado."
                 >
-                  {baseTheme ? `Baseado em: ${baseTheme.name} (modificado)` : '(Cores personalizadas)'}
+                  {baseTheme ? `${baseTheme.name} (modificado)` : '(Cores personalizadas)'}
                 </span>
               )}
             </div>
@@ -767,9 +767,6 @@ export default function LandingPageConfig() {
           {/* Dicas contextuais informando o que o botão de salvar fará */}
           {baseTheme && !baseTheme.is_predefined && isBaseThemeModified && (
             <div style={{ margin: '10px 0 20px 0', fontSize: '0.82rem', color: '#92400e', background: '#fffbeb', padding: '8px 14px', borderRadius: 6, border: '1px solid #fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-              <span>
-                ✏️ Você está editando o tema personalizado <strong>"{baseTheme.name}"</strong>. Ao clicar em <em>Salvar alterações</em>, o modelo e a Landing Page serão atualizados juntos.
-              </span>
               <button
                 type="button"
                 style={{
@@ -973,6 +970,7 @@ export default function LandingPageConfig() {
         onSelectTheme={handleSelectFromLibrary}
         currentLandingColors={data}
         activeThemeId={data.themeId ?? matchedTheme?.id ?? baseTheme?.id ?? null}
+        quota={themeQuota}
       />
 
       {/* Modal: Salvar Cores Atuais na Biblioteca */}
@@ -996,7 +994,7 @@ export default function LandingPageConfig() {
               <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
                 {isForkingPredefined ? (
                   <>
-                    Você personalizou as cores a partir do tema de fábrica <strong>"{baseTheme?.name || 'pré-definido'}"</strong>.
+                    Você personalizou as cores a partir de um tema pré-definido <strong>"{baseTheme?.name || 'pré-definido'}"</strong>.
                     Informe um nome para criar o novo tema personalizado:
                   </>
                 ) : (

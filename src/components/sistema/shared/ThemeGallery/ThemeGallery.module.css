@@ -92,7 +92,7 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 14px;
-  transition: all 0.2s ease-in-out;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   position: relative;
@@ -265,13 +265,13 @@
 .galleryModalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(15, 23, 42, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 400;
-  backdrop-filter: blur(2px);
   padding: 20px;
+  will-change: opacity;
 }
 
 .galleryModalBox {

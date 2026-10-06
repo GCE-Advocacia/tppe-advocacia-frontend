@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Palette, Plus, Pencil, Trash2, Check, X, Loader2, Copy, ArrowRight
 } from 'lucide-react';
@@ -20,6 +20,7 @@ interface Props {
   onSelectTheme: (theme: LandingPageTheme) => void;
   currentLandingColors: LandingPageData;
   activeThemeId?: number | null;
+  quota?: ThemeQuota | null;
 }
 
 type ModalMode = 'create' | 'edit' | 'duplicate' | null;
@@ -69,9 +70,8 @@ export default function ThemeGallery({
   onSelectTheme,
   currentLandingColors,
   activeThemeId,
+  quota: initialQuota,
 }: Props) {
-  if (!isOpen) return null;
-
   // Modal de Criação / Edição de Tema
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [formData, setFormData] = useState<ThemeFormState>(DEFAULT_FORM_STATE);
@@ -83,12 +83,13 @@ export default function ThemeGallery({
   const [deletingTheme, setDeletingTheme] = useState(false);
 
   // Cota dinâmica fornecida pelo backend
-  const [quota, setQuota] = useState<ThemeQuota | null>(null);
+  const [internalQuota, setInternalQuota] = useState<ThemeQuota | null>(null);
+  const quota = initialQuota ?? internalQuota;
 
   // Seleção de tema dentro do modal
   const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
 
-  function isThemeActive(theme: LandingPageTheme) {
+  const isThemeActive = useCallback((theme: LandingPageTheme) => {
     if (activeThemeId !== undefined && activeThemeId !== null) {
       return theme.id === activeThemeId;
     }
@@ -106,30 +107,41 @@ export default function ThemeGallery({
       theme.color_link_primary.toLowerCase() === (currentLandingColors.colorLinkPrimary || '').toLowerCase() &&
       theme.color_link_secondary.toLowerCase() === (currentLandingColors.colorLinkSecondary || '').toLowerCase()
     );
-  }
+  }, [activeThemeId, currentLandingColors]);
+
+  const defaultThemeId = useMemo(() => {
+    if (activeThemeId) {
+      return activeThemeId;
+    }
+    const active = themes.find(t => isThemeActive(t));
+    return active ? active.id : (themes[0]?.id ?? null);
+  }, [activeThemeId, themes, isThemeActive]);
+
+  const effectiveSelectedThemeId = selectedThemeId ?? defaultThemeId;
 
   const fetchQuota = useCallback(async () => {
     try {
       const q = await getThemeQuota();
-      setQuota(q);
+      setInternalQuota(q);
     } catch {
       // fallback silencioso
     }
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !initialQuota) {
       fetchQuota();
-      if (activeThemeId) {
-        setSelectedThemeId(activeThemeId);
-      } else {
-        const active = themes.find(t => isThemeActive(t));
-        setSelectedThemeId(active ? active.id : (themes[0]?.id ?? null));
-      }
     }
-  }, [isOpen, activeThemeId, themes, fetchQuota]);
+  }, [isOpen, initialQuota, fetchQuota]);
 
-  const selectedTheme = themes.find(t => t.id === selectedThemeId) || null;
+  // Reseta seleção para o padrão ao abrir
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedThemeId(null);
+    }
+  }, [isOpen]);
+
+  const selectedTheme = themes.find(t => t.id === effectiveSelectedThemeId) || null;
 
   const customCount = quota ? quota.custom_count : themes.filter(t => !t.is_predefined).length;
   const maxCustom = quota?.max_custom ?? 6;
@@ -288,6 +300,8 @@ export default function ThemeGallery({
     }
   }
 
+  if (!isOpen) return null;
+
   return (
     <div
       className={styles.galleryModalOverlay}
@@ -353,7 +367,7 @@ export default function ThemeGallery({
           <div className={styles.grid}>
             {themes.map(theme => {
               const active = isThemeActive(theme);
-              const isSelected = selectedThemeId === theme.id;
+              const isSelected = effectiveSelectedThemeId === theme.id;
               return (
                 <div
                   key={theme.id}
