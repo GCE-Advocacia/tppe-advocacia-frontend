@@ -39,7 +39,7 @@
   margin-bottom: 40px;
   z-index: 1;
 }
-.logoImg { height: 64px; width: auto; }
+.logoImg { height: 80px; width: 280px; max-width: 100%; }
 
 /* Card */
 .card {

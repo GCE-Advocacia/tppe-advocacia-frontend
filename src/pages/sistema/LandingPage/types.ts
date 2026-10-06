@@ -46,4 +46,45 @@ export interface LandingPageData {
 
   // Áreas
   areas: AreaAtuacao[];
+
+  // Cores
+  color: string;
+  colorBgPrimary: string;
+  colorBgSecondary: string;
+  colorBgSobre: string;
+  colorButtons: string;
+  colorButtonsHover: string;
+  colorButtonsText: string;
+  colorTitlePrimary: string;
+  colorTitleSecondary: string;
+  colorTextPrimary: string;
+  colorTextSecondary: string;
+  colorLinkPrimary: string;
+  colorLinkSecondary: string;
+  themeId?: number | null;
 }
+
+export interface LandingPageTheme {
+  id: number;
+  name: string;
+  description: string | null;
+  is_predefined: boolean;
+  color: string;
+  color_bg_primary: string;
+  color_bg_secondary: string;
+  color_bg_sobre: string;
+  color_buttons: string;
+  color_buttons_hover: string;
+  color_buttons_text: string;
+  color_title_primary: string;
+  color_title_secondary: string;
+  color_text_primary: string;
+  color_text_secondary: string;
+  color_link_primary: string;
+  color_link_secondary: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type ThemeCreatePayload = Omit<LandingPageTheme, 'id' | 'is_predefined' | 'created_at' | 'updated_at'>;
+export type ThemeUpdatePayload = Partial<ThemeCreatePayload>;

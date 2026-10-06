@@ -3,7 +3,9 @@ import { useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 import type { SuccessResponse } from '../../services/api';
+import BrandLogo from '../../components/BrandLogo/BrandLogo';
 import styles from '../sistema/Artigos_/VisualizarArtigo.module.css';
+import pageStyles from './ArtigoPage.module.css';
 
 interface ArticleDetail {
   id: number;
@@ -22,6 +24,19 @@ function calcLeitura(html: string = ''): number {
   const text = html.replace(/<[^>]*>/g, ' ');
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
+}
+
+function ArticleHeader() {
+  return (
+    <header className={pageStyles.header}>
+      <a href="/" aria-label="Página inicial" className={pageStyles.logoLink}>
+        <BrandLogo background="light" className={pageStyles.logo} />
+      </a>
+      <a href="/#artigos" className={styles.btnVoltar} style={{ textDecoration: 'none' }}>
+        <ArrowLeft size={15} /> Voltar aos artigos
+      </a>
+    </header>
+  );
 }
 
 export default function ArtigoPage() {
@@ -50,12 +65,8 @@ export default function ArtigoPage() {
   if (loading) {
     return (
       <div className={styles.shell} style={{ margin: 0 }}>
-        <header className={styles.navbar}>
-          <div className={styles.navLeft}>
-            <span className={styles.navBrand}>Carregando artigo...</span>
-          </div>
-        </header>
-        <article className={styles.article}>
+        <ArticleHeader />
+        <article className={styles.article} aria-label="Carregando artigo" aria-busy="true">
           <div style={{ maxWidth: 800, margin: '48px auto', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[30, 80, 60, 100, 95, 85, 70].map((w, i) => (
               <div key={i} style={{
@@ -76,13 +87,7 @@ export default function ArtigoPage() {
   if (erro || !artigo) {
     return (
       <div className={styles.shell} style={{ margin: 0 }}>
-        <header className={styles.navbar}>
-          <div className={styles.navLeft}>
-            <a href="/#artigos" className={styles.btnVoltar} style={{ textDecoration: 'none' }}>
-              <ArrowLeft size={15} /> Voltar aos artigos
-            </a>
-          </div>
-        </header>
+        <ArticleHeader />
         <article className={styles.article}>
           <p style={{ maxWidth: 800, margin: '48px auto', padding: '0 24px', color: 'var(--crimson, #c0392b)' }}>
             {erro ?? 'Artigo não encontrado.'}
@@ -95,13 +100,7 @@ export default function ArtigoPage() {
   return (
     <div className={styles.shell} style={{ margin: 0 }}>
 
-      <header className={styles.navbar}>
-        <div className={styles.navLeft}>
-          <a href="/#artigos" className={styles.btnVoltar} style={{ textDecoration: 'none' }}>
-            <ArrowLeft size={15} /> Voltar aos artigos
-          </a>
-        </div>
-      </header>
+      <ArticleHeader />
 
       <article className={styles.article}>
 

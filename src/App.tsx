@@ -24,6 +24,8 @@ import Login from './pages/auth/Login';
 import ResetPassword from './pages/auth/ResetPassword';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+import PaymentsViewRoute from './components/auth/PaymentsViewRoute';
+import { getSessionClaims } from './services/api';
 
 // Landing page components
 import Navbar from './components/Navbar/Navbar';
@@ -35,6 +37,7 @@ import Sobre from './components/Sobre/Sobre';
 import Artigos from './components/Artigos/Artigos';
 import Contato from './components/Contato/Contato';
 import Footer from './components/Footer/Footer';
+import { BrandingProvider } from './contexts/BrandingContext';
 import { OfficeConfigProvider } from './contexts/OfficeConfigContext';
 import ArtigoPage from './pages/public/ArtigoPage';
 
@@ -52,6 +55,7 @@ import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
 import Feriados from './pages/sistema/Feriados/Feriados';
+import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
 function LandingPage() {
   return (
@@ -81,9 +85,15 @@ function GoogleCalendarRedirect() {
   return null;
 }
 
+// Leads é restrito a ADMIN; funcionários iriam para /sistema em loop.
+function SistemaIndexRedirect() {
+  const isAdmin = getSessionClaims()?.role === 'ADMIN';
+  return <Navigate to={isAdmin ? 'leads' : 'clientes'} replace />;
+}
+
 export default function App() {
   return (
-    <>
+    <BrandingProvider>
     <BrowserRouter>
       <ScrollToHash />
       <Routes>
@@ -98,18 +108,18 @@ export default function App() {
         {/* Sistema */}
         <Route element={<ProtectedRoute />}>
           <Route path="/sistema" element={<SistemaLayout />}>
-            <Route index element={<Navigate to="leads" replace />} />
+            <Route index element={<SistemaIndexRedirect />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Usuarios />} />
+              <Route path="landing-page" element={<LandingPageConfig />} />
             </Route>
-            <Route path="landing-page" element={<LandingPageConfig />} />
             <Route path="artigos" element={<Artigos_ />} />
             <Route element={<AdminRoute />}>
               <Route path="leads" element={<Leads />} />
             </Route>
             <Route path="clientes" element={<Clientes />} />
             <Route path="agenda" element={<Agenda />} />
-            <Route element={<AdminRoute />}>
+            <Route element={<PaymentsViewRoute />}>
               <Route path="pagamentos" element={<Pagamentos />} />
             </Route>
             <Route path="processos" element={<Processos />} />
@@ -121,10 +131,13 @@ export default function App() {
             <Route element={<AdminRoute />}>
               <Route path="feriados" element={<Feriados />} />
             </Route>
+            <Route element={<AdminRoute />}>
+              <Route path="financeiro" element={<Financeiro />} />
+            </Route>
           </Route>
         </Route>
       </Routes>
     </BrowserRouter>
-    </>
+    </BrandingProvider>
   );
 }
