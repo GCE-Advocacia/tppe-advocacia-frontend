@@ -1,12 +1,25 @@
 import { apiRequest, getAccessToken, clearAccessToken, ApiError } from './api';
 import type { SuccessResponse } from './api';
-import type { LandingPageData } from '../pages/sistema/LandingPage/types';
+import type { LandingPageData, LandingPageTheme, ThemeCreatePayload, ThemeUpdatePayload } from '../pages/sistema/LandingPage/types';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
 export interface OfficeConfigAPI {
   id: number;
   office_name: string | null;
+  logo_url: string | null;
+  logo_dark_url: string | null;
+  system_logo_url: string | null;
+  system_logo_dark_url: string | null;
+  favicon_url: string | null;
+  default_logo_url: string | null;
+  default_logo_dark_url: string | null;
+  default_system_logo_url: string | null;
+  default_system_logo_dark_url: string | null;
+  default_favicon_url: string | null;
+  logo_same_for_themes: boolean;
+  system_logo_same_for_themes: boolean;
+  system_uses_landing_logo: boolean;
   cnpj: string | null;
   address: string | null;
   phone: string | null;
@@ -43,6 +56,7 @@ export interface OfficeConfigAPI {
   color_text_secondary: string | null;
   color_link_primary: string | null;
   color_link_secondary: string | null;
+  theme_id?: number | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
@@ -96,10 +110,11 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorTextSecondary: api.color_text_secondary ?? '#6B7280',
     colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
     colorLinkSecondary: api.color_link_secondary ?? '#661C16',
+    themeId: api.theme_id ?? null,
   };
 }
 
-function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'office_name'> {
+function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'office_name' | 'logo_url' | 'logo_dark_url' | 'system_logo_url' | 'system_logo_dark_url' | 'favicon_url' | keyof LogoSettings | typeof DEFAULT_LOGO_FIELDS[LogoSlot]> {
   return {
     email: ui.email || null,
     address: ui.endereco || null,
@@ -136,6 +151,7 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_text_secondary: ui.colorTextSecondary || null,
     color_link_primary: ui.colorLinkPrimary || null,
     color_link_secondary: ui.colorLinkSecondary || null,
+    theme_id: ui.themeId ?? null,
   };
 }
 
@@ -150,14 +166,70 @@ export async function getOfficeConfigUI(): Promise<LandingPageData> {
   return apiToUI(await getOfficeConfig());
 }
 
-export async function updateOfficeConfig(ui: LandingPageData): Promise<LandingPageData> {
+export async function updateOfficeConfig(ui: LandingPageData, onUpdated?: (config: OfficeConfigAPI) => void): Promise<LandingPageData> {
   const payload = uiToApi(ui);
   const res = await apiRequest<SuccessResponse<OfficeConfigAPI>>('/office-config', {
     method: 'PATCH',
     body: JSON.stringify(payload),
     authenticated: true,
   });
+  onUpdated?.(res.data);
   return apiToUI(res.data);
+}
+
+export async function getThemes(): Promise<LandingPageTheme[]> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme[]>>('/office-config/themes', {
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function createTheme(payload: ThemeCreatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>('/office-config/themes', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function updateTheme(id: number, payload: ThemeUpdatePayload): Promise<LandingPageTheme> {
+  const res = await apiRequest<SuccessResponse<LandingPageTheme>>(`/office-config/themes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+    authenticated: true,
+  });
+  return res.data;
+}
+
+export async function deleteTheme(id: number): Promise<void> {
+  await apiRequest<void>(`/office-config/themes/${id}`, {
+    method: 'DELETE',
+    authenticated: true,
+  });
+}
+
+export async function applyTheme(id: number): Promise<LandingPageData> {
+  const res = await apiRequest<SuccessResponse<OfficeConfigAPI>>(`/office-config/themes/${id}/apply`, {
+    method: 'POST',
+    authenticated: true,
+  });
+  return apiToUI(res.data);
+}
+
+export interface ThemeQuota {
+  max_total: number;
+  max_custom: number;
+  total_count: number;
+  custom_count: number;
+  is_limit_reached: boolean;
+}
+
+export async function getThemeQuota(): Promise<ThemeQuota> {
+  const res = await apiRequest<SuccessResponse<ThemeQuota>>('/office-config/themes/quota', {
+    authenticated: true,
+  });
+  return res.data;
 }
 
 const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
@@ -166,6 +238,117 @@ const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
   VALIDATION_ERROR:  'Arquivo inválido.',
   UNAUTHORIZED:      'Sessão expirada. Faça login novamente.',
 };
+
+export const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+export const LOGO_ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml';
+
+/** Early feedback only; the server also decodes and validates the actual image. */
+export function validateLogoFile(file: File): string | null {
+  if (file.size === 0) return 'O arquivo está vazio. Selecione uma imagem.';
+  if (file.size > LOGO_MAX_BYTES) return 'A logo deve ter no máximo 5 MB.';
+  const supportedMime = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'].includes(file.type);
+  const supportedExtension = /\.(png|jpe?g|webp|svg)$/i.test(file.name);
+  if (!supportedMime && !(supportedExtension && (!file.type || file.type === 'application/octet-stream'))) {
+    return 'Formato não permitido. Envie uma logo em PNG, JPG, WebP ou SVG.';
+  }
+  return null;
+}
+
+const LOGO_ERROR_MESSAGES: Record<string, string> = {
+  FILE_TOO_LARGE: 'A logo deve ter no máximo 5 MB.',
+  INVALID_MIME_TYPE: 'Formato não permitido. Envie uma logo em PNG, JPG, WebP ou SVG.',
+  INVALID_LOGO_IMAGE: 'Imagem inválida. Use uma imagem estática, visível e sem danos.',
+  LOGO_DIMENSIONS_TOO_LARGE: 'A imagem tem resolução muito alta. Use até 20 milhões de pixels.',
+  VALIDATION_ERROR: 'Selecione uma logo em PNG, JPG, WebP ou SVG.',
+  FORBIDDEN: 'Apenas administradores podem alterar a logo.',
+  LOGO_NOT_CONFIGURED: 'Selecione uma logo antes de defini-la como padrão.',
+};
+
+export type LogoSlot = 'landing-light' | 'landing-dark' | 'system-light' | 'system-dark' | 'favicon';
+export interface LogoSettings {
+  logo_same_for_themes: boolean;
+  system_logo_same_for_themes: boolean;
+  system_uses_landing_logo: boolean;
+}
+
+export const LOGO_FIELDS = {
+  'landing-light': 'logo_url',
+  'landing-dark': 'logo_dark_url',
+  'system-light': 'system_logo_url',
+  'system-dark': 'system_logo_dark_url',
+  favicon: 'favicon_url',
+} as const;
+
+export const DEFAULT_LOGO_FIELDS = {
+  'landing-light': 'default_logo_url',
+  'landing-dark': 'default_logo_dark_url',
+  'system-light': 'default_system_logo_url',
+  'system-dark': 'default_system_logo_dark_url',
+  favicon: 'default_favicon_url',
+} as const;
+
+function logoForm(file: File): FormData {
+  const validationError = validateLogoFile(file);
+  if (validationError) throw new Error(validationError);
+  const form = new FormData();
+  form.append('file', file);
+  return form;
+}
+
+async function logoRequest(path: string, options: RequestInit): Promise<Response> {
+  const token = getAccessToken();
+  const res = await fetch(`${API_URL}/office-config/logo${path}`, {
+    ...options,
+    headers: { ...options.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+  });
+
+  if (res.status === 401) {
+    clearAccessToken();
+    if (window.location.pathname !== '/login') window.location.assign('/login');
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401, 'UNAUTHORIZED');
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({})) as { error?: { code?: string } };
+    const code = body.error?.code ?? '';
+    throw new ApiError(
+      LOGO_ERROR_MESSAGES[code] ?? 'Não foi possível atualizar a logo. Tente novamente.',
+      res.status,
+      code,
+    );
+  }
+
+  return res;
+}
+
+export async function uploadOfficeLogo(file: File, slot: LogoSlot = 'landing-light', makeDefault = false): Promise<OfficeConfigAPI> {
+  const form = logoForm(file);
+  form.append('make_default', String(makeDefault));
+  const res = await logoRequest(`?slot=${slot}`, { method: 'PUT', body: form });
+  return ((await res.json()) as SuccessResponse<OfficeConfigAPI>).data;
+}
+
+export async function previewOfficeLogo(file: File, slot: LogoSlot, signal: AbortSignal): Promise<Blob> {
+  const res = await logoRequest(`/preview?slot=${slot}`, { method: 'POST', body: logoForm(file), signal });
+  return res.blob();
+}
+
+export async function resetOfficeLogo(slot: LogoSlot = 'landing-light', factory = false): Promise<OfficeConfigAPI> {
+  const res = await logoRequest(`?slot=${slot}&factory=${factory}`, { method: 'DELETE' });
+  return ((await res.json()) as SuccessResponse<OfficeConfigAPI>).data;
+}
+
+export async function setOfficeLogoDefault(slot: LogoSlot): Promise<OfficeConfigAPI> {
+  const res = await logoRequest(`/default?slot=${slot}`, { method: 'POST' });
+  return ((await res.json()) as SuccessResponse<OfficeConfigAPI>).data;
+}
+
+export async function updateLogoSettings(settings: Partial<LogoSettings>): Promise<OfficeConfigAPI> {
+  const res = await logoRequest('', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings),
+  });
+  return ((await res.json()) as SuccessResponse<OfficeConfigAPI>).data;
+}
 
 export async function uploadMedia(file: File): Promise<string> {
   const token = getAccessToken();

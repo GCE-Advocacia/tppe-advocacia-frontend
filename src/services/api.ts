@@ -30,7 +30,12 @@ export type SessionClaims = {
   sub: string;
   role: 'ADMIN' | 'USER';
   exp: number;
+  can_view_payments?: boolean;
 };
+
+export function canViewPayments(claims: SessionClaims | null): boolean {
+  return claims?.role === 'ADMIN' || claims?.can_view_payments === true;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -113,7 +118,11 @@ export async function apiRequest<T>(
   const token = getAccessToken();
   const requestHeaders = new Headers(headers);
 
-  if (requestOptions.body && !requestHeaders.has('Content-Type')) {
+  if (
+    requestOptions.body
+    && !(requestOptions.body instanceof FormData)
+    && !requestHeaders.has('Content-Type')
+  ) {
     requestHeaders.set('Content-Type', 'application/json');
   }
   if (authenticated && token) {
@@ -143,4 +152,28 @@ export async function apiRequest<T>(
   }
 
   return body as T;
+}
+
+export async function apiDownload(path: string): Promise<Blob> {
+  const token = getAccessToken();
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as ErrorBody;
+    if (response.status === 401) {
+      clearAccessToken();
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login');
+      }
+    }
+    throw new ApiError(
+      parseMessage(body.error?.message),
+      response.status,
+      body.error?.code,
+    );
+  }
+
+  return response.blob();
 }
