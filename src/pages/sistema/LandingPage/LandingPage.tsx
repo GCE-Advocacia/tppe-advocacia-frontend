@@ -38,6 +38,7 @@ const EMPTY_AREAS: AreaAtuacao[] = [
 ];
 
 const EMPTY_DATA: LandingPageData = {
+  
   email: '', endereco: '', telefone: '',
   linkedin: '', instagram: '', whatsapp: '', website: '',
   heroTitulo: '', heroSubtexto: '', heroImagem: '', heroImagemPos: { x: 50, y: 50 },
@@ -186,6 +187,68 @@ function Field({ label, tooltip, children }: FieldProps) {
   );
 }
 
+function LandingPreview({ data }: { data: LandingPageData }) {
+  const previewVars = {
+    '--pv-bg-primary': data.colorBgPrimary || data.color || '#232C43',
+    '--pv-bg-secondary': data.colorBgSecondary || '#F5F3EF',
+    '--pv-bg-about': data.colorBgSobre || '#FFFFFF',
+    '--pv-button': data.colorButtons || '#661C16',
+    '--pv-button-hover': data.colorButtonsHover || '#A52020',
+    '--pv-button-text': data.colorButtonsText || '#FFFFFF',
+    '--pv-title-primary': data.colorTitlePrimary || '#FFFFFF',
+    '--pv-title-secondary': data.colorTitleSecondary || '#232C43',
+    '--pv-text-primary': data.colorTextPrimary || '#FFFFFF',
+    '--pv-text-secondary': data.colorTextSecondary || '#6B7280',
+    '--pv-link-primary': data.colorLinkPrimary || '#FFFFFF',
+    '--pv-link-secondary': data.colorLinkSecondary || '#661C16',
+  } as React.CSSProperties;
+
+  const placeholder = '/placeholder.png';
+  return (
+    <div className={styles.previewFrame}>
+      <div className={styles.previewLanding} style={previewVars}>
+        <nav className={styles.pvNav}>
+          <a href="#pv-hero"><img src="/logo.png" alt="Vitor França" /></a>
+          <div>{['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>)}</div>
+          <a className={styles.pvButton} href="#pv-contato">Agendar Consulta</a>
+        </nav>
+        <main>
+          <section id="pv-hero" className={styles.pvHero}>
+            <div className={styles.pvHeroContent}>
+              <div className={styles.pvHeroCopy}>
+                <p className={styles.pvKicker}>Advocacia Empresarial</p>
+                <h1>{data.heroTitulo || 'Soluções jurídicas para empresas que querem crescer com segurança'}</h1>
+                <p>{data.heroSubtexto || 'Assessoria jurídica especializada com foco em resultados práticos e estratégias personalizadas para o seu negócio.'}</p>
+                <div className={styles.pvActions}><a className={styles.pvButton} href="#pv-contato">Fale Conosco</a><a className={styles.pvOutline} href="#pv-escritorio">Conheça o Escritório</a></div>
+              </div>
+              <span className={styles.pvHeroDivider} />
+              <img className={styles.pvHeroImage} src={data.heroImagem || placeholder} alt="" style={{ objectPosition: `${data.heroImagemPos.x}% ${data.heroImagemPos.y}%` }} />
+            </div>
+          </section>
+          <section id="pv-escritorio" className={styles.pvLightSection}>
+            <div className={styles.pvSplit}>
+              <img className={styles.pvOfficeImage} src={data.escritorioImagem || placeholder} alt="" style={{ objectPosition: `${data.escritorioImagemPos.x}% ${data.escritorioImagemPos.y}%` }} />
+              <div><p className={styles.pvKickerDark}>O Escritório</p><span className={styles.pvRule} /><h2>{data.escritorioTitulo || 'Excelência jurídica com foco em resultados'}</h2><p>{data.escritorioConteudo || 'O escritório nasceu com o propósito de oferecer soluções jurídicas personalizadas e estratégicas para empresas que buscam crescimento sustentável.'}</p><a className={styles.pvTextLink} href={data.website || '#pv-contato'}>Saiba Mais →</a></div>
+            </div>
+          </section>
+          <section id="pv-diferenciais" className={styles.pvDarkSection}>
+            <h2>Nossos Diferenciais</h2><div className={styles.pvDiffGrid}>{data.diferenciais.filter(item => item.titulo || item.descricao).map(item => <article key={item.id}><h3>{item.titulo}</h3><p>{item.descricao}</p></article>)}</div>
+          </section>
+          <section id="pv-areas" className={styles.pvLightSection}>
+            <h2 className={styles.pvCenteredHeading}>Áreas de Atuação</h2><div className={styles.pvAreaGrid}>{data.areas.filter(item => item.titulo || item.descricao).map(item => <article key={item.id}><h3>{item.titulo}</h3><p>{item.descricao}</p></article>)}</div>
+          </section>
+          <section id="pv-sobre" className={styles.pvAboutSection}>
+            <div className={styles.pvAboutSplit}><div className={styles.pvAboutImageWrap}><img src={data.advogadoImagem || '/vitor.png'} alt="" style={{ objectPosition: `${data.advogadoImagemPos.x}% ${data.advogadoImagemPos.y}%` }} /></div><span className={styles.pvAboutDivider} /><div><h2>{data.advogadoTitulo || 'Vitor França'}</h2><p className={styles.pvOab}>{data.advogadoOab || 'OAB/SP 123.456'}</p><p>{data.advogadoConteudo || 'Advogado especializado em Direito Empresarial, com mais de 15 anos de experiência em assessoria jurídica estratégica para empresas de médio e grande porte.'}</p><a className={styles.pvTextLink} href={data.linkedin || '#pv-contato'}>Ver currículo completo →</a></div></div>
+          </section>
+          <section id="pv-artigos" className={styles.pvDarkSection}><p className={styles.pvKicker}>Publicações</p><h2>Artigos e Notícias</h2><div className={styles.pvArticleGrid}>{['Assessoria jurídica estratégica para empresas', 'Segurança jurídica e crescimento sustentável', 'O que considerar em contratos empresariais'].map(title => <article key={title}><p>Publicação recente</p><h3>{title}</h3><a href="#pv-artigos">Leia mais →</a></article>)}</div></section>
+          <section id="pv-contato" className={styles.pvLightSection}><div className={styles.pvContactGrid}><div><h2>Entre em Contato</h2><p>ENDEREÇO</p><p>{data.endereco || 'Av. Paulista, 1.500 - 10º andar\nBela Vista, São Paulo - SP\nCEP 01310-100'}</p><p>E-MAIL</p><p>{data.email || 'contato@vitorfranca.adv.br'}</p><p>TELEFONE</p><p>{data.telefone || '(11) 3456-7890'}</p><a className={styles.pvButton} href={data.whatsapp || '#pv-contato'}>Falar no WhatsApp</a></div><div className={styles.pvForm}><label>Nome<input readOnly placeholder="Seu nome" /></label><label>E-mail<input readOnly placeholder="seu@email.com" /></label><label>Telefone<input readOnly placeholder="(11) 99999-9999" /></label><label>Mensagem<textarea readOnly placeholder="Como podemos ajudar?" /></label><p>Li e concordo com o Termo de Consentimento.</p><button className={styles.pvButton} type="button">Enviar Mensagem</button></div></div></section>
+        </main>
+        <footer className={styles.pvFooter}><div><img src="/logo.png" alt="Vitor França" /><p>© 2026 Vitor França. Todos os direitos reservados.</p></div><nav>{['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>)}</nav><div>{data.linkedin && <a href={data.linkedin}>LinkedIn</a>}{data.instagram && <a href={data.instagram}>Instagram</a>}</div></footer>
+      </div>
+    </div>
+  );
+}
+
 // ── main page ────────────────────────────────────────────
 export default function LandingPageConfig() {
   const { applyConfig } = useBrandingActions();
@@ -217,6 +280,33 @@ export default function LandingPageConfig() {
       .catch(() => { setLoadError('Não foi possível carregar as configurações. Recarregue a página.'); })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [isDirty]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const confirmInternalNavigation = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest('a[href]') as HTMLAnchorElement | null;
+      if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const destination = new URL(link.href, window.location.href);
+      if (destination.origin !== window.location.origin || (destination.pathname === window.location.pathname && destination.search === window.location.search)) return;
+      if (!window.confirm('Existem alterações não salvas. Deseja sair e descartá-las?')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+    document.addEventListener('click', confirmInternalNavigation, true);
+    return () => document.removeEventListener('click', confirmInternalNavigation, true);
+  }, [isDirty]);
 
   const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
     setData(d => ({ ...d, [key]: value }));
@@ -716,6 +806,48 @@ export default function LandingPageConfig() {
 
       {/* ── Identidade Visual / Cores (US09 v2.1) ── */}
       <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 12 }}>Preview em tempo real</h3>
+            <p style={{ color: 'var(--gray)', fontSize: '.85rem', marginBottom: 14 }}>Preview com os componentes reais do site. Passe o mouse sobre os botões para conferir o hover.</p>
+            <LandingPreview data={data} />
+          </div>
+          {/* Botão para restaurar cores originais */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              style={{
+                background: 'none',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                padding: '6px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: 'var(--navy)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+              }}
+              onClick={() => {
+                setData(d => ({
+                  ...d,
+                  color: '#232C43',
+                  colorBgPrimary: '#232C43',
+                  colorBgSecondary: '#F5F3EF',
+                  colorBgSobre: '#FFFFFF',
+                  colorButtons: '#661C16',
+                  colorButtonsHover: '#A52020',
+                  colorButtonsText: '#FFFFFF',
+                  colorTitlePrimary: '#FFFFFF',
+                  colorTitleSecondary: '#232C43',
+                  colorTextPrimary: '#FFFFFF',
+                  colorTextSecondary: '#6B7280',
+                  colorLinkPrimary: '#FFFFFF',
+                  colorLinkSecondary: '#661C16',
+                }));
+              }}
+            >
+              ↺ Restaurar Cores Padrão
+            </button>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Barra Superior: Tema Base Ativo e Ações Rápidas */}
           <div className={styles.themeSelectorBar}>
@@ -1089,8 +1221,8 @@ export default function LandingPageConfig() {
           </span>
         )}
         <div className={styles.bottomActions}>
-          <button className={styles.btnDiscard} onClick={discard} disabled={saving}>
-            <X size={15} /> Descartar
+          <button className={styles.btnDiscard} onClick={discard} disabled={saving || !isDirty}>
+            <X size={15} /> Restaurar salvas
           </button>
           <button className={styles.btnSave} onClick={save} disabled={saving || !isDirty || (branding.dirty && !branding.ready)}>
             {saving

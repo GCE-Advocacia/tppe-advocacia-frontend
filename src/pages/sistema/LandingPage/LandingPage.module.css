@@ -47,6 +47,131 @@
   padding: 24px;
 }
 
+/* Preview reproduz o layout da landing sem compartilhar variáveis com o admin. */
+.previewFrame {
+  height: min(78vh, 860px);
+  min-height: 560px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: auto;
+  background: #fff;
+  isolation: isolate;
+}
+.previewLanding {
+  position: relative;
+  min-width: 700px;
+  overflow: hidden;
+  transform: translateZ(0);
+  background: #fff;
+  color: #1A1A2E;
+  font-family: var(--font-body);
+}
+.previewLanding a { text-decoration: none; }
+.pvNav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 110px;
+  padding: 0 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--pv-bg-primary);
+}
+.pvNav > a:first-child { display: flex; width: 228px; height: 100px; align-items: center; justify-content: center; }
+.pvNav > a:first-child img { width: auto; height: auto; max-height: 90px; }
+.pvNav > div { display: flex; align-items: center; gap: 25px; }
+.pvNav > div a { color: var(--pv-link-primary); font-size: .85rem; }
+.pvNav > div a:hover { color: #fff; }
+.pvButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 24px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--pv-button);
+  color: var(--pv-button-text);
+  font: 600 .9rem var(--font-body);
+  transition: background .2s, transform .15s;
+  cursor: pointer;
+}
+.pvButton:hover { background: var(--pv-button-hover); transform: translateY(-1px); }
+.pvHero { min-height: 100vh; padding: 180px 0 120px; display: flex; align-items: center; background: var(--pv-bg-primary); color: var(--pv-text-primary); }
+.pvHeroContent { width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 80px; display: flex; align-items: center; gap: 20px; }
+.pvHeroCopy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; }
+.pvKicker { color: var(--pv-text-primary); opacity: .8; font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 16px; }
+.pvHero h1 { max-width: 600px; margin-bottom: 20px; color: var(--pv-title-primary); font-family: 'Montserrat', sans-serif; font-size: clamp(2.4rem, 4.4vw, 4rem); font-weight: 800; line-height: 1.1; }
+.pvHeroCopy > p:not(.pvKicker) { max-width: 640px; margin-bottom: 40px; color: var(--pv-text-primary); font-size: 1.1rem; line-height: 1.65; }
+.pvActions { display: flex; flex-wrap: wrap; gap: 16px; }
+.pvOutline { display: inline-flex; padding: 13px 24px; align-items: center; border: 1.5px solid rgba(255,255,255,.45); border-radius: 4px; color: var(--pv-title-primary); font-size: .9rem; font-weight: 600; }
+.pvOutline:hover { border-color: #fff; background: rgba(255,255,255,.06); }
+.pvHeroDivider { flex: 0 0 8px; height: 600px; background: #661C16; }
+.pvHeroImage { flex: 1; width: 40%; height: 598px; object-fit: cover; background: #162240; }
+.pvLightSection { padding: 100px 0; background: var(--pv-bg-secondary); }
+.pvSplit { max-width: 1600px; margin: 0 auto; padding: 0 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.pvOfficeImage { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; background: #162240; }
+.pvKickerDark { margin-bottom: 12px; color: #661C16; font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.pvRule { display: block; width: 48px; height: 3px; margin: 12px 0 24px; background: #661C16; }
+.pvSplit h2, .pvContactGrid h2 { margin-bottom: 24px; color: var(--pv-title-secondary); font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.2; }
+.pvSplit p:not(.pvKickerDark), .pvAboutSplit > div:last-child > p:not(.pvOab) { margin-bottom: 16px; color: var(--pv-text-secondary); font-size: .97rem; line-height: 1.8; white-space: pre-line; }
+.pvTextLink { display: inline-flex; margin-top: 8px; color: var(--pv-link-secondary); font-size: .95rem; font-weight: 700; }
+.pvTextLink:hover { text-decoration: underline; }
+.pvDarkSection { padding: 64px 80px 100px; background: var(--pv-bg-primary); }
+.pvDarkSection > h2 { margin-bottom: 64px; color: var(--pv-title-primary); text-align: center; font-size: clamp(1.8rem, 3vw, 2.4rem); }
+.pvDiffGrid { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; }
+.pvDiffGrid article { min-height: 120px; }
+.pvDiffGrid h3, .pvArticleGrid h3 { padding-top: 20px; margin-bottom: 16px; border-top: 3px solid #661C16; color: #fff; font-size: 1.15rem; }
+.pvDiffGrid p { color: var(--pv-text-primary); font-size: .93rem; line-height: 1.75; }
+.pvCenteredHeading { margin-bottom: 64px; color: var(--pv-title-secondary); text-align: center; font-size: clamp(1.8rem, 3vw, 2.4rem); }
+.pvAreaGrid { max-width: 1440px; margin: 0 auto; padding: 0 80px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 60px; }
+.pvAreaGrid h3 { display: block; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid #661C16; color: var(--pv-title-secondary); font-size: 1.15rem; }
+.pvAreaGrid p { color: var(--pv-text-secondary); font-size: .92rem; line-height: 1.7; }
+.pvAboutSection { padding: 100px 0; background: var(--pv-bg-about); }
+.pvAboutSplit { max-width: 1600px; margin: 0 auto; padding: 0 80px; display: flex; align-items: center; gap: 80px; }
+.pvAboutImageWrap { flex: 0 0 42%; height: 560px; overflow: hidden; background: #1b2a4a; }
+.pvAboutImageWrap img { width: 100%; height: 100%; object-fit: cover; }
+.pvAboutDivider { width: 8px; height: 560px; flex-shrink: 0; background: #661C16; }
+.pvAboutSplit > div:last-child { flex: 1; }
+.pvAboutSplit h2 { margin-bottom: 6px; color: var(--pv-title-secondary); font-size: clamp(1.8rem, 3vw, 2.6rem); }
+.pvOab { margin-bottom: 24px; color: var(--pv-text-secondary); font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+.pvArticleGrid { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+.pvArticleGrid article > p { margin-bottom: 14px; color: var(--pv-text-primary); opacity: .6; font-size: .78rem; }
+.pvArticleGrid h3 { border: 0; padding: 0; line-height: 1.35; }
+.pvArticleGrid a { color: var(--pv-link-primary); font-size: .88rem; font-weight: 700; }
+.pvContactGrid { max-width: 1440px; margin: 0 auto; padding: 0 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; }
+.pvContactGrid > div:first-child > p:nth-of-type(odd) { margin: 0 0 6px; color: var(--pv-text-secondary); font-size: .7rem; font-weight: 700; letter-spacing: .18em; }
+.pvContactGrid > div:first-child > p:nth-of-type(even) { margin-bottom: 28px; color: var(--pv-text-secondary); font-size: .95rem; line-height: 1.7; white-space: pre-line; }
+.pvForm { display: flex; flex-direction: column; gap: 14px; }
+.pvForm label { color: #1A1A2E; font-size: .85rem; font-weight: 700; }
+.pvForm input, .pvForm textarea { display: block; width: 100%; margin-top: 8px; padding: 12px 14px; border: 1.5px solid #E5E3DF; border-radius: 4px; background: #fff; font: .95rem var(--font-body); }
+.pvForm textarea { height: 100px; resize: none; }
+.pvForm > p { color: var(--pv-text-secondary); font-size: .78rem; }
+.pvFooter { padding: 40px 80px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: var(--pv-bg-primary); color: var(--pv-text-primary); }
+.pvFooter > div:first-child img { max-width: 180px; max-height: 70px; margin-bottom: 20px; }
+.pvFooter p { font-size: .75rem; opacity: .7; }
+.pvFooter nav, .pvFooter > div:last-child { display: flex; flex-wrap: wrap; gap: 20px; }
+.pvFooter a { color: var(--pv-link-primary); font-size: .85rem; }
+
+@media (max-width: 900px) {
+  .pvNav { height: 72px; padding: 0 24px; }
+  .pvNav > a:first-child { width: 150px; height: auto; }
+  .pvNav > div, .pvNav > .pvButton { display: none; }
+  .pvHero { min-height: unset; padding: 112px 0 60px; }
+  .pvHeroContent { padding: 0 24px; flex-direction: column; align-items: flex-start; gap: 32px; }
+  .pvHero h1 { font-size: 2.5rem; }
+  .pvHeroDivider { display: none; }
+  .pvHeroImage { display: none; }
+  .pvSplit, .pvContactGrid { padding: 0 24px; grid-template-columns: 1fr; gap: 40px; }
+  .pvDarkSection { padding: 64px 24px; }
+  .pvDiffGrid, .pvAreaGrid, .pvArticleGrid { grid-template-columns: 1fr; gap: 36px; }
+  .pvAreaGrid { padding: 0 24px; }
+  .pvAboutSplit { padding: 0 24px; flex-direction: column; gap: 40px; }
+  .pvAboutImageWrap { width: 100%; height: 400px; flex-basis: auto; }
+  .pvAboutDivider { width: 100%; height: 8px; }
+  .pvFooter { padding: 40px 24px; }
+}
+
 /* ── Fields ── */
 .field {
   margin-bottom: 20px;
