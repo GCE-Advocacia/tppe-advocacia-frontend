@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useBrandingActions } from '../../../../contexts/BrandingContext';
 import {
   getThemes,
   createTheme,
@@ -29,6 +30,7 @@ export function usePersonalizacaoThemes({
   setData,
   setSaved,
 }: UsePersonalizacaoThemesProps) {
+  const { applyConfig: defaultApplyConfig } = useBrandingActions();
   const [themes, setThemes] = useState<LandingPageTheme[]>([]);
   const [themeQuota, setThemeQuota] = useState<ThemeQuota | null>(null);
   const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
@@ -210,7 +212,7 @@ export function usePersonalizacaoThemes({
 
   const handleSaveCurrentAsTheme = useCallback(async (
     brandingSave: () => Promise<void>,
-    applyConfig?: (cfg: OfficeConfigAPI) => void
+    applyConfigCallback?: (cfg: OfficeConfigAPI) => void
   ) => {
     if (!newThemeName.trim()) {
       setSaveNewError('Informe um nome para o tema.');
@@ -238,7 +240,8 @@ export function usePersonalizacaoThemes({
         color_link_secondary: data.colorLinkSecondary || '#661C16',
       });
 
-      const updated = await updateOfficeConfig({ ...data, themeId: created.id }, applyConfig);
+      const onUpdated = applyConfigCallback || defaultApplyConfig;
+      const updated = await updateOfficeConfig({ ...data, themeId: created.id }, onUpdated);
       setSaved(updated);
       setData(updated);
       setBaseThemeId(created.id);
@@ -254,7 +257,7 @@ export function usePersonalizacaoThemes({
     } finally {
       setSavingNewTheme(false);
     }
-  }, [newThemeName, newThemeDesc, data, applyConfig, fetchThemes, setData, setSaved]);
+  }, [newThemeName, newThemeDesc, data, defaultApplyConfig, fetchThemes, setData, setSaved]);
 
   return {
     themes,
