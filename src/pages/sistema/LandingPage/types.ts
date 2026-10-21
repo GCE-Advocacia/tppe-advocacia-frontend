@@ -88,3 +88,51 @@ export interface LandingPageTheme {
 
 export type ThemeCreatePayload = Omit<LandingPageTheme, 'id' | 'is_predefined' | 'created_at' | 'updated_at'>;
 export type ThemeUpdatePayload = Partial<ThemeCreatePayload>;
+
+export const EMPTY_DIFERENCIAIS: Diferencial[] = [
+  { id: 1, titulo: '', descricao: '' },
+  { id: 2, titulo: '', descricao: '' },
+  { id: 3, titulo: '', descricao: '' },
+];
+
+export const EMPTY_AREAS: AreaAtuacao[] = [
+  { id: 1, titulo: '', descricao: '' },
+  { id: 2, titulo: '', descricao: '' },
+  { id: 3, titulo: '', descricao: '' },
+  { id: 4, titulo: '', descricao: '' },
+  { id: 5, titulo: '', descricao: '' },
+  { id: 6, titulo: '', descricao: '' },
+];
+
+export const DEFAULT_COLORS = {
+  color: '#232C43',
+  colorBgPrimary: '#232C43',
+  colorBgSecondary: '#F5F3EF',
+  colorBgSobre: '#FFFFFF',
+  colorButtons: '#661C16',
+  colorButtonsHover: '#A52020',
+  colorButtonsText: '#FFFFFF',
+  colorTitlePrimary: '#FFFFFF',
+  colorTitleSecondary: '#232C43',
+  colorTextPrimary: '#FFFFFF',
+  colorTextSecondary: '#6B7280',
+  colorLinkPrimary: '#FFFFFF',
+  colorLinkSecondary: '#661C16',
+};
+
+export const EMPTY_DATA: LandingPageData = {
+  email: '', endereco: '', telefone: '',
+  linkedin: '', instagram: '', whatsapp: '', website: '',
+  heroTitulo: '', heroSubtexto: '', heroImagem: '', heroImagemPos: { x: 50, y: 50 },
+  escritorioTitulo: '', escritorioConteudo: '', escritorioImagem: '', escritorioImagemPos: { x: 50, y: 50 },
+  advogadoTitulo: '', advogadoOab: '', advogadoConteudo: '', advogadoImagem: '', advogadoImagemPos: { x: 50, y: 50 },
+  diferenciais: EMPTY_DIFERENCIAIS,
+  areas: EMPTY_AREAS,
+  ...DEFAULT_COLORS,
+  themeId: null,
+};
+
+export function deepEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
