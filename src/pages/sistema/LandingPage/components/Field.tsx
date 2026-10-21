@@ -12,7 +12,7 @@ export default function Field({ label, tooltip, children }: FieldProps) {
   return (
     <div className={styles.field}>
       <label className={styles.fieldLabel}>
-        <span>{label}</span>
+        {label}
         {tooltip && (
           <span className={styles.tooltipWrapper} tabIndex={0} aria-label={tooltip}>
             <Info size={13} className={styles.tooltipIcon} />

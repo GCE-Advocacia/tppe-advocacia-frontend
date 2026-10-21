@@ -58,7 +58,7 @@ class TestInformacoesInstitucionais:
     def test_secao_links_visivel(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//*[contains(text(),'Links')]")
+            (By.XPATH, "//*[contains(text(),'LINKEDIN')]")
         ))
         pause()
         assert "LINKEDIN"  in logged_in.page_source
@@ -165,59 +165,59 @@ class TestEdicaoSecoes:
     def test_secao_diferenciais_exibe_tres_cards(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]")
+            (By.XPATH, "//h2[text()='Diferenciais']")
         ))
         pause()
         botoes = logged_in.find_elements(
-            By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//button"
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//button"
         )
         assert len(botoes) >= 3
 
     def test_editar_diferencial_abre_inputs_inline(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]")
+            (By.XPATH, "//h2[text()='Diferenciais']")
         ))
         pause()
         primeiro_edit = logged_in.find_element(
-            By.XPATH, "(//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//button)[1]"
+            By.XPATH, "(//h2[text()='Diferenciais']/ancestor::div[2]//button)[1]"
         )
         scroll_and_click(logged_in, primeiro_edit)
 
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//input")
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//input")
         ))
         pause()
         assert logged_in.find_element(
-            By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//input"
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//input"
         ).is_displayed()
         assert logged_in.find_element(
-            By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//textarea"
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea"
         ).is_displayed()
 
     def test_confirmar_edicao_diferencial_fecha_inputs(self, logged_in, wait):
         logged_in.get(LANDING_URL)
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]")
+            (By.XPATH, "//h2[text()='Diferenciais']")
         ))
         pause()
         primeiro_edit = logged_in.find_element(
-            By.XPATH, "(//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//button)[1]"
+            By.XPATH, "(//h2[text()='Diferenciais']/ancestor::div[2]//button)[1]"
         )
         scroll_and_click(logged_in, primeiro_edit)
 
         wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//textarea")
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea")
         ))
         pause()
         confirm = logged_in.find_element(
             By.XPATH,
-            "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//textarea/following-sibling::button"
+            "//h2[text()='Diferenciais']/ancestor::div[2]//textarea/following-sibling::button"
         )
         scroll_and_click(logged_in, confirm)
 
         wait.until(EC.invisibility_of_element_located(
-            (By.XPATH, "//h2[contains(text(),'Diferenciais')]/ancestor::div[2]//textarea")
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea")
         ))
         pause()
 
@@ -667,13 +667,11 @@ class TestTemasLandingPage:
 
     def test_abrir_modal_biblioteca_de_temas(self, logged_in, wait):
         logged_in.get(LANDING_URL)
-        wait.until(EC.element_to_be_clickable(
+        btn = wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//button[contains(.,'Biblioteca de Temas')]")
         ))
         pause()
-        logged_in.find_element(
-            By.XPATH, "//button[contains(.,'Biblioteca de Temas')]"
-        ).click()
+        scroll_and_click(logged_in, btn)
 
         wait.until(EC.presence_of_element_located(
             (By.XPATH, "//*[contains(text(),'Biblioteca de Temas')]")
@@ -687,24 +685,20 @@ class TestTemasLandingPage:
 
     def test_fechar_modal_biblioteca_ao_cancelar(self, logged_in, wait):
         logged_in.get(LANDING_URL)
-        wait.until(EC.element_to_be_clickable(
+        btn = wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//button[contains(.,'Biblioteca de Temas')]")
         ))
         pause()
-        logged_in.find_element(
-            By.XPATH, "//button[contains(.,'Biblioteca de Temas')]"
-        ).click()
+        scroll_and_click(logged_in, btn)
 
-        wait.until(EC.element_to_be_clickable(
+        cancel_btn = wait.until(EC.element_to_be_clickable(
             (By.XPATH, "//button[contains(.,'Cancelar')]")
         ))
         pause()
-        logged_in.find_element(
-            By.XPATH, "//button[contains(.,'Cancelar')]"
-        ).click()
+        scroll_and_click(logged_in, cancel_btn)
 
         wait.until(EC.invisibility_of_element_located(
-            (By.XPATH, "//*[contains(text(),'Biblioteca de Temas')]")
+            (By.XPATH, "//h3[contains(text(),'Biblioteca de Temas')]")
         ))
         pause()
 

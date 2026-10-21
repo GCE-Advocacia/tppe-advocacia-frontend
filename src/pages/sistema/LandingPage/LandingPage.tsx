@@ -77,7 +77,7 @@ export default function LandingPageConfig() {
             onClick={handleDiscard}
             disabled={form.saving || !form.isDirty}
           >
-            <X size={15} /> Restaurar salvas
+            <X size={15} /> Descartar
           </button>
           <button
             type="button"
