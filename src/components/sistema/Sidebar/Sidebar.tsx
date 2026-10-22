@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   UserCog,
-  Layout,
+  Palette,
   FileText,
   UserPlus,
   UsersRound,
@@ -25,7 +25,7 @@ import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
   { label: 'Usuários',      href: '/sistema/usuarios',      icon: UserCog,      adminOnly: true  },
-  { label: 'Landing Page',  href: '/sistema/landing-page',  icon: Layout,       adminOnly: true  },
+  { label: 'Personalização', href: '/sistema/personalizacao', icon: Palette,     adminOnly: true  },
   { label: 'Artigos',       href: '/sistema/artigos',        icon: FileText,     adminOnly: false },
   { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
   { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },

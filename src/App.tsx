@@ -111,7 +111,8 @@ export default function App() {
             <Route index element={<SistemaIndexRedirect />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Usuarios />} />
-              <Route path="landing-page" element={<LandingPageConfig />} />
+              <Route path="personalizacao" element={<LandingPageConfig />} />
+              <Route path="landing-page" element={<Navigate to="/sistema/personalizacao" replace />} />
             </Route>
             <Route path="artigos" element={<Artigos_ />} />
             <Route element={<AdminRoute />}>
