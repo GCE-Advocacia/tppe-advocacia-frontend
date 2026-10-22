@@ -151,7 +151,7 @@ async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 12
 }
 
 async function openSettings(page) {
-  await page.goto(`${baseURL}/sistema/landing-page`);
+  await page.goto(`${baseURL}/sistema/personalizacao`);
   await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).waitFor();
 }
 
@@ -267,6 +267,7 @@ test('saves all five image slots, theme choices and existing form fields in one 
   await page.getByRole('checkbox', { name: 'Usar a mesma logo nos fundos claro e escuro da landing page' }).uncheck();
   await page.getByRole('checkbox', { name: 'Usar a mesma logo nos fundos claro e escuro do sistema' }).uncheck();
   for (const slot of Object.keys(slots)) await chooseImage(page, `${slot}.png`, slot);
+  await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).click();
   await page.locator('input:not([type])').first().fill('contato@novo.test');
   assert.equal(state.uploads.length, 0);
   assert.equal(state.preferenceUpdates.length, 0);
@@ -372,6 +373,7 @@ test('a failed form save keeps unsaved fields and does not repeat successful ima
   const { page, state } = await setup(t);
   await openSettings(page);
   await chooseImage(page);
+  await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).click();
   await page.locator('input:not([type])').first().fill('contato@novo.test');
   state.generalFailure = true;
   await saveButton(page).click();
@@ -490,7 +492,7 @@ test('logo changes preserve the existing color settings and landing color behavi
 test('denies unauthenticated and non-admin access without redirect loops', async t => {
   for (const role of [null, 'USER']) {
     const { page, state } = await setup(t, { role });
-    await page.goto(`${baseURL}/sistema/landing-page`);
+    await page.goto(`${baseURL}/sistema/personalizacao`);
     await page.waitForURL(`${baseURL}${role ? '/sistema/clientes' : '/login'}`);
     assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
     assert.equal(state.uploads.length, 0);
@@ -593,4 +595,20 @@ test('each theme, system logo and favicon can have its own default', async t => 
   assert.equal(state.config.favicon_url, null);
   assert.equal(state.config.default_favicon_url, null);
   assert.equal(state.config.default_logo_url, landingDefault);
+});
+
+test('redirects legacy landing-page route and normalizes canonical personalizacao tabs', async t => {
+  const { page } = await setup(t);
+  await page.goto(`${baseURL}/sistema/landing-page`);
+  await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=identidade`);
+  assert.equal(await page.getByRole('heading', { name: 'Personalização do Sistema' }).count(), 1);
+  assert.equal(await page.getByRole('tab', { name: /Identidade Visual & Cores/ }).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 1);
+  assert.equal(await page.getByRole('heading', { name: 'Dados Institucionais' }).count(), 0);
+
+  await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).click();
+  await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=conteudo`);
+  assert.equal(await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.getByRole('heading', { name: 'Dados Institucionais' }).count(), 1);
+  assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
 });
