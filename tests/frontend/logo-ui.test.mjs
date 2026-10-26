@@ -491,7 +491,7 @@ test('denies unauthenticated and non-admin access without redirect loops', async
   for (const role of [null, 'USER']) {
     const { page, state } = await setup(t, { role });
     await page.goto(`${baseURL}/sistema/landing-page`);
-    await page.waitForURL(`${baseURL}${role ? '/sistema/clientes' : '/login'}`);
+    await page.waitForURL(`${baseURL}${role ? '/sistema/sem-acesso' : '/login'}`);
     assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
     assert.equal(state.uploads.length, 0);
   }
