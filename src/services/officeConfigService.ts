@@ -260,7 +260,7 @@ const LOGO_ERROR_MESSAGES: Record<string, string> = {
   INVALID_LOGO_IMAGE: 'Imagem inválida. Use uma imagem estática, visível e sem danos.',
   LOGO_DIMENSIONS_TOO_LARGE: 'A imagem tem resolução muito alta. Use até 20 milhões de pixels.',
   VALIDATION_ERROR: 'Selecione uma logo em PNG, JPG, WebP ou SVG.',
-  FORBIDDEN: 'Apenas administradores podem alterar a logo.',
+  FORBIDDEN: 'Você não tem permissão para acessar esta área.',
   LOGO_NOT_CONFIGURED: 'Selecione uma logo antes de defini-la como padrão.',
 };
 
