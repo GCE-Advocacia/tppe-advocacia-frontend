@@ -1,43 +1,16 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  UserCog,
-  Layout,
-  FileText,
-  UserPlus,
-  UsersRound,
-  CalendarDays,
-  Wallet,
-  Briefcase,
-  LayoutList,
-  Bell,
-  Activity,
-  CalendarX2,
   User,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
 } from 'lucide-react';
-import { canViewPayments, getSessionClaims } from '../../../services/api';
+import { getSessionClaims } from '../../../services/api';
 import { logout } from '../../../services/auth';
+import { ABAS, canAccessAba } from '../../../config/abas';
 import BrandLogo from '../../BrandLogo/BrandLogo';
 import styles from './Sidebar.module.css';
-
-const NAV_ITEMS = [
-  { label: 'Usuários',      href: '/sistema/usuarios',      icon: UserCog,      adminOnly: true  },
-  { label: 'Landing Page',  href: '/sistema/landing-page',  icon: Layout,       adminOnly: true  },
-  { label: 'Artigos',       href: '/sistema/artigos',        icon: FileText,     adminOnly: false },
-  { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
-  { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },
-  { label: 'Agenda',        href: '/sistema/agenda',         icon: CalendarDays, adminOnly: false },
-  { label: 'Pagamentos',    href: '/sistema/pagamentos',     icon: Wallet,       adminOnly: false, visible: canViewPayments },
-  { label: 'Processos',     href: '/sistema/processos',      icon: Briefcase,    adminOnly: false },
-  { label: 'Tarefas',       href: '/sistema/tarefas',        icon: LayoutList,   adminOnly: false },
-  { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
-  { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
-  { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
-  { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
-];
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -45,7 +18,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const claims = getSessionClaims();
   const role = claims?.role === 'ADMIN' ? 'Administrador' : 'Usuário';
-  const isAdmin = claims?.role === 'ADMIN';
+  const abasVisiveis = ABAS.filter(aba => canAccessAba(claims, aba));
 
   function handleLogout() {
     logout();
@@ -87,10 +60,10 @@ export default function Sidebar() {
 
         {/* Nav links */}
         <nav className={styles.nav}>
-          {NAV_ITEMS.filter(item => (item.visible ? item.visible(claims) : !item.adminOnly || isAdmin)).map(({ label, href, icon: Icon }) => (
+          {abasVisiveis.map(({ label, path, icon: Icon }) => (
             <NavLink
-              key={href}
-              to={href}
+              key={path}
+              to={`/sistema/${path}`}
               className={({ isActive }) =>
                 `${styles.navItem} ${isActive ? styles.active : ''}`
               }
