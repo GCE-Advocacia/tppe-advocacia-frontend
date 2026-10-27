@@ -7,7 +7,7 @@
 .fullField { grid-column: 1 / -1; }
 .formError { padding: 10px 12px; border-radius: 6px; color: var(--crimson); background: #fdecea; font-size: .75rem; }
 .formActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 18px; border-top: 1px solid #eceef2; }
-.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: 6px; font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
+.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: var(--btn-radius, 6px); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
 .cancelButton { border: 1px solid #dfe2e8; background: var(--white); color: var(--navy); }
 .submitButton { border: 1px solid var(--crimson); background: var(--crimson); color: var(--white); }
 .submitButton:disabled { opacity: .5; cursor: wait; }

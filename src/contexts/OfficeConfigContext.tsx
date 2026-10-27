@@ -1,6 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getOfficeConfig } from '../services/officeConfigService';
 import type { OfficeConfigAPI } from '../services/officeConfigService';
+import { useBranding } from './BrandingContext';
+
+/** Apply only the saved geometry globally; keep the existing landing color scope. */
+export function OfficeButtonRadius() {
+  const { config } = useBranding();
+  const radius = config?.button_radius ?? '6px';
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--btn-radius', radius);
+  }, [radius]);
+
+  return null;
+}
 
 interface OfficeConfigCtx {
   config: OfficeConfigAPI | null;

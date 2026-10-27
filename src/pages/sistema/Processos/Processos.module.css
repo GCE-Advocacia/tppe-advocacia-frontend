@@ -17,7 +17,7 @@
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
   background: var(--navy); color: var(--white);
-  border: none; padding: 11px 22px; border-radius: 8px;
+  border: none; padding: 11px 22px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
@@ -180,7 +180,7 @@
 .btnCancel { background: none; border: none; color: var(--gray); font-size: .9rem; font-weight: 500; cursor: pointer; font-family: var(--font-body); }
 .btnCancel:hover { color: var(--text); }
 .btnDelete { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--crimson); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
-.btnSave { display: flex; align-items: center; gap: 6px; background: var(--navy); color: var(--white); border: none; padding: 10px 22px; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background .2s; }
+.btnSave { display: flex; align-items: center; gap: 6px; background: var(--navy); color: var(--white); border: none; padding: 10px 22px; border-radius: var(--btn-radius, 6px); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background .2s; }
 .btnSave:hover { background: var(--navy-mid); }
 
 /* Ficha e timeline */
@@ -208,7 +208,7 @@
   font: inherit; font-size: .8rem;
 }
 .statusControl button, .syncButton {
-  min-height: 38px; border: 1px solid #dfe2e8; border-radius: 6px;
+  min-height: 38px; border: 1px solid #dfe2e8; border-radius: var(--btn-radius, 6px);
   background: var(--white); padding: 0 12px; color: var(--navy);
   font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer;
 }
@@ -280,7 +280,7 @@
 .noteForm { display: grid; justify-items: end; gap: 8px; margin-bottom: 13px; }
 .noteForm textarea { width: 100%; resize: vertical; min-height: 76px; border: 1px solid #dfe2e8; border-radius: 6px; padding: 10px; outline: none; color: var(--navy); font: inherit; font-size: .75rem; box-sizing: border-box; }
 .noteForm textarea:focus { border-color: #9aa8ba; box-shadow: 0 0 0 3px rgba(38,56,89,.08); }
-.noteForm button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: 6px; padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.noteForm button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: var(--btn-radius, 6px); padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .noteForm button:disabled { opacity: .45; cursor: default; }
 .noteList { display: grid; gap: 9px; }
 .noteItem { padding: 11px 12px; border-left: 3px solid #c8d0dc; background: #f7f8fa; border-radius: 0 4px 4px 0; }
@@ -299,7 +299,7 @@
 .notesEmpty { padding: 18px; border: 1px dashed #d6dae1; border-radius: 7px; color: var(--gray); text-align: center; font-size: .7rem; }
 .documentsSection { border-top: 1px solid #eceef2; padding: 20px 0; margin-top: 4px; }
 .documentUpload { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 13px; }
-.documentUpload button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: 6px; padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.documentUpload button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: var(--btn-radius, 6px); padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .documentUpload button:disabled { opacity: .45; cursor: default; }
 .documentUpload small { color: var(--gray); font-size: .65rem; }
 .documentList { display: grid; gap: 8px; }
@@ -315,7 +315,7 @@
 .deadlinesHeader h3 { color: var(--navy); font-size: .95rem; }
 .deadlinesHeader button {
   min-height: 34px; display: flex; align-items: center; gap: 6px;
-  border: 1px solid var(--navy); border-radius: 6px; padding: 0 10px;
+  border: 1px solid var(--navy); border-radius: var(--btn-radius, 6px); padding: 0 10px;
   color: var(--white); background: var(--navy); font: inherit; font-size: .7rem;
   font-weight: 700; cursor: pointer;
 }
@@ -344,7 +344,7 @@
 .tasksHeader h3 { color: var(--navy); font-size: .95rem; display: flex; align-items: center; gap: 7px; }
 .tasksHeader button {
   min-height: 34px; display: flex; align-items: center; gap: 6px;
-  border: 1px solid var(--navy); border-radius: 6px; padding: 0 10px;
+  border: 1px solid var(--navy); border-radius: var(--btn-radius, 6px); padding: 0 10px;
   color: var(--white); background: var(--navy); font: inherit; font-size: .7rem;
   font-weight: 700; cursor: pointer;
 }

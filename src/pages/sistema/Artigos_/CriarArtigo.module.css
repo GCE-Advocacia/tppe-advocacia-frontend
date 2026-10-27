@@ -242,7 +242,7 @@
   color: var(--white);
   border: none;
   padding: 10px 22px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 6px);
   font-size: .88rem;
   font-weight: 600;
   cursor: pointer;
@@ -453,7 +453,7 @@
   color: var(--navy);
   border: 1.5px solid #e0e0e0;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 6px);
   font-size: .88rem;
   font-weight: 600;
   cursor: pointer;
@@ -470,7 +470,7 @@
   color: var(--white);
   border: none;
   padding: 10px 22px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 6px);
   font-size: .88rem;
   font-weight: 600;
   cursor: pointer;

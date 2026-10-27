@@ -38,7 +38,7 @@ import Artigos from './components/Artigos/Artigos';
 import Contato from './components/Contato/Contato';
 import Footer from './components/Footer/Footer';
 import { BrandingProvider } from './contexts/BrandingContext';
-import { OfficeConfigProvider } from './contexts/OfficeConfigContext';
+import { OfficeConfigProvider, OfficeButtonRadius } from './contexts/OfficeConfigContext';
 import ArtigoPage from './pages/public/ArtigoPage';
 
 // Sistema
@@ -94,6 +94,7 @@ function SistemaIndexRedirect() {
 export default function App() {
   return (
     <BrandingProvider>
+    <OfficeButtonRadius />
     <BrowserRouter>
       <ScrollToHash />
       <Routes>

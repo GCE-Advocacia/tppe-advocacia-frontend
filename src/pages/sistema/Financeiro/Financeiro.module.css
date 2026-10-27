@@ -15,7 +15,7 @@
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
   background: var(--navy); color: var(--white);
-  border: none; padding: 10px 20px; border-radius: 8px;
+  border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
@@ -25,7 +25,7 @@
 .btnExpense {
   display: flex; align-items: center; gap: 8px;
   background: var(--crimson); color: var(--white);
-  border: none; padding: 10px 20px; border-radius: 8px;
+  border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }

@@ -79,7 +79,7 @@
   background: var(--navy, #1a2340);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 6px);
   padding: 8px 20px;
   font-size: .85rem;
   font-weight: 600;
