@@ -1,13 +1,25 @@
-import { ImageIcon, Loader2, X, Check } from 'lucide-react';
-import SectionCard from './components/SectionCard';
-import ConteudoSections from './components/ConteudoSections';
-import CoresSection from './components/CoresSection';
-import LogoSettings from '../../../components/sistema/shared/Logo config/LogoSettings';
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Palette, Globe, Loader2, X, Check } from 'lucide-react';
+import IdentidadeVisualTab from './tabs/IdentidadeVisualTab';
+import LandingPageConteudoTab from './tabs/LandingPageConteudoTab';
 import { usePersonalizacaoForm } from './hooks/usePersonalizacaoForm';
 import { usePersonalizacaoThemes } from './hooks/usePersonalizacaoThemes';
 import styles from './LandingPage.module.css';
 
+export type PersonalizacaoTab = 'identidade' | 'conteudo';
+
 export default function LandingPageConfig() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawTab = searchParams.get('tab');
+  const activeTab: PersonalizacaoTab = rawTab === 'conteudo' ? 'conteudo' : 'identidade';
+
+  useEffect(() => {
+    if (rawTab !== 'identidade' && rawTab !== 'conteudo') {
+      setSearchParams({ tab: 'identidade' }, { replace: true });
+    }
+  }, [rawTab, setSearchParams]);
+
   const form = usePersonalizacaoForm();
   const themes = usePersonalizacaoThemes({
     data: form.data,
@@ -16,6 +28,12 @@ export default function LandingPageConfig() {
     setData: form.setData,
     setSaved: form.setSaved,
   });
+
+  const handleTabChange = (tab: PersonalizacaoTab) => {
+    if (tab !== activeTab) {
+      setSearchParams({ tab });
+    }
+  };
 
   const handleSave = () => form.save(themes);
   const handleDiscard = () => form.discard(themes);
@@ -38,24 +56,61 @@ export default function LandingPageConfig() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.pageTitle}>Configuração da Landing Page</h1>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Personalização do Sistema</h1>
+        <p className={styles.pageSubtitle}>
+          Gerencie a identidade visual da sua marca e o conteúdo da vitrine pública do seu escritório.
+        </p>
+      </header>
 
-      {/* ── Logos e ícone do navegador ── */}
-      <SectionCard icon={<ImageIcon size={20} />} title="Logos e ícone do navegador">
-        <LogoSettings draft={form.branding} saving={form.saving} />
-      </SectionCard>
+      {/* ── Abas de Navegação ── */}
+      <nav className={styles.tabsBar} role="tablist" aria-label="Abas de Personalização">
+        <button
+          type="button"
+          role="tab"
+          id="tab-identidade"
+          aria-selected={activeTab === 'identidade'}
+          aria-controls="panel-identidade"
+          className={`${styles.tabBtn} ${activeTab === 'identidade' ? styles.tabBtnActive : ''}`}
+          onClick={() => handleTabChange('identidade')}
+        >
+          <Palette size={17} /> Identidade Visual &amp; Cores
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-conteudo"
+          aria-selected={activeTab === 'conteudo'}
+          aria-controls="panel-conteudo"
+          className={`${styles.tabBtn} ${activeTab === 'conteudo' ? styles.tabBtnActive : ''}`}
+          onClick={() => handleTabChange('conteudo')}
+        >
+          <Globe size={17} /> Conteúdo da Landing Page
+        </button>
+      </nav>
 
-      {/* ── Seções de Conteúdo da Landing Page ── */}
-      <ConteudoSections data={form.data} onChange={form.set} />
+      {/* ── Painel da Aba Ativa ── */}
+      {activeTab === 'identidade' && (
+        <div id="panel-identidade" role="tabpanel" aria-labelledby="tab-identidade">
+          <IdentidadeVisualTab
+            data={form.data}
+            themes={themes}
+            branding={form.branding}
+            saving={form.saving}
+            applyConfig={form.applyConfig}
+            onQuotaExceeded={form.setSaveError}
+          />
+        </div>
+      )}
 
-      {/* ── Identidade Visual / Cores ── */}
-      <CoresSection
-        data={form.data}
-        themes={themes}
-        brandingSave={form.branding.save}
-        applyConfig={form.applyConfig}
-        onQuotaExceeded={form.setSaveError}
-      />
+      {activeTab === 'conteudo' && (
+        <div id="panel-conteudo" role="tabpanel" aria-labelledby="tab-conteudo">
+          <LandingPageConteudoTab
+            data={form.data}
+            onChange={form.set}
+          />
+        </div>
+      )}
 
       {/* ── Bottom bar ── */}
       <div
