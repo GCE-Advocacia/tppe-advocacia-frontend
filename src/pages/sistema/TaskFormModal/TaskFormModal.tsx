@@ -205,7 +205,7 @@ export default function TaskFormModal({
               <option value="">Sem responsável</option>
               {users.map(user => <option value={user.id} key={user.id}>{user.name}</option>)}
             </select>
-            {users.length === 0 && <small>Responsáveis disponíveis apenas para administradores.</small>}
+            {users.length === 0 && <small>Nenhum responsável disponível.</small>}
           </label>
 
           <label>

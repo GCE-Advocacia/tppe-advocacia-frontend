@@ -55,7 +55,7 @@ function formatDate(value: string): string {
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError && error.status === 403) {
-    return 'Somente administradores podem gerenciar leads.';
+    return 'Você não tem permissão para acessar esta área.';
   }
   return 'Não foi possível concluir a operação.';
 }
