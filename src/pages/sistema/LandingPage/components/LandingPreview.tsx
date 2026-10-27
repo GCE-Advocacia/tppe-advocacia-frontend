@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { Monitor, Smartphone, Tablet } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
 
@@ -7,6 +8,7 @@ export interface LandingPreviewProps {
 }
 
 export default function LandingPreview({ data }: LandingPreviewProps) {
+  const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const previewVars = {
     '--pv-bg-primary': data.colorBgPrimary || data.color || '#232C43',
     '--pv-bg-secondary': data.colorBgSecondary || '#F5F3EF',
@@ -24,7 +26,16 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
 
   const placeholder = '/placeholder.png';
   return (
-    <div className={styles.previewFrame}>
+    <section className={styles.previewShell}>
+      <div className={styles.previewToolbar}>
+        <div className={styles.previewDevices} aria-label="Tamanho da prévia">
+          <button type="button" aria-pressed={viewport === 'desktop'} className={viewport === 'desktop' ? styles.previewControlActive : ''} onClick={() => setViewport('desktop')}><Monitor size={15} /> Desktop</button>
+          <button type="button" aria-pressed={viewport === 'tablet'} className={viewport === 'tablet' ? styles.previewControlActive : ''} onClick={() => setViewport('tablet')}><Tablet size={15} /> Tablet</button>
+          <button type="button" aria-pressed={viewport === 'mobile'} className={viewport === 'mobile' ? styles.previewControlActive : ''} onClick={() => setViewport('mobile')}><Smartphone size={15} /> Mobile</button>
+        </div>
+      </div>
+      <div className={`${styles.previewStage} ${styles[`previewStage${viewport[0].toUpperCase()}${viewport.slice(1)}`]}`}>
+      <div className={styles.previewFrame}>
       <div className={styles.previewLanding} style={previewVars}>
         <nav className={styles.pvNav}>
           <a href="#pv-hero"><img src="/logo.png" alt="Vitor França" /></a>
@@ -64,6 +75,8 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
         </main>
         <footer className={styles.pvFooter}><div><img src="/logo.png" alt="Vitor França" /><p>© 2026 Vitor França. Todos os direitos reservados.</p></div><nav>{['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>)}</nav><div>{data.linkedin && <a href={data.linkedin}>LinkedIn</a>}{data.instagram && <a href={data.instagram}>Instagram</a>}</div></footer>
       </div>
-    </div>
+      </div>
+      </div>
+    </section>
   );
 }
