@@ -14,6 +14,7 @@ import {
   Activity,
   CalendarX2,
   Mail,
+  AtSign,
   User,
   PanelLeftClose,
   PanelLeftOpen,
@@ -38,6 +39,7 @@ const NAV_ITEMS = [
   { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
   { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
   { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
+  { label: 'Configurações', href: '/sistema/configuracoes-email', icon: AtSign,   adminOnly: true  },
 ];
 
 export default function Sidebar() {

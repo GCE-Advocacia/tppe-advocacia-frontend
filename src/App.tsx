@@ -22,6 +22,7 @@ function ScrollToHash() {
 // Auth
 import Login from './pages/auth/Login';
 import ResetPassword from './pages/auth/ResetPassword';
+import Convite from './pages/auth/Convite';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import PaymentsViewRoute from './components/auth/PaymentsViewRoute';
@@ -55,6 +56,7 @@ import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
 import ModelosEmail from './pages/sistema/ModelosEmail/ModelosEmail';
+import ConfiguracoesEmail from './pages/sistema/ConfiguracoesEmail/ConfiguracoesEmail';
 import Feriados from './pages/sistema/Feriados/Feriados';
 import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
@@ -105,6 +107,7 @@ export default function App() {
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/convite/:token" element={<Convite />} />
 
         {/* Sistema */}
         <Route element={<ProtectedRoute />}>
@@ -129,6 +132,7 @@ export default function App() {
             <Route element={<AdminRoute />}>
               <Route path="logs-api" element={<LogsAPI />} />
               <Route path="modelos-email" element={<ModelosEmail />} />
+              <Route path="configuracoes-email" element={<ConfiguracoesEmail />} />
             </Route>
             <Route element={<AdminRoute />}>
               <Route path="feriados" element={<Feriados />} />
