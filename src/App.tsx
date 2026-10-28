@@ -59,7 +59,7 @@ import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
 function LandingPage() {
   return (
-    <OfficeConfigProvider>
+    <>
       <Navbar />
       <main>
         <Hero />
@@ -71,8 +71,23 @@ function LandingPage() {
         <Contato />
       </main>
       <Footer />
-    </OfficeConfigProvider>
+    </>
   );
+}
+
+function SystemThemeModeListener() {
+  const { search } = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const mode = params.get('themeMode');
+    if (mode === 'immersive' || mode === 'highlights') {
+      try {
+        localStorage.setItem('advocacia_system_theme_mode', mode);
+      } catch {}
+      document.documentElement.dataset.systemThemeMode = mode;
+    }
+  }, [search]);
+  return null;
 }
 
 function GoogleCalendarRedirect() {
@@ -94,10 +109,12 @@ function SistemaIndexRedirect() {
 export default function App() {
   return (
     <BrandingProvider>
-    <OfficeButtonRadius />
-    <BrowserRouter>
-      <ScrollToHash />
-      <Routes>
+      <OfficeConfigProvider>
+        <OfficeButtonRadius />
+        <BrowserRouter>
+          <ScrollToHash />
+          <SystemThemeModeListener />
+          <Routes>
         {/* Landing page pública */}
         <Route path="/" element={<><GoogleCalendarRedirect /><LandingPage /></>} />
         <Route path="/artigos/:id" element={<ArtigoPage />} />
@@ -140,6 +157,7 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </OfficeConfigProvider>
     </BrandingProvider>
   );
 }

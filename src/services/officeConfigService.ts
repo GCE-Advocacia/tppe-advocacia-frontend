@@ -58,6 +58,10 @@ export interface OfficeConfigAPI {
   color_link_primary: string | null;
   color_link_secondary: string | null;
   theme_id?: number | null;
+  system_uses_landing_buttons?: boolean;
+  color_buttons_system?: string | null;
+  color_buttons_system_hover?: string | null;
+  color_buttons_system_text?: string | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
@@ -113,6 +117,10 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
     colorLinkSecondary: api.color_link_secondary ?? '#661C16',
     themeId: api.theme_id ?? null,
+    systemUsesLandingButtons: api.system_uses_landing_buttons ?? true,
+    colorButtonsSystem: api.color_buttons_system ?? null,
+    colorButtonsSystemHover: api.color_buttons_system_hover ?? null,
+    colorButtonsSystemText: api.color_buttons_system_text ?? null,
   };
 }
 
@@ -155,6 +163,10 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_link_primary: ui.colorLinkPrimary || null,
     color_link_secondary: ui.colorLinkSecondary || null,
     theme_id: ui.themeId ?? null,
+    system_uses_landing_buttons: ui.systemUsesLandingButtons ?? true,
+    color_buttons_system: ui.colorButtonsSystem || null,
+    color_buttons_system_hover: ui.colorButtonsSystemHover || null,
+    color_buttons_system_text: ui.colorButtonsSystemText || null,
   };
 }
 

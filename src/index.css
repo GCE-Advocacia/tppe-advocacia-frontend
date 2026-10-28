@@ -20,6 +20,29 @@
   --light-gray:    #E5E3DF;
   --text:          #1A1A2E;
 
+  /* US14 — Semantic danger tokens (immune to brand changes) */
+  --color-danger:       #c62828;
+  --color-danger-hover: #b71c1c;
+  --color-danger-bg:    #fdecea;
+
+  /* US14 — Brand semantic tokens */
+  --brand-primary:          #232C43;
+  --brand-primary-text:     #FFFFFF;
+  --brand-primary-muted:    color-mix(in srgb, var(--brand-primary-text) 65%, transparent);
+  --brand-primary-border:   color-mix(in srgb, var(--brand-primary-text) 12%, transparent);
+  --brand-primary-hover-bg: color-mix(in srgb, var(--brand-primary-text) 8%, transparent);
+  --brand-accent:           #111827;
+  --brand-accent-hover:     #1F2937;
+  --brand-accent-text:      #FFFFFF;
+  --brand-title:            #232C43;
+  --brand-link:             #661C16;
+
+  /* US14 — System surface tokens (Mode: highlights default) */
+  --sys-bg:         #f0f2f5;
+  --sys-auth-bg:    #f0f4f8;
+  --sys-surface:    #FFFFFF;
+  --sys-text-muted: #6B7280;
+
   --font-display: 'Montserrat', normal;;
   --font-body:    'Montserrat', normal;
 
@@ -66,4 +89,12 @@ a {
     --px: 24px;
     --nav-height: 72px;
   }
+}
+
+/* US14 — Mode 3: Immersive system surfaces */
+:root[data-system-theme-mode="immersive"] {
+  --sys-bg:         var(--bg-secondary, #f0f2f5);
+  --sys-auth-bg:    var(--bg-secondary, #f0f4f8);
+  --sys-surface:    var(--bg-sobre, #FFFFFF);
+  --sys-text-muted: var(--text-secondary, #6B7280);
 }

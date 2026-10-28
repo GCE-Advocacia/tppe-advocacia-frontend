@@ -64,6 +64,12 @@ export interface LandingPageData {
   colorLinkPrimary: string;
   colorLinkSecondary: string;
   themeId?: number | null;
+
+  // Botões do Sistema (quando desacoplados da Landing Page)
+  systemUsesLandingButtons?: boolean;
+  colorButtonsSystem?: string | null;
+  colorButtonsSystemHover?: string | null;
+  colorButtonsSystemText?: string | null;
 }
 
 export interface LandingPageTheme {
@@ -78,6 +84,10 @@ export interface LandingPageTheme {
   color_buttons: string;
   color_buttons_hover: string;
   color_buttons_text: string;
+  system_uses_landing_buttons?: boolean;
+  color_buttons_system?: string | null;
+  color_buttons_system_hover?: string | null;
+  color_buttons_system_text?: string | null;
   color_title_primary: string;
   color_title_secondary: string;
   color_text_primary: string;
@@ -120,6 +130,10 @@ export const DEFAULT_COLORS = {
   colorTextSecondary: '#6B7280',
   colorLinkPrimary: '#FFFFFF',
   colorLinkSecondary: '#661C16',
+  systemUsesLandingButtons: false,
+  colorButtonsSystem: '#111827',
+  colorButtonsSystemHover: '#1F2937',
+  colorButtonsSystemText: '#FFFFFF',
 };
 
 export const EMPTY_DATA: LandingPageData = {
