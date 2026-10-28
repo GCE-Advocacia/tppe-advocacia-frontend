@@ -930,8 +930,7 @@ function ProcessDetailsModal({
 
               <ProcessDocumentsSection
                 processId={processId}
-                onSuccess={message => setFeedback({ message, kind: 'success' })}
-                onError={requestError => setFeedback({ message: errorMessage(requestError), kind: 'error' })}
+                describeError={errorMessage}
               />
 
               <section className={styles.notesSection}>

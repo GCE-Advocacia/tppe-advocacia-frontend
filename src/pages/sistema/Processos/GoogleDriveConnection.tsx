@@ -73,16 +73,17 @@ export default function GoogleDriveConnection({ onMessage }: Props) {
 
   return (
     <div className={styles.driveBlock} data-google-drive>
-      <HardDrive size={16} />
       {status.connected ? (
         <>
           <span className={styles.driveText}>Google Drive conectado: {status.email}</span>
           <button className={styles.btnRefresh} onClick={() => void handleDisconnect()} disabled={busy}>
+            <HardDrive size={16} />
             Desconectar
           </button>
         </>
       ) : (
         <button className={styles.btnRefresh} onClick={() => void handleConnect()} disabled={busy}>
+          <HardDrive size={16} />
           Conectar Google Drive
         </button>
       )}

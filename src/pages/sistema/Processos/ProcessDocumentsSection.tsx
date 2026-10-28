@@ -20,18 +20,30 @@ function formatSize(bytes: number): string {
 
 type Props = {
   processId: number;
-  onSuccess: (message: string) => void;
-  onError: (error: unknown) => void;
+  describeError: (error: unknown) => string;
 };
 
-export default function ProcessDocumentsSection({ processId, onSuccess, onError }: Props) {
+type Notice = { message: string; kind: 'success' | 'error' };
+
+export default function ProcessDocumentsSection({ processId, describeError }: Props) {
   const [documents, setDocuments] = useState<ProcessDocument[]>([]);
+  // A mensagem fica na própria seção: o aviso do topo da ficha fica fora da
+  // tela de quem está anexando um documento lá embaixo.
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const claims = getSessionClaims();
   const isAdmin = claims?.role === 'ADMIN';
   const currentUserId = claims ? Number(claims.sub) : null;
+
+  function onSuccess(message: string) {
+    setNotice({ message, kind: 'success' });
+  }
+
+  function onError(error: unknown) {
+    setNotice({ message: describeError(error), kind: 'error' });
+  }
 
   async function reload() {
     try {
@@ -54,6 +66,7 @@ export default function ProcessDocumentsSection({ processId, onSuccess, onError 
       onError(new ApiError('Arquivo muito grande.', 413, 'FILE_TOO_LARGE'));
       return;
     }
+    setNotice(null);
     setUploading(true);
     try {
       await uploadProcessDocument(processId, file);
@@ -112,6 +125,15 @@ export default function ProcessDocumentsSection({ processId, onSuccess, onError 
         </button>
         <small>PDF, JPG, PNG ou DOCX · até {DOCUMENT_MAX_SIZE_MB} MB</small>
       </div>
+
+      {notice && (
+        <p
+          role={notice.kind === 'error' ? 'alert' : 'status'}
+          className={`${styles.detailFeedback} ${notice.kind === 'error' ? styles.feedbackError : styles.feedbackSuccess}`}
+        >
+          {notice.message}
+        </p>
+      )}
 
       <div className={styles.documentList}>
         {documents.length === 0 && (
