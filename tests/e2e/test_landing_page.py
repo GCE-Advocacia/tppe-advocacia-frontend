@@ -11,6 +11,7 @@ IDENTIDADE_TAB_URL = f"{PERSONALIZACAO_URL}?tab=identidade"
 CONTEUDO_TAB_URL   = f"{PERSONALIZACAO_URL}?tab=conteudo"
 LANDING_URL        = CONTEUDO_TAB_URL
 ARTIGOS_URL = f"{BASE_URL}/sistema/artigos"
+CLIENTES_URL = f"{BASE_URL}/sistema/clientes"
 SITE_URL    = BASE_URL
 
 
@@ -809,4 +810,68 @@ class TestPersonalizacaoNavegacaoAbas:
         js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
         wait.until(lambda d: not _bottombar_visivel(d))
         pause()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestSincronizacaoTemasUS14:
+    """US-14 — Sincronização dos Temas com a área do Sistema e do Login"""
+
+    def test_tokens_de_marca_injetados_no_root_sem_sobrescrever_navy_inline(self, logged_in, wait):
+        logged_in.get(CLIENTES_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//h1[contains(text(),'Clientes')]")))
+        pause()
+
+        tokens = logged_in.execute_script("""
+            const s = document.documentElement.style;
+            return {
+                brandPrimary: s.getPropertyValue('--brand-primary'),
+                brandAccent: s.getPropertyValue('--brand-accent'),
+                navyInline: s.getPropertyValue('--navy'),
+            };
+        """)
+        assert tokens["brandPrimary"] != "", "Token --brand-primary deve estar presente"
+        assert tokens["brandAccent"] != "", "Token --brand-accent deve estar presente"
+        assert tokens["navyInline"] == "", "--navy estático não deve ser sobrescrito inline no :root"
+
+    def test_sidebar_consome_brand_primary(self, logged_in, wait):
+        logged_in.get(CLIENTES_URL)
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "aside")))
+        pause()
+
+        aside_bg = logged_in.execute_script("""
+            const aside = document.querySelector('aside');
+            return aside ? getComputedStyle(aside).backgroundColor : null;
+        """)
+        assert aside_bg is not None and aside_bg != "rgba(0, 0, 0, 0)"
+
+    def test_botoes_contabeis_financeiro_preservam_cores_reservadas(self, logged_in, wait):
+        logged_in.get(f"{BASE_URL}/sistema/financeiro")
+        wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(.,'Nova Entrada')]")))
+        pause()
+
+        colors = logged_in.execute_script("""
+            const btnIn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Nova Entrada'));
+            const btnOut = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Nova Saída'));
+            return {
+                entrada: btnIn ? getComputedStyle(btnIn).backgroundColor : null,
+                saida: btnOut ? getComputedStyle(btnOut).backgroundColor : null,
+            };
+        """)
+        assert colors["entrada"] == "rgb(46, 125, 50)", "Nova Entrada deve ser verde contábil (#2e7d32)"
+        assert colors["saida"] == "rgb(198, 40, 40)", "Nova Saída deve ser vermelho semântico (#c62828)"
+
+    def test_alternancia_modo_destaque_e_imersivo_via_query_param(self, logged_in, wait):
+        logged_in.get(f"{CLIENTES_URL}?themeMode=immersive")
+        wait.until(lambda d: d.execute_script("return document.documentElement.dataset.systemThemeMode") == "immersive")
+        pause()
+
+        mode_storage = logged_in.execute_script("return localStorage.getItem('advocacia_system_theme_mode');")
+        assert mode_storage == "immersive"
+
+        logged_in.get(f"{CLIENTES_URL}?themeMode=highlights")
+        wait.until(lambda d: d.execute_script("return document.documentElement.dataset.systemThemeMode") == "highlights")
+        pause()
+
+        mode_storage2 = logged_in.execute_script("return localStorage.getItem('advocacia_system_theme_mode');")
+        assert mode_storage2 == "highlights"
 
