@@ -118,9 +118,18 @@ for (const [role, message] of [
   test(`upload with GOOGLE_DRIVE_NOT_CONNECTED shows ${role} message`, async t => {
     const { page, state } = await setup(t, { role });
     await page.getByRole('button', { name: 'Abrir Ficha' }).click();
-    const input = page.locator('input[type="file"]');
-    await input.setInputFiles({ name: 'peticao.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') });
-    await page.getByText(message).waitFor();
+    // Como o usuário: rola até a seção de documentos e anexa por lá.
+    const attach = page.getByRole('button', { name: 'Anexar documento' });
+    await attach.scrollIntoViewIfNeeded();
+    const documents = page.locator('section', { has: page.getByRole('heading', { name: 'Documentos' }) });
+    await documents.locator('input[type="file"]').setInputFiles({ name: 'peticao.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') });
+    const notice = documents.getByText(message);
+    await notice.waitFor();
     assert.equal(state.uploads, 1);
+    const inViewport = await notice.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.top >= 0 && rect.bottom <= window.innerHeight;
+    });
+    assert.ok(inViewport, 'a mensagem de erro precisa estar visível na tela');
   });
 }
