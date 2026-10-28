@@ -9,7 +9,7 @@
 .headerActions { display: flex; gap: 9px; }
 .primaryButton, .secondaryButton {
   min-height: 40px; display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 0 14px; border-radius: 7px; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
+  padding: 0 14px; border-radius: var(--btn-radius, 6px); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer;
 }
 .primaryButton { border: 1px solid var(--crimson); background: var(--crimson); color: var(--white); }
 .secondaryButton { border: 1px solid #dfe2e8; background: var(--white); color: var(--navy); }
@@ -62,7 +62,7 @@
 .fullField { grid-column: 1 / -1; }
 .formError { padding: 10px 12px; border-radius: 6px; color: var(--crimson); background: #fdecea; font-size: .76rem; }
 .formActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 18px; border-top: 1px solid #eceef2; }
-.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: 6px; font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: var(--btn-radius, 6px); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
 .cancelButton { border: 1px solid #dfe2e8; background: var(--white); color: var(--navy); }
 .submitButton { border: 1px solid var(--crimson); background: var(--crimson); color: var(--white); }
 .submitButton:disabled { cursor: wait; opacity: .6; }
@@ -104,7 +104,7 @@
 .noteForm { display: grid; justify-items: end; gap: 8px; margin-bottom: 13px; }
 .noteForm textarea { width: 100%; resize: vertical; min-height: 76px; border: 1px solid #dfe2e8; border-radius: 6px; padding: 10px; outline: none; color: var(--navy); font: inherit; font-size: .75rem; }
 .noteForm textarea:focus { border-color: #9aa8ba; box-shadow: 0 0 0 3px rgba(38,56,89,.08); }
-.noteForm button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: 6px; padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
+.noteForm button { min-height: 34px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--navy); border-radius: var(--btn-radius, 6px); padding: 0 11px; background: var(--navy); color: var(--white); font: inherit; font-size: .7rem; font-weight: 700; cursor: pointer; }
 .noteForm button:disabled { opacity: .45; cursor: default; }
 .noteItem { padding: 11px 12px; border-left: 3px solid #c8d0dc; background: #f7f8fa; }
 .noteItem p { color: var(--text); font-size: .73rem; line-height: 1.5; white-space: pre-wrap; margin-bottom: 7px; }
@@ -135,7 +135,7 @@
 .confirmField > span strong { color: var(--navy); }
 .confirmField input { width: 100%; border: 1px solid #dfe2e8; border-radius: 6px; padding: 10px 11px; outline: none; color: var(--navy); font: inherit; font-size: .8rem; }
 .confirmField input:focus { border-color: #9aa8ba; box-shadow: 0 0 0 3px rgba(38,56,89,.08); }
-.dangerButton { min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 15px; border: 1px solid var(--crimson); border-radius: 6px; color: var(--white); background: var(--crimson); font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
+.dangerButton { min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 15px; border: 1px solid var(--crimson); border-radius: var(--btn-radius, 6px); color: var(--white); background: var(--crimson); font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
 .dangerButton:disabled { opacity: .4; cursor: default; }
 .processFallback { padding: 18px 20px; border-top: 1px solid #eceef2; display: grid; gap: 10px; }
 .processFallbackLabel { display: flex; align-items: center; gap: 7px; color: var(--gray); font-size: .72rem; }

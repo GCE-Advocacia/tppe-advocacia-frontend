@@ -9,7 +9,7 @@
 .headerActions { display: flex; gap: 9px; }
 .refreshButton { min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid #dfe2e8; border-radius: 7px; background: var(--white); color: var(--navy); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
 .refreshButton:disabled { cursor: wait; opacity: .6; }
-.primaryButton { min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid var(--crimson); border-radius: 7px; background: var(--crimson); color: var(--white); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.primaryButton { min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border: 1px solid var(--crimson); border-radius: var(--btn-radius, 6px); background: var(--crimson); color: var(--white); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
 .metric { display: flex; align-items: center; gap: 13px; padding: 17px; border: 1px solid #e4e7ed; border-radius: 8px; background: var(--white); }
 .metricIcon { width: 40px; height: 40px; display: grid; place-items: center; flex-shrink: 0; border-radius: 7px; }
@@ -79,7 +79,7 @@
 .fullField { grid-column: 1 / -1; }
 .formError { padding: 10px 12px; border-radius: 6px; color: var(--crimson); background: #fdecea; font-size: .75rem; }
 .formActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding-top: 18px; border-top: 1px solid #eceef2; }
-.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: 6px; font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
+.cancelButton, .submitButton { min-height: 40px; padding: 0 15px; border-radius: var(--btn-radius, 6px); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
 .cancelButton { border: 1px solid #dfe2e8; background: var(--white); color: var(--navy); }
 .submitButton { border: 1px solid var(--crimson); background: var(--crimson); color: var(--white); }
 .submitButton:disabled { opacity: .5; cursor: wait; }
@@ -88,7 +88,7 @@
 .deleteNotice svg { flex-shrink: 0; }
 .deleteNotice strong { display: block; overflow-wrap: anywhere; font-size: .78rem; margin-bottom: 5px; }
 .deleteNotice p { color: #7d4c49; font-size: .7rem; line-height: 1.5; }
-.deleteButton { min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 15px; border: 1px solid var(--crimson); border-radius: 6px; background: var(--crimson); color: var(--white); font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
+.deleteButton { min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 15px; border: 1px solid var(--crimson); border-radius: var(--btn-radius, 6px); background: var(--crimson); color: var(--white); font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
 .deleteButton:disabled { opacity: .5; cursor: wait; }
 .spinning { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

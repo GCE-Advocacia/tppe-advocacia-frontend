@@ -47,6 +47,8 @@ export interface LandingPageData {
   // Áreas
   areas: AreaAtuacao[];
 
+  buttonRadius: string;
+
   // Cores
   color: string;
   colorBgPrimary: string;
@@ -128,6 +130,7 @@ export const EMPTY_DATA: LandingPageData = {
   advogadoTitulo: '', advogadoOab: '', advogadoConteudo: '', advogadoImagem: '', advogadoImagemPos: { x: 50, y: 50 },
   diferenciais: EMPTY_DIFERENCIAIS,
   areas: EMPTY_AREAS,
+  buttonRadius: '6px',
   ...DEFAULT_COLORS,
   themeId: null,
 };
