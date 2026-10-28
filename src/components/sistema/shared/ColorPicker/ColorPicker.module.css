@@ -27,7 +27,7 @@
 
 .triggerBtn:focus-visible {
   outline: none;
-  border-color: var(--navy);
+  border-color: var(--brand-primary);
   box-shadow: 0 0 0 2px rgba(35, 44, 67, 0.15);
 }
 
@@ -267,7 +267,7 @@
 }
 
 .formatSelect:focus {
-  border-color: var(--navy);
+  border-color: var(--brand-primary);
 }
 
 .inputGroupWrapper {
@@ -304,7 +304,7 @@
 }
 
 .formatInput:focus {
-  border-color: var(--navy);
+  border-color: var(--brand-primary);
   z-index: 1;
 }
 

@@ -75,7 +75,7 @@ export default function Sidebar() {
 
         {/* Logo */}
         <div className={styles.logoArea}>
-          <BrandLogo scope="system" className={styles.logo} />
+          <BrandLogo scope="system" background="auto" className={styles.logo} />
           <button
             className={styles.collapseBtn}
             onClick={() => setCollapsed(prev => !prev)}

@@ -50,20 +50,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--navy, #232C43);
-  color: #fff;
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   border-radius: var(--btn-radius, 6px);
   padding: 8px 16px;
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
   font-family: var(--font-body);
 }
 
 .btnNewTheme:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--brand-accent-hover);
 }
 
 .btnNewTheme:disabled {
@@ -256,8 +256,8 @@
 }
 
 .btnIconDanger:hover {
-  background: #fef2f2;
-  color: #ef4444;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
   border-color: #fca5a5;
 }
 
@@ -384,8 +384,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--navy, #232C43);
-  color: #ffffff;
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   border-radius: var(--btn-radius, 6px);
   padding: 9px 20px;
@@ -397,7 +397,7 @@
 }
 
 .btnFooterApply:hover:not(:disabled) {
-  opacity: 0.92;
+  background: var(--brand-accent-hover);
   transform: translateY(-1px);
 }
 
@@ -579,7 +579,7 @@
 
 .modalError {
   font-size: 0.82rem;
-  color: #ef4444;
+  color: var(--color-danger);
   margin: 0;
 }
 
@@ -609,8 +609,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--navy, #232C43);
-  color: #ffffff;
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   border-radius: var(--btn-radius, 6px);
   padding: 7px 16px;
@@ -620,7 +620,7 @@
 }
 
 .btnConfirm:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--brand-accent-hover);
 }
 
 .btnConfirm:disabled {
@@ -629,7 +629,7 @@
 }
 
 .btnDangerConfirm {
-  background: #dc2626;
+  background: var(--color-danger);
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -640,5 +640,5 @@
 }
 
 .btnDangerConfirm:hover:not(:disabled) {
-  background: #b91c1c;
+  background: var(--color-danger-hover);
 }

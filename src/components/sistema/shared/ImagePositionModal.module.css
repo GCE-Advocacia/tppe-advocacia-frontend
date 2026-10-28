@@ -112,14 +112,14 @@
   font-family: var(--font-body);
   transition: border-color .2s, color .2s;
 }
-.btnCancel:hover { border-color: var(--crimson); color: var(--crimson); }
+.btnCancel:hover { border-color: var(--color-danger); color: var(--color-danger); }
 
 .btnConfirm {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   padding: 9px 24px;
   border-radius: var(--btn-radius, 6px);
@@ -129,7 +129,7 @@
   font-family: var(--font-body);
   transition: background .2s;
 }
-.btnConfirm:hover { background: var(--navy-mid); }
+.btnConfirm:hover { background: var(--brand-accent-hover); }
 
 @media (max-width: 480px) {
   .box { padding: 18px 14px 14px; }

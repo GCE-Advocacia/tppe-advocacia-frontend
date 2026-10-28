@@ -4,7 +4,7 @@
   top: 0; left: 0;
   width: 260px;
   height: 100vh;
-  background: var(--navy);
+  background: var(--brand-primary);
   display: flex;
   flex-direction: column;
   z-index: 200;
@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid var(--brand-primary-border);
   min-height: 88px;
   flex-shrink: 0;
 }
@@ -45,7 +45,7 @@
 .collapseBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,.5);
+  color: var(--brand-primary-muted);
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -56,7 +56,7 @@
   flex-shrink: 0;
   margin-left: auto;
 }
-.collapseBtn:hover { color: var(--white); background: rgba(255,255,255,.08); }
+.collapseBtn:hover { color: var(--brand-primary-text); background: var(--brand-primary-hover-bg); }
 
 /* Nav */
 .nav {
@@ -73,7 +73,7 @@
   align-items: center;
   gap: 14px;
   padding: 12px 20px;
-  color: rgba(255,255,255,.6);
+  color: var(--brand-primary-muted);
   text-decoration: none;
   font-size: .95rem;
   font-family: var(--font-body);
@@ -82,13 +82,13 @@
   border-left: 3px solid transparent;
 }
 .navItem:hover {
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.9);
+  background: var(--brand-primary-hover-bg);
+  color: var(--brand-primary-text);
 }
 .navItem.active {
-  background: rgba(255,255,255,.08);
-  color: var(--white);
-  border-left-color: var(--crimson);
+  background: var(--brand-primary-hover-bg);
+  color: var(--brand-primary-text);
+  border-left-color: var(--brand-accent);
 }
 
 .icon { flex-shrink: 0; }
@@ -106,8 +106,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid rgba(255,255,255,.08);
-  color: rgba(255,255,255,.6);
+  border-top: 1px solid var(--brand-primary-border);
+  color: var(--brand-primary-muted);
   font-size: .9rem;
   white-space: nowrap;
   flex-shrink: 0;
@@ -129,7 +129,7 @@
   border: none;
   border-radius: 5px;
   background: transparent;
-  color: rgba(255,255,255,.55);
+  color: var(--brand-primary-muted);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -137,8 +137,8 @@
 }
 
 .logoutButton:hover {
-  color: var(--white);
-  background: rgba(255,255,255,.08);
+  color: var(--brand-primary-text);
+  background: var(--brand-primary-hover-bg);
 }
 
 .collapsed .logoutButton {
@@ -151,9 +151,9 @@
   position: fixed;
   top: 12px; left: 12px;
   z-index: 300;
-  background: var(--navy);
-  border: 1px solid rgba(255,255,255,.15);
-  color: var(--white);
+  background: var(--brand-primary);
+  border: 1px solid var(--brand-primary-border);
+  color: var(--brand-primary-text);
   width: 40px; height: 40px;
   border-radius: 8px;
   align-items: center;
