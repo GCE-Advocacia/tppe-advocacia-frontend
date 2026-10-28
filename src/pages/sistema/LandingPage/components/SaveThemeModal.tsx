@@ -53,7 +53,7 @@ export default function SaveThemeModal({
                 Informe um nome para criar o novo tema personalizado:
               </>
             ) : (
-              'As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado na sua biblioteca.'
+              'As cores atualmente configuradas serão salvas como um novo tema personalizado na sua biblioteca.'
             )}
           </p>
 
@@ -70,6 +70,9 @@ export default function SaveThemeModal({
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorTextSecondary || '#6B7280' }} title="Textos 2" />
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorLinkPrimary || '#FFFFFF' }} title="Links 1" />
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorLinkSecondary || '#661C16' }} title="Links 2" />
+            {colors.systemUsesLandingButtons === false && (
+              <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorButtonsSystem || '#111827' }} title="Botões do Sistema" />
+            )}
           </div>
 
           <div className={styles.inputGroup}>

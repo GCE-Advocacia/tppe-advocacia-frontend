@@ -49,7 +49,7 @@ export default function LandingPageConfig() {
   if (form.loadError) {
     return (
       <div className={styles.page}>
-        <p style={{ color: '#c0392b', fontSize: '0.95rem' }}>{form.loadError}</p>
+        <p style={{ color: 'var(--color-danger)', fontSize: '0.95rem' }}>{form.loadError}</p>
       </div>
     );
   }

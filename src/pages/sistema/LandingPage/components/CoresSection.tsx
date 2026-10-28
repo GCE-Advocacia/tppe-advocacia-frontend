@@ -26,7 +26,7 @@ export default function CoresSection({
   onQuotaExceeded,
 }: CoresSectionProps) {
   const {
-    baseTheme, matchedTheme, isBaseThemeModified, updateColor,
+    baseTheme, matchedTheme, isBaseThemeModified, updateColor, updateSystemButtons,
     restoreDefaultColors, handleSelectFromLibrary, fetchThemes,
     showThemeGalleryModal, setShowThemeGalleryModal,
     showSaveCurrentModal, isForkingPredefined,
@@ -114,15 +114,15 @@ export default function CoresSection({
               <div>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>1. Cores de Fundo</h3>
                 <div className={styles.row2}>
-                  <Field label="BACKGROUND 1" tooltip="Aplica-se às seções: Navbar, Hero, Diferenciais, Artigos e Rodapé">
+                  <Field label="BACKGROUND 1" tooltip="Aplica-se à Navbar, Hero, Diferenciais, Artigos, Rodapé e à Barra Lateral (Sidebar) do sistema.">
                     <ColorPicker value={data.colorBgPrimary || '#232C43'} onChange={v => updateColor('colorBgPrimary', v)} />
                   </Field>
-                  <Field label="BACKGROUND 2" tooltip="Aplica-se às seções: Escritório, Áreas e Contato">
+                  <Field label="BACKGROUND 2" tooltip="Aplica-se a Escritório, Áreas, Contato e ao fundo do sistema no modo imersivo.">
                     <ColorPicker value={data.colorBgSecondary || '#F5F3EF'} onChange={v => updateColor('colorBgSecondary', v)} />
                   </Field>
                 </div>
                 <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
-                  <Field label="BACKGROUND 3" tooltip="Aplica-se à seção: Sobre o Advogado">
+                  <Field label="BACKGROUND 3" tooltip="Aplica-se ao Sobre o Advogado e aos cards/painéis do sistema no modo imersivo.">
                     <ColorPicker value={data.colorBgSobre || '#FFFFFF'} onChange={v => updateColor('colorBgSobre', v)} />
                   </Field>
                 </div>
@@ -133,19 +133,77 @@ export default function CoresSection({
               {/* 2 - Cores dos Botões */}
               <div>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>2. Cores dos Botões</h3>
+                <div style={{ marginBottom: 16 }}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={data.systemUsesLandingButtons ?? true}
+                      onChange={e => {
+                        const checked = e.target.checked;
+                        if (!checked) {
+                          updateSystemButtons({
+                            systemUsesLandingButtons: false,
+                            colorButtonsSystem: data.colorButtonsSystem || data.colorButtons || '#661C16',
+                            colorButtonsSystemHover: data.colorButtonsSystemHover || data.colorButtonsHover || '#A52020',
+                            colorButtonsSystemText: data.colorButtonsSystemText || data.colorButtonsText || '#FFFFFF',
+                          });
+                        } else {
+                          updateSystemButtons({ systemUsesLandingButtons: true });
+                        }
+                      }}
+                    />
+                    <span>Usar as mesmas cores de botões no sistema</span>
+                  </label>
+                </div>
+
                 <div className={styles.row2}>
-                  <Field label="FUNDO DOS BOTÕES" tooltip="Aplica-se à cor de fundo dos botões principais">
+                  <Field label="FUNDO DOS BOTÕES" tooltip="Aplica-se à cor de fundo dos botões da vitrine pública (e do sistema quando vinculado).">
                     <ColorPicker value={data.colorButtons || '#661C16'} onChange={v => updateColor('colorButtons', v)} />
                   </Field>
-                  <Field label="HOVER DOS BOTÕES" tooltip="Aplica-se à cor de fundo ao passar o mouse sobre os botões">
+                  <Field label="HOVER DOS BOTÕES" tooltip="Aplica-se ao hover dos botões da vitrine pública (e do sistema quando vinculado).">
                     <ColorPicker value={data.colorButtonsHover || '#A52020'} onChange={v => updateColor('colorButtonsHover', v)} />
                   </Field>
                 </div>
                 <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
-                  <Field label="TEXTO DOS BOTÕES" tooltip="Aplica-se à cor do texto dos botões principais">
+                  <Field label="TEXTO DOS BOTÕES" tooltip="Aplica-se ao texto dos botões da vitrine pública (e do sistema quando vinculado).">
                     <ColorPicker value={data.colorButtonsText || '#FFFFFF'} onChange={v => updateColor('colorButtonsText', v)} />
                   </Field>
                 </div>
+
+                {!(data.systemUsesLandingButtons ?? true) && (
+                  <div className={styles.systemButtonsBox}>
+                    <div>
+                      <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 4 }}>
+                        Cores dos Botões no Sistema
+                      </h4>
+                      <p style={{ color: 'var(--gray)', fontSize: '.8rem', margin: 0 }}>
+                        Personalize os botões das páginas internas e da tela de login de forma independente da vitrine.
+                      </p>
+                    </div>
+                    <div className={styles.row2}>
+                      <Field label="FUNDO DOS BOTÕES (SISTEMA)" tooltip="Aplica-se à cor de fundo dos botões primários no sistema e na tela de login.">
+                        <ColorPicker
+                          value={data.colorButtonsSystem || data.colorButtons || '#661C16'}
+                          onChange={v => updateSystemButtons({ colorButtonsSystem: v })}
+                        />
+                      </Field>
+                      <Field label="HOVER DOS BOTÕES (SISTEMA)" tooltip="Aplica-se ao hover dos botões primários no sistema e na tela de login.">
+                        <ColorPicker
+                          value={data.colorButtonsSystemHover || data.colorButtonsHover || '#A52020'}
+                          onChange={v => updateSystemButtons({ colorButtonsSystemHover: v })}
+                        />
+                      </Field>
+                    </div>
+                    <div style={{ maxWidth: 'calc(50% - 12px)' }}>
+                      <Field label="TEXTO DOS BOTÕES (SISTEMA)" tooltip="Aplica-se ao texto dos botões primários no sistema e na tela de login.">
+                        <ColorPicker
+                          value={data.colorButtonsSystemText || data.colorButtonsText || '#FFFFFF'}
+                          onChange={v => updateSystemButtons({ colorButtonsSystemText: v })}
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <hr style={{ border: 'none', borderTop: '1px solid #f0f0f0' }} />
@@ -154,26 +212,26 @@ export default function CoresSection({
               <div>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>3. Cores das Fontes</h3>
                 <div className={styles.row2}>
-                  <Field label="TÍTULOS 1" tooltip="Aplica-se aos títulos das seções: Hero, Diferenciais, Artigos e Rodapé">
+                  <Field label="TÍTULOS 1" tooltip="Aplica-se aos títulos das seções escuras da landing page (Hero, Diferenciais, Artigos, Rodapé) e à tela de login.">
                     <ColorPicker value={data.colorTitlePrimary || '#FFFFFF'} onChange={v => updateColor('colorTitlePrimary', v)} />
                   </Field>
-                  <Field label="TÍTULOS 2" tooltip="Aplica-se aos títulos das seções: Escritório, Áreas, Contato e Sobre">
+                  <Field label="TÍTULOS 2" tooltip="Aplica-se aos títulos das seções claras da landing page e aos títulos das páginas internas do sistema.">
                     <ColorPicker value={data.colorTitleSecondary || '#232C43'} onChange={v => updateColor('colorTitleSecondary', v)} />
                   </Field>
                 </div>
                 <div className={styles.row2} style={{ marginTop: 16 }}>
-                  <Field label="TEXTOS 1" tooltip="Aplica-se aos parágrafos das seções: Hero, Diferenciais, Artigos e Rodapé">
+                  <Field label="TEXTOS 1" tooltip="Aplica-se aos parágrafos das seções escuras da landing page e à tela de login.">
                     <ColorPicker value={data.colorTextPrimary || '#FFFFFF'} onChange={v => updateColor('colorTextPrimary', v)} />
                   </Field>
-                  <Field label="TEXTOS 2" tooltip="Aplica-se aos parágrafos das seções: Escritório, Áreas, Contato e Sobre">
+                  <Field label="TEXTOS 2" tooltip="Aplica-se aos parágrafos das seções claras da landing page e ao texto secundário do sistema.">
                     <ColorPicker value={data.colorTextSecondary || '#6B7280'} onChange={v => updateColor('colorTextSecondary', v)} />
                   </Field>
                 </div>
                 <div className={styles.row2} style={{ marginTop: 16 }}>
-                  <Field label="LINKS 1" tooltip="Aplica-se aos links das seções: Navbar, Artigos e Rodapé">
+                  <Field label="LINKS 1" tooltip="Aplica-se aos links das seções escuras da landing page (Navbar, Artigos, Rodapé).">
                     <ColorPicker value={data.colorLinkPrimary || '#FFFFFF'} onChange={v => updateColor('colorLinkPrimary', v)} />
                   </Field>
-                  <Field label="LINKS 2" tooltip="Aplica-se aos links textuais e Termos de Contato">
+                  <Field label="LINKS 2" tooltip="Aplica-se aos links textuais e às ações secundárias do sistema.">
                     <ColorPicker value={data.colorLinkSecondary || '#661C16'} onChange={v => updateColor('colorLinkSecondary', v)} />
                   </Field>
                 </div>

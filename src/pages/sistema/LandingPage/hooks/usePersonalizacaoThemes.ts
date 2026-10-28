@@ -60,7 +60,7 @@ export function usePersonalizacaoThemes({
   }, [fetchThemes]);
 
   const isColorMatching = useCallback((t: LandingPageTheme, currentColors: LandingPageData) => {
-    return (
+    const landingMatches = (
       t.color_bg_primary.toLowerCase() === (currentColors.colorBgPrimary || '').toLowerCase() &&
       t.color_bg_secondary.toLowerCase() === (currentColors.colorBgSecondary || '').toLowerCase() &&
       t.color_bg_sobre.toLowerCase() === (currentColors.colorBgSobre || '').toLowerCase() &&
@@ -74,6 +74,27 @@ export function usePersonalizacaoThemes({
       t.color_link_primary.toLowerCase() === (currentColors.colorLinkPrimary || '').toLowerCase() &&
       t.color_link_secondary.toLowerCase() === (currentColors.colorLinkSecondary || '').toLowerCase()
     );
+    if (!landingMatches) return false;
+
+    const themeUsesLanding = t.system_uses_landing_buttons ?? true;
+    const currentUsesLanding = currentColors.systemUsesLandingButtons ?? true;
+    if (themeUsesLanding !== currentUsesLanding) return false;
+
+    if (!themeUsesLanding) {
+      const tSysBg = (t.color_buttons_system || t.color_buttons || '').toLowerCase();
+      const tSysHover = (t.color_buttons_system_hover || t.color_buttons_hover || '').toLowerCase();
+      const tSysText = (t.color_buttons_system_text || t.color_buttons_text || '').toLowerCase();
+
+      const cSysBg = (currentColors.colorButtonsSystem || currentColors.colorButtons || '').toLowerCase();
+      const cSysHover = (currentColors.colorButtonsSystemHover || currentColors.colorButtonsHover || '').toLowerCase();
+      const cSysText = (currentColors.colorButtonsSystemText || currentColors.colorButtonsText || '').toLowerCase();
+
+      if (tSysBg !== cSysBg || tSysHover !== cSysHover || tSysText !== cSysText) {
+        return false;
+      }
+    }
+
+    return true;
   }, []);
 
   // Tema de referência original (baseTheme): o último tema deliberadamente selecionado ou associado
@@ -134,12 +155,32 @@ export function usePersonalizacaoThemes({
     });
   }, [baseTheme, isColorMatching, setData]);
 
+  const updateSystemButtons = useCallback((changes: Partial<Pick<LandingPageData, 'systemUsesLandingButtons' | 'colorButtonsSystem' | 'colorButtonsSystemHover' | 'colorButtonsSystemText'>>) => {
+    setData(d => {
+      const next: LandingPageData = { ...d, ...changes };
+      if (baseTheme && !baseTheme.is_predefined) {
+        next.themeId = baseTheme.id;
+      } else if (baseTheme && isColorMatching(baseTheme, next)) {
+        next.themeId = baseTheme.id;
+      } else {
+        next.themeId = null;
+      }
+      return next;
+    });
+  }, [baseTheme, isColorMatching, setData]);
+
   const restoreDefaultColors = useCallback(() => {
+    const defaultTheme = themes.find(t => t.is_predefined) || null;
     setData(d => ({
       ...d,
       ...DEFAULT_COLORS,
+      themeId: defaultTheme ? defaultTheme.id : null,
     }));
-  }, [setData]);
+    if (defaultTheme) {
+      setBaseThemeId(defaultTheme.id);
+      setSelectedThemeId(defaultTheme.id);
+    }
+  }, [setData, themes]);
 
   const matchedTheme = useMemo(() => {
     const activeId = data.themeId ?? selectedThemeId;
@@ -165,6 +206,7 @@ export function usePersonalizacaoThemes({
   const handleThemeSelected = useCallback((theme: LandingPageTheme) => {
     setBaseThemeId(theme.id);
     setSelectedThemeId(theme.id);
+    const usesLanding = theme.system_uses_landing_buttons ?? true;
     setData(d => ({
       ...d,
       themeId: theme.id,
@@ -175,6 +217,10 @@ export function usePersonalizacaoThemes({
       colorButtons: theme.color_buttons,
       colorButtonsHover: theme.color_buttons_hover,
       colorButtonsText: theme.color_buttons_text,
+      systemUsesLandingButtons: usesLanding,
+      colorButtonsSystem: theme.color_buttons_system ?? (usesLanding ? null : theme.color_buttons),
+      colorButtonsSystemHover: theme.color_buttons_system_hover ?? (usesLanding ? null : theme.color_buttons_hover),
+      colorButtonsSystemText: theme.color_buttons_system_text ?? (usesLanding ? null : theme.color_buttons_text),
       colorTitlePrimary: theme.color_title_primary,
       colorTitleSecondary: theme.color_title_secondary,
       colorTextPrimary: theme.color_text_primary,
@@ -232,6 +278,10 @@ export function usePersonalizacaoThemes({
         color_buttons: data.colorButtons || '#661C16',
         color_buttons_hover: data.colorButtonsHover || '#A52020',
         color_buttons_text: data.colorButtonsText || '#FFFFFF',
+        system_uses_landing_buttons: data.systemUsesLandingButtons ?? true,
+        color_buttons_system: data.colorButtonsSystem || null,
+        color_buttons_system_hover: data.colorButtonsSystemHover || null,
+        color_buttons_system_text: data.colorButtonsSystemText || null,
         color_title_primary: data.colorTitlePrimary || '#FFFFFF',
         color_title_secondary: data.colorTitleSecondary || '#232C43',
         color_text_primary: data.colorTextPrimary || '#FFFFFF',
@@ -272,6 +322,7 @@ export function usePersonalizacaoThemes({
     isBaseThemeModified,
     isColorMatching,
     updateColor,
+    updateSystemButtons,
     restoreDefaultColors,
     handleThemeSelected,
     handleSelectFromLibrary,

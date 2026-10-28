@@ -42,6 +42,10 @@ interface ThemeFormState {
   color_text_secondary: string;
   color_link_primary: string;
   color_link_secondary: string;
+  system_uses_landing_buttons?: boolean;
+  color_buttons_system?: string | null;
+  color_buttons_system_hover?: string | null;
+  color_buttons_system_text?: string | null;
 }
 
 const DEFAULT_FORM_STATE: ThemeFormState = {
@@ -60,6 +64,10 @@ const DEFAULT_FORM_STATE: ThemeFormState = {
   color_text_secondary: '#6B7280',
   color_link_primary: '#FFFFFF',
   color_link_secondary: '#661C16',
+  system_uses_landing_buttons: true,
+  color_buttons_system: null,
+  color_buttons_system_hover: null,
+  color_buttons_system_text: null,
 };
 
 export default function ThemeGallery({
@@ -93,7 +101,7 @@ export default function ThemeGallery({
     if (activeThemeId !== undefined && activeThemeId !== null) {
       return theme.id === activeThemeId;
     }
-    return (
+    const landingMatches = (
       theme.color_bg_primary.toLowerCase() === (currentLandingColors.colorBgPrimary || '').toLowerCase() &&
       theme.color_bg_secondary.toLowerCase() === (currentLandingColors.colorBgSecondary || '').toLowerCase() &&
       theme.color_bg_sobre.toLowerCase() === (currentLandingColors.colorBgSobre || '').toLowerCase() &&
@@ -107,6 +115,27 @@ export default function ThemeGallery({
       theme.color_link_primary.toLowerCase() === (currentLandingColors.colorLinkPrimary || '').toLowerCase() &&
       theme.color_link_secondary.toLowerCase() === (currentLandingColors.colorLinkSecondary || '').toLowerCase()
     );
+    if (!landingMatches) return false;
+
+    const themeUsesLanding = theme.system_uses_landing_buttons ?? true;
+    const currentUsesLanding = currentLandingColors.systemUsesLandingButtons ?? true;
+    if (themeUsesLanding !== currentUsesLanding) return false;
+
+    if (!themeUsesLanding) {
+      const tSysBg = (theme.color_buttons_system || theme.color_buttons || '').toLowerCase();
+      const tSysHover = (theme.color_buttons_system_hover || theme.color_buttons_hover || '').toLowerCase();
+      const tSysText = (theme.color_buttons_system_text || theme.color_buttons_text || '').toLowerCase();
+
+      const cSysBg = (currentLandingColors.colorButtonsSystem || currentLandingColors.colorButtons || '').toLowerCase();
+      const cSysHover = (currentLandingColors.colorButtonsSystemHover || currentLandingColors.colorButtonsHover || '').toLowerCase();
+      const cSysText = (currentLandingColors.colorButtonsSystemText || currentLandingColors.colorButtonsText || '').toLowerCase();
+
+      if (tSysBg !== cSysBg || tSysHover !== cSysHover || tSysText !== cSysText) {
+        return false;
+      }
+    }
+
+    return true;
   }, [activeThemeId, currentLandingColors]);
 
   const defaultThemeId = useMemo(() => {
@@ -180,6 +209,10 @@ export default function ThemeGallery({
       color_text_secondary: baseTheme.color_text_secondary,
       color_link_primary: baseTheme.color_link_primary,
       color_link_secondary: baseTheme.color_link_secondary,
+      system_uses_landing_buttons: baseTheme.system_uses_landing_buttons ?? true,
+      color_buttons_system: baseTheme.color_buttons_system ?? null,
+      color_buttons_system_hover: baseTheme.color_buttons_system_hover ?? null,
+      color_buttons_system_text: baseTheme.color_buttons_system_text ?? null,
     });
     setModalMode('duplicate');
   }
@@ -202,6 +235,10 @@ export default function ThemeGallery({
       color_text_secondary: currentLandingColors.colorTextSecondary || DEFAULT_FORM_STATE.color_text_secondary,
       color_link_primary: currentLandingColors.colorLinkPrimary || DEFAULT_FORM_STATE.color_link_primary,
       color_link_secondary: currentLandingColors.colorLinkSecondary || DEFAULT_FORM_STATE.color_link_secondary,
+      system_uses_landing_buttons: currentLandingColors.systemUsesLandingButtons ?? true,
+      color_buttons_system: currentLandingColors.colorButtonsSystem ?? null,
+      color_buttons_system_hover: currentLandingColors.colorButtonsSystemHover ?? null,
+      color_buttons_system_text: currentLandingColors.colorButtonsSystemText ?? null,
     });
     setModalMode('create');
   }
@@ -225,6 +262,10 @@ export default function ThemeGallery({
       color_text_secondary: theme.color_text_secondary,
       color_link_primary: theme.color_link_primary,
       color_link_secondary: theme.color_link_secondary,
+      system_uses_landing_buttons: theme.system_uses_landing_buttons ?? true,
+      color_buttons_system: theme.color_buttons_system ?? null,
+      color_buttons_system_hover: theme.color_buttons_system_hover ?? null,
+      color_buttons_system_text: theme.color_buttons_system_text ?? null,
     });
     setModalMode('edit');
   }
@@ -254,6 +295,10 @@ export default function ThemeGallery({
           color_text_secondary: formData.color_text_secondary,
           color_link_primary: formData.color_link_primary,
           color_link_secondary: formData.color_link_secondary,
+          system_uses_landing_buttons: formData.system_uses_landing_buttons ?? true,
+          color_buttons_system: formData.color_buttons_system ?? null,
+          color_buttons_system_hover: formData.color_buttons_system_hover ?? null,
+          color_buttons_system_text: formData.color_buttons_system_text ?? null,
         };
         await createTheme(payload);
       } else if (modalMode === 'edit' && formData.id) {
@@ -273,6 +318,10 @@ export default function ThemeGallery({
           color_text_secondary: formData.color_text_secondary,
           color_link_primary: formData.color_link_primary,
           color_link_secondary: formData.color_link_secondary,
+          system_uses_landing_buttons: formData.system_uses_landing_buttons ?? true,
+          color_buttons_system: formData.color_buttons_system ?? null,
+          color_buttons_system_hover: formData.color_buttons_system_hover ?? null,
+          color_buttons_system_text: formData.color_buttons_system_text ?? null,
         });
       }
       await onRefreshThemes();

@@ -10,7 +10,7 @@
   font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--brand-title);
   margin-bottom: 6px;
 }
 
@@ -51,14 +51,14 @@
 }
 
 .tabBtnActive {
-  color: var(--navy);
-  border-bottom-color: var(--navy);
+  color: var(--brand-link);
+  border-bottom-color: var(--brand-accent);
   font-weight: 700;
 }
 
 /* ── Card ── */
 .card {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   margin-bottom: 24px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
@@ -74,8 +74,8 @@
 }
 
 .cardIcon {
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-primary);
+  color: var(--brand-primary-text);
   width: 36px; height: 36px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -429,8 +429,8 @@
 }
 
 .imgBtn {
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   padding: 9px 20px;
   border-radius: var(--btn-radius, 6px);
@@ -441,7 +441,7 @@
   margin-top: 4px;
   transition: background .2s;
 }
-.imgBtn:hover { background: var(--navy-mid); }
+.imgBtn:hover { background: var(--brand-accent-hover); }
 
 /* ── Grids para diferenciais / áreas ── */
 .grid3 {
@@ -494,7 +494,7 @@
   display: flex; align-items: center;
   transition: color .2s;
 }
-.iconBtnRed:hover { color: var(--crimson); }
+.iconBtnRed:hover { color: var(--color-danger); }
 
 .iconBtnGreen {
   background: #e8f5e9; border: none; cursor: pointer;
@@ -575,7 +575,7 @@
 }
 
 .bottomError {
-  color: #e74c3c;
+  color: var(--color-danger);
   font-size: .82rem;
   flex: 1;
   min-width: 0;
@@ -599,17 +599,17 @@
   font-family: var(--font-body);
   transition: border-color .2s, color .2s;
 }
-.btnDiscard:hover { border-color: var(--crimson); color: var(--crimson); }
+.btnDiscard:hover { border-color: var(--color-danger); color: var(--color-danger); }
 
 .btnSave {
   display: flex; align-items: center; gap: 6px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 9px 24px; border-radius: var(--btn-radius, 6px);
   font-size: .88rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body);
   transition: background .2s;
 }
-.btnSave:hover { background: var(--navy-mid); }
+.btnSave:hover { background: var(--brand-accent-hover); }
 
 /* ── Color Picker ── */
 .colorPickerContainer {
@@ -751,8 +751,8 @@
 }
 
 .btnPrimaryTheme {
-  background: var(--navy);
-  color: #ffffff;
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   border-radius: var(--btn-radius, 6px);
   padding: 7px 14px;
@@ -768,7 +768,7 @@
 }
 
 .btnPrimaryTheme:hover {
-  filter: brightness(1.15);
+  background: var(--brand-accent-hover);
   box-shadow: 0 2px 6px rgba(35, 44, 67, 0.3);
 }
 
@@ -924,7 +924,7 @@
 
 .modalError {
   font-size: 0.82rem;
-  color: #ef4444;
+  color: var(--color-danger);
   margin: 0;
 }
 
@@ -951,8 +951,8 @@
 }
 
 .btnConfirm {
-  background: var(--navy);
-  color: #ffffff;
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   border-radius: var(--btn-radius, 6px);
   padding: 7px 16px;
@@ -965,10 +965,40 @@
 }
 
 .btnConfirm:hover {
-  filter: brightness(1.1);
+  background: var(--brand-accent-hover);
 }
 
 .btnConfirm:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--brand-accent);
+  cursor: pointer;
+}
+
+.systemButtonsBox {
+  margin-top: 18px;
+  padding: 16px 18px;
+  background: var(--sys-surface);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
