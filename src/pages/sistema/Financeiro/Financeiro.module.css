@@ -7,29 +7,29 @@
 
 .pageTitle {
   font-family: var(--font-display);
-  font-size: 2rem; font-weight: 700; color: var(--navy);
+  font-size: 2rem; font-weight: 700; color: var(--brand-title, var(--navy));
 }
 
 .headerActions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: #2e7d32; color: var(--white);
   border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnPrimary:hover { background: var(--navy-mid); }
+.btnPrimary:hover { background: #1b5e20; }
 .btnPrimary:disabled { opacity: .6; cursor: default; }
 
 .btnExpense {
   display: flex; align-items: center; gap: 8px;
-  background: var(--crimson); color: var(--white);
+  background: var(--color-danger); color: var(--white);
   border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnExpense:hover { background: var(--crimson-light); }
+.btnExpense:hover { background: var(--color-danger-hover); }
 .btnExpense:disabled { opacity: .6; cursor: default; }
 
 /* Resumo do período */
@@ -39,7 +39,7 @@
 }
 
 .summaryCard {
-  background: var(--white); border-radius: 12px;
+  background: var(--sys-surface); border-radius: 12px;
   padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
@@ -60,7 +60,7 @@
   line-height: 1.2; margin-bottom: 4px; word-break: break-word;
 }
 
-.summaryValueRed { color: var(--crimson); }
+.summaryValueRed { color: var(--color-danger); }
 
 .summarySub { font-size: .78rem; color: var(--gray); }
 
@@ -96,7 +96,7 @@
 
 /* Table */
 .tableWrap {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   overflow-x: auto;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
@@ -128,7 +128,7 @@
   font-size: .9rem; font-weight: 700; color: var(--navy);
 }
 .amountIncome  { color: #2e7d32; }
-.amountExpense { color: var(--crimson); }
+.amountExpense { color: var(--color-danger); }
 
 .badge {
   display: inline-block;
@@ -161,7 +161,7 @@
   color: var(--gray); transition: background .2s;
 }
 .pageNum:hover { background: #f5f5f5; }
-.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
+.pageActive { background: var(--brand-accent) !important; color: var(--brand-accent-text) !important; border-color: var(--brand-accent) !important; }
 
 /* Modal form */
 .fieldGroup { margin-bottom: 16px; }
@@ -205,7 +205,7 @@
 .statusMsg { padding: 24px 0; color: var(--gray); font-size: .9rem; text-align: center; }
 .errorMsg {
   padding: 10px 14px; margin: 8px 0;
-  background: #fce4ec; color: var(--crimson);
+  background: var(--color-danger-bg); color: var(--color-danger);
   border-radius: 8px; font-size: .85rem;
 }
 

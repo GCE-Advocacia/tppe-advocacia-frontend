@@ -23,7 +23,7 @@
   font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--brand-title, var(--navy));
   margin: 0 0 4px;
 }
 
@@ -47,15 +47,15 @@
   padding: 9px 16px;
   border-radius: var(--btn-radius, 6px);
   border: none;
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   font-size: .85rem;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: opacity .15s;
+  transition: background .15s, opacity .15s;
 }
-.syncAllButton:hover:not(:disabled) { opacity: .85; }
+.syncAllButton:hover:not(:disabled) { background: var(--brand-accent-hover); }
 .syncAllButton:disabled { opacity: .5; cursor: not-allowed; }
 
 .refreshButton {
@@ -96,7 +96,7 @@
 
 .syncIcon { color: var(--navy); flex-shrink: 0; }
 .syncSuccess { color: #2e7d32; font-weight: 600; }
-.syncFailure { color: #c62828; font-weight: 600; }
+.syncFailure { color: var(--color-danger); font-weight: 600; }
 
 /* ── Toast ── */
 .toast {
@@ -112,11 +112,11 @@
   max-width: 420px;
 }
 .toastSuccess { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
-.toastError   { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+.toastError   { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid #ef9a9a; }
 
 /* ── Panel ── */
 .panel {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
   overflow: hidden;
@@ -191,7 +191,7 @@
   white-space: nowrap;
 }
 .badgeSuccess { background: #e8f5e9; color: #2e7d32; }
-.badgeFailure { background: #ffebee; color: #c62828; }
+.badgeFailure { background: var(--color-danger-bg); color: var(--color-danger); }
 
 /* Provider */
 .provider {
@@ -224,13 +224,13 @@
 
 /* HTTP */
 .httpOk    { color: #2e7d32; font-weight: 700; font-size: .88rem; }
-.httpError { color: #c62828; font-weight: 700; font-size: .88rem; }
+.httpError { color: var(--color-danger); font-weight: 700; font-size: .88rem; }
 
 /* Error */
 .errorCode {
   font-size: .78rem;
   font-weight: 700;
-  color: #c62828;
+  color: var(--color-danger);
   font-family: monospace;
   margin-bottom: 3px;
 }

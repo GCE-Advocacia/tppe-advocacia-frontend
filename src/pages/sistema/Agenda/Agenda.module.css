@@ -2,7 +2,7 @@
 
 /* Header */
 .pageHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-.pageTitle  { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--navy); }
+.pageTitle  { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--brand-title); }
 .headerRight { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .monthNav { display: flex; align-items: center; gap: 8px; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 6px 14px; background: var(--white); }
@@ -21,16 +21,16 @@
 
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .88rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnPrimary:hover { background: var(--navy-mid); }
+.btnPrimary:hover { background: var(--brand-accent-hover); }
 
 /* Calendar */
 .calendar {
-  background: var(--white); border-radius: 12px;
+  background: var(--sys-surface); border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
   overflow: hidden;
 }
@@ -62,7 +62,7 @@
 .calCellEmpty:hover { background: #fafafa; }
 
 .calCellToday {
-  border: 2px solid var(--crimson) !important;
+  border: 2px solid var(--brand-accent) !important;
   border-radius: 2px;
 }
 
@@ -72,7 +72,7 @@
   margin-bottom: 4px;
 }
 .dayNumToday {
-  background: var(--crimson); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border-radius: 50%; width: 24px; height: 24px;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: .8rem;
@@ -119,19 +119,19 @@
 }
 
 .modal {
-  background: var(--white); border-radius: 12px;
+  background: var(--sys-surface); border-radius: 12px;
   width: 100%; max-width: 500px; max-height: 90vh;
   display: flex; flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,.2); overflow: hidden;
 }
 
 .modalHeader {
-  background: var(--navy); padding: 20px 24px;
+  background: var(--brand-primary); padding: 20px 24px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.modalTitle { color: var(--white); font-size: 1.1rem; font-weight: 600; font-family: var(--font-body); }
-.modalClose { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; display: flex; align-items: center; padding: 4px; border-radius: 4px; transition: color .2s; }
-.modalClose:hover { color: var(--white); }
+.modalTitle { color: var(--brand-primary-text); font-size: 1.1rem; font-weight: 600; font-family: var(--font-body); }
+.modalClose { background: none; border: none; color: var(--brand-primary-muted); cursor: pointer; display: flex; align-items: center; padding: 4px; border-radius: 4px; transition: color .2s; }
+.modalClose:hover { color: var(--brand-primary-text); }
 
 .modalBody { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
 .modalFooter { padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
@@ -149,8 +149,8 @@
 .mInputBare { border: none; outline: none; font-family: var(--font-body); font-size: .9rem; color: var(--text); background: transparent; width: 100%; }
 
 .btnCancel { background: none; border: none; color: var(--gray); font-size: .9rem; font-weight: 500; cursor: pointer; font-family: var(--font-body); }
-.btnSave   { display: flex; align-items: center; gap: 6px; background: var(--navy); color: var(--white); border: none; padding: 10px 22px; border-radius: var(--btn-radius, 6px); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background .2s; }
-.btnSave:hover { background: var(--navy-mid); }
+.btnSave   { display: flex; align-items: center; gap: 6px; background: var(--brand-accent); color: var(--brand-accent-text); border: none; padding: 10px 22px; border-radius: var(--btn-radius, 6px); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: background .2s; }
+.btnSave:hover { background: var(--brand-accent-hover); }
 
 /* ── Detalhes Modal ── */
 .detalhesModal {
@@ -182,7 +182,7 @@
 .detalhesObsText  { border-left: 3px solid #e0e0e0; padding-left: 14px; font-size: .88rem; color: var(--gray); line-height: 1.7; font-style: italic; white-space: pre-line; }
 
 .detalhesActions { display: flex; gap: 20px; }
-.btnExcluir { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--crimson); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
+.btnExcluir { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--color-danger); font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
 .btnEditar  { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--navy);   font-size: .9rem; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
 
 /* ── Calculadora ── */
@@ -193,7 +193,7 @@
 }
 
 .calcForm {
-  background: var(--white); padding: 28px;
+  background: var(--sys-surface); padding: 28px;
   flex: 1; display: flex; flex-direction: column; gap: 16px;
 }
 
@@ -202,26 +202,26 @@
 .calcTitle { font-size: 1.1rem; font-weight: 700; color: var(--navy); font-family: var(--font-body); }
 
 .calcResultado {
-  background: var(--navy); padding: 28px;
+  background: var(--brand-primary); padding: 28px;
   width: 260px; flex-shrink: 0;
   display: flex; flex-direction: column; gap: 8px;
   position: relative;
 }
 
-.calcClose { position: absolute; top: 12px; right: 12px; background: none; border: none; color: rgba(255,255,255,.5); cursor: pointer; display: flex; align-items: center; }
+.calcClose { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--brand-primary-muted); cursor: pointer; display: flex; align-items: center; }
 
-.calcResultLabel    { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+.calcResultLabel    { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--brand-primary-muted); margin-bottom: 8px; }
 .calcResultSubLabel { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #f59e0b; margin-top: 12px; }
-.calcResultDate     { font-size: 1.6rem; font-weight: 800; color: var(--white); letter-spacing: .02em; }
+.calcResultDate     { font-size: 1.6rem; font-weight: 800; color: var(--brand-primary-text); letter-spacing: .02em; }
 .calcResultDias     { display: flex; align-items: baseline; gap: 6px; }
-.calcResultNum      { font-size: 3rem; font-weight: 800; color: var(--white); line-height: 1; }
-.calcResultDiasLabel{ font-size: .9rem; font-weight: 700; color: rgba(255,255,255,.6); }
-.calcResultEmpty    { font-size: .85rem; color: rgba(255,255,255,.4); line-height: 1.6; margin-top: 16px; }
+.calcResultNum      { font-size: 3rem; font-weight: 800; color: var(--brand-primary-text); line-height: 1; }
+.calcResultDiasLabel{ font-size: .9rem; font-weight: 700; color: var(--brand-primary-muted); }
+.calcResultEmpty    { font-size: .85rem; color: var(--brand-primary-muted); line-height: 1.6; margin-top: 16px; }
 
 .btnSalvarAgenda {
   display: flex; align-items: center; gap: 8px;
-  background: rgba(255,255,255,.12); color: var(--white);
-  border: none; padding: 10px 16px; border-radius: var(--btn-radius, 6px);
+  background: var(--brand-primary-hover-bg); color: var(--brand-primary-text);
+  border: 1px solid var(--brand-primary-border); padding: 10px 16px; border-radius: var(--btn-radius, 6px);
   font-size: .88rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); margin-top: 16px;
   transition: background .2s;
@@ -344,14 +344,14 @@
 
 .mobileDayAddBtn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 14px;
   border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); flex-shrink: 0;
   transition: background .2s;
 }
-.mobileDayAddBtn:hover { background: var(--navy-mid); }
+.mobileDayAddBtn:hover { background: var(--brand-accent-hover); }
 
 /* ── Google Calendar Banner ── */
 .gcalBanner {
@@ -368,7 +368,7 @@
 
 .gcalActions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .gcalOk  { font-size: .82rem; color: #2e7d32; font-weight: 500; }
-.gcalErr { font-size: .82rem; color: #c62828; font-weight: 500; }
+.gcalErr { font-size: .82rem; color: var(--color-danger); font-weight: 500; }
 
 .gcalBtnPrimary {
   background: #1a73e8; color: var(--white);
@@ -391,7 +391,7 @@
 .gcalBtnSecondary:disabled { opacity: .6; cursor: default; }
 
 .gcalBtnDanger {
-  background: none; color: #c62828;
+  background: none; color: var(--color-danger);
   border: none; padding: 7px 4px; border-radius: 7px;
   font-size: .84rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); white-space: nowrap;

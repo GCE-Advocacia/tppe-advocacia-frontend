@@ -11,7 +11,7 @@
 }
 .pageTitle {
   font-family: var(--font-display);
-  font-size: 1.6rem; font-weight: 700; color: var(--navy);
+  font-size: 1.6rem; font-weight: 700; color: var(--brand-title, var(--navy));
 }
 .pageSubtitle { margin-top: 4px; font-size: .86rem; color: var(--gray); max-width: 60ch; }
 .headerRight { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -37,14 +37,14 @@
 
 .btnPrimary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 0 20px; min-height: 44px; border-radius: var(--btn-radius, 6px);
   font-size: .88rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnPrimary:hover { background: var(--navy-mid); }
+.btnPrimary:hover { background: var(--brand-accent-hover); }
 .btnPrimary:disabled { opacity: .45; cursor: not-allowed; }
-.btnPrimary:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.btnPrimary:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 2px; }
 
 .btnSecondary {
   display: inline-flex; align-items: center; gap: 8px;
@@ -58,8 +58,8 @@
 .btnSecondary:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
 
 .pageError {
-  background: #fdecea; color: #8c1d18;
-  border-left: 3px solid var(--crimson-light);
+  background: var(--color-danger-bg); color: var(--color-danger);
+  border-left: 3px solid var(--color-danger);
   padding: 12px 14px; border-radius: 6px;
   font-size: .86rem; margin-bottom: 16px;
 }
@@ -71,7 +71,7 @@
 }
 .resumoCard {
   display: flex; align-items: center; gap: 12px;
-  background: var(--white); border: 1px solid #eeeeee;
+  background: var(--sys-surface); border: 1px solid #eeeeee;
   border-radius: 12px; padding: 14px 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,.04);
 }
@@ -102,13 +102,13 @@
 .filtroBtn:hover { background: #f5f5f5; color: var(--navy); }
 .filtroBtn:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
 .filtroAtivo {
-  background: var(--navy); color: var(--white); border-color: var(--navy);
+  background: var(--brand-accent); color: var(--brand-accent-text); border-color: var(--brand-accent);
 }
-.filtroAtivo:hover { background: var(--navy-mid); color: var(--white); }
+.filtroAtivo:hover { background: var(--brand-accent-hover); color: var(--brand-accent-text); }
 
 /* ── Calendário ── */
 .calendar {
-  background: var(--white); border-radius: 12px;
+  background: var(--sys-surface); border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
   overflow: hidden;
 }
@@ -136,14 +136,14 @@
 .calCell:focus-visible { outline: 2px solid var(--navy); outline-offset: -2px; }
 .calCellEmpty { background: #fafafa; cursor: default; }
 .calCellEmpty:hover { background: #fafafa; }
-.calCellToday { box-shadow: inset 0 0 0 2px var(--crimson); }
+.calCellToday { box-shadow: inset 0 0 0 2px var(--brand-accent); }
 
 .dayNum {
   font-size: .82rem; font-weight: 500; color: var(--text);
   align-self: flex-start; font-variant-numeric: tabular-nums;
 }
 .dayNumToday {
-  background: var(--crimson); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border-radius: 50%; width: 22px; height: 22px;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: .74rem;
@@ -220,13 +220,13 @@
   display: flex; align-items: center; justify-content: center; padding: 16px;
 }
 .modal {
-  background: var(--white); border-radius: 12px;
+  background: var(--sys-surface); border-radius: 12px;
   width: 100%; max-width: 560px; max-height: 90dvh;
   display: flex; flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,.25); overflow: hidden;
 }
 .modalHeader {
-  background: var(--navy); padding: 16px 20px; flex-shrink: 0;
+  background: var(--brand-primary); color: var(--brand-primary-text); padding: 16px 20px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
 }
 .modalTitle { color: var(--white); font-size: 1.05rem; font-weight: 600; font-family: var(--font-body); }
@@ -249,8 +249,8 @@
 .footerRight { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 
 .formError {
-  background: #fdecea; color: #8c1d18;
-  border-left: 3px solid var(--crimson-light);
+  background: var(--color-danger-bg); color: var(--color-danger);
+  border-left: 3px solid var(--color-danger);
   padding: 10px 12px; border-radius: 6px; font-size: .84rem;
 }
 
@@ -272,7 +272,7 @@
   outline: none; border-color: var(--navy);
 }
 .mHelp  { font-size: .74rem; color: var(--gray); }
-.mError { font-size: .74rem; color: var(--crimson-light); font-weight: 600; }
+.mError { font-size: .74rem; color: var(--color-danger); font-weight: 600; }
 
 .btnGhost {
   background: none; border: none; color: var(--gray);
@@ -285,24 +285,24 @@
 
 .btnDangerGhost {
   display: inline-flex; align-items: center; gap: 6px;
-  background: none; border: none; color: var(--crimson-light);
+  background: none; border: none; color: var(--color-danger);
   font-size: .85rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body);
   min-height: 44px; padding: 0 10px; border-radius: 8px;
   transition: background .2s;
 }
-.btnDangerGhost:hover { background: #fdecea; }
+.btnDangerGhost:hover { background: var(--color-danger-bg); }
 
 .btnDanger {
-  background: var(--crimson-light); color: var(--white);
+  background: var(--color-danger); color: var(--white);
   border: none; border-radius: var(--btn-radius, 6px); cursor: pointer;
   font-family: var(--font-body); font-size: .85rem; font-weight: 600;
   min-height: 40px; padding: 0 14px;
 }
-.btnDanger:hover { background: var(--crimson); }
+.btnDanger:hover { background: var(--color-danger-hover); }
 
 .confirmBox { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.confirmText { font-size: .83rem; font-weight: 600; color: var(--crimson); }
+.confirmText { font-size: .83rem; font-weight: 600; color: var(--color-danger); }
 
 /* ── Sheet do dia (mobile) ── */
 .overlayBottom {
@@ -311,7 +311,7 @@
   display: flex; align-items: flex-end; justify-content: center;
 }
 .daySheet {
-  background: var(--white); width: 100%;
+  background: var(--sys-surface); width: 100%;
   border-radius: 16px 16px 0 0; padding: 8px 16px 20px;
   max-height: 80dvh; display: flex; flex-direction: column;
   animation: sheetUp .25s ease both;
@@ -347,9 +347,11 @@
 .daySheetAdd {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   margin-top: 12px; min-height: 44px; border-radius: 8px;
-  background: var(--navy); color: var(--white); border: none;
+  background: var(--brand-accent); color: var(--brand-accent-text); border: none;
   font-family: var(--font-body); font-size: .88rem; font-weight: 600; cursor: pointer;
+  transition: background .2s;
 }
+.daySheetAdd:hover { background: var(--brand-accent-hover); }
 
 /* ══════════════════════════════════════════
    Responsivo — 375 / 768 / 1024 / 1440

@@ -3,7 +3,7 @@
 .pageTitle {
   font-family: var(--font-display);
   font-size: 1.8rem; font-weight: 700;
-  color: var(--navy); margin-bottom: 28px;
+  color: var(--brand-title, var(--navy)); margin-bottom: 28px;
 }
 
 /* ── Config row ── */
@@ -15,7 +15,7 @@
 }
 
 .configCard {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
@@ -57,7 +57,7 @@
   transition: background .25s;
   flex-shrink: 0;
 }
-.toggleOn { background: var(--navy); }
+.toggleOn { background: var(--brand-accent); }
 
 .toggleThumb {
   position: absolute;
@@ -72,7 +72,7 @@
 
 /* ── Alert card ── */
 .alertCard {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
   overflow-x: auto;
@@ -101,10 +101,10 @@
   cursor: pointer; font-family: var(--font-body);
   transition: background .15s, color .15s, border-color .15s;
 }
-.filtroBtn:hover { border-color: var(--navy); color: var(--navy); }
+.filtroBtn:hover { border-color: var(--brand-accent); color: var(--brand-accent); }
 .filtroBtnActive {
-  background: var(--navy); color: var(--white);
-  border-color: var(--navy);
+  background: var(--brand-accent); color: var(--brand-accent-text);
+  border-color: var(--brand-accent);
 }
 
 /* ── Table ── */
@@ -198,7 +198,7 @@
   transition: background .15s;
 }
 .pageNum:hover { background: #f5f5f5; }
-.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
+.pageActive { background: var(--brand-accent) !important; color: var(--brand-accent-text) !important; border-color: var(--brand-accent) !important; }
 
 .toggleDisabled { opacity: .45; cursor: not-allowed; }
 
