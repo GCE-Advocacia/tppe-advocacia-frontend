@@ -22,7 +22,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { ApiError } from '../../../services/api';
+import { ApiError, getSessionClaims } from '../../../services/api';
 import {
   createProcessDeadline,
   Deadline,
@@ -56,6 +56,7 @@ import { Task, TaskStatus, deleteTask, listTasks } from '../../../services/tasks
 import styles from './Processos.module.css';
 // taskformmodal
 import TaskFormModal from '../TaskFormModal/TaskFormModal';
+import GoogleDriveConnection from './GoogleDriveConnection';
 import ProcessDocumentsSection from './ProcessDocumentsSection';
 
 const PER_PAGE = 10;
@@ -165,6 +166,10 @@ function errorMessage(error: unknown): string {
     INVALID_MIME_TYPE: 'Tipo de arquivo não permitido. Envie PDF, JPG, PNG ou DOCX.',
     PROCESS_DOCUMENT_NOT_FOUND: 'Documento não encontrado. Atualize a página.',
     FORBIDDEN: 'Você não tem permissão para esta ação.',
+    GOOGLE_DRIVE_NOT_CONNECTED: getSessionClaims()?.role === 'ADMIN'
+      ? 'Conecte o Google Drive para anexar documentos.'
+      : 'O Google Drive não está conectado. Peça a um administrador para conectar.',
+    GOOGLE_DRIVE_UNAVAILABLE: 'Não foi possível acessar o Google Drive. Tente novamente.',
   };
   return (error.code && messages[error.code]) || error.message;
 }
@@ -1098,6 +1103,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export default function Processos() {
+  const isAdmin = getSessionClaims()?.role === 'ADMIN';
   const [processes, setProcesses] = useState<ProcessListItem[]>([]);
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, suspended: 0, closed: 0 });
@@ -1195,6 +1201,9 @@ export default function Processos() {
           <h1 className={styles.pageTitle}>Core Jurídico</h1>
         </div>
         <div className={styles.headerActions}>
+          {isAdmin && (
+            <GoogleDriveConnection onMessage={({ message, kind }) => showToast(message, kind)} />
+          )}
           <button className={styles.btnRefresh} onClick={() => void refreshAll()} disabled={refreshing}>
             <RefreshCw size={16} className={refreshing ? styles.spinning : ''} />
             Atualizar
