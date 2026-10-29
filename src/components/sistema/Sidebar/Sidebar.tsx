@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   UserCog,
@@ -13,12 +13,15 @@ import {
   Bell,
   Activity,
   CalendarX2,
+  Mail,
+  AtSign,
   User,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
 } from 'lucide-react';
 import { canViewPayments, getSessionClaims } from '../../../services/api';
+import { getEmailHealth } from '../../../services/emailLogs';
 import { logout } from '../../../services/auth';
 import BrandLogo from '../../BrandLogo/BrandLogo';
 import styles from './Sidebar.module.css';
@@ -35,8 +38,10 @@ const NAV_ITEMS = [
   { label: 'Tarefas',       href: '/sistema/tarefas',        icon: LayoutList,   adminOnly: false },
   { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
   { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
+  { label: 'E-mails',       href: '/sistema/emails',         icon: Mail,         adminOnly: true  },
   { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
   { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
+  { label: 'Configurações', href: '/sistema/configuracoes-email', icon: AtSign,   adminOnly: true  },
 ];
 
 export default function Sidebar() {
@@ -46,6 +51,21 @@ export default function Sidebar() {
   const claims = getSessionClaims();
   const role = claims?.role === 'ADMIN' ? 'Administrador' : 'Usuário';
   const isAdmin = claims?.role === 'ADMIN';
+  // Alertas do envio de e-mail aparecem no menu mesmo com o SMTP fora.
+  const [emailAlerts, setEmailAlerts] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let active = true;
+    const load = () => {
+      getEmailHealth()
+        .then(h => { if (active) setEmailAlerts(h.alerts.length); })
+        .catch(() => {});
+    };
+    load();
+    const timer = window.setInterval(load, 120000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [isAdmin]);
 
   function handleLogout() {
     logout();
@@ -96,8 +116,21 @@ export default function Sidebar() {
               }
               onClick={() => setMobileOpen(false)}
             >
-              <Icon size={20} strokeWidth={1.6} className={styles.icon} />
-              <span className={styles.label}>{label}</span>
+              <span className={styles.iconWrap}>
+                <Icon size={20} strokeWidth={1.6} className={styles.icon} />
+                {href === '/sistema/emails' && emailAlerts > 0 && (
+                  <span className={styles.alertDot} aria-hidden="true" />
+                )}
+              </span>
+              <span className={styles.label}>
+                {label}
+                {href === '/sistema/emails' && emailAlerts > 0 && (
+                  <span className={styles.alertBadge}>
+                    {emailAlerts}
+                    <span className={styles.srOnly}> alerta(s) de envio</span>
+                  </span>
+                )}
+              </span>
             </NavLink>
           ))}
         </nav>

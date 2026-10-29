@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   BriefcaseBusiness,
@@ -6,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Inbox,
   FileText,
   Mail,
   MapPin,
@@ -159,6 +161,7 @@ export default function Clientes() {
   const [processResults, setProcessResults] = useState<ProcessListItem[]>([]);
   const [feedback, setFeedback] = useState<{ message: string; kind: 'success' | 'error' } | null>(null);
   const isAdmin = getSessionClaims()?.role === 'ADMIN';
+  const navigate = useNavigate();
 
   const stats = useMemo(() => ({
     people: clients.filter(client => client.cpf).length,
@@ -573,6 +576,15 @@ export default function Clientes() {
                 <button onClick={() => openEdit(timeline.client)} title="Editar dados" aria-label="Editar dados">
                   <Pencil size={17} />
                 </button>
+                {isAdmin && timeline.client.email && (
+                  <button
+                    onClick={() => navigate(`/sistema/emails?busca=${encodeURIComponent(timeline.client.email ?? '')}`)}
+                    title="Ver e-mails enviados ao cliente"
+                    aria-label="Ver e-mails enviados ao cliente"
+                  >
+                    <Inbox size={17} />
+                  </button>
+                )}
                 {isAdmin && (
                   <button className={styles.dangerIconButton} onClick={() => openAnonymize(timeline.client)} title="Anonimizar cliente" aria-label="Anonimizar cliente">
                     <Trash2 size={17} />
