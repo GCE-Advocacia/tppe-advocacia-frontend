@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Plus, X, Trash2,
-  AlertTriangle, CalendarClock, CheckCircle2, Wallet, Bell, Mail, MailX,
+  AlertTriangle, CalendarClock, CheckCircle2, Wallet, Bell, Mail, MailX, Clock, Repeat,
 } from 'lucide-react';
 import {
   listPayments, createPayment, updatePayment, deletePayment,
   paymentSituation, paymentAmount, formatBRL,
   getPaymentReminders, type PaymentReminder,
-  SITUATION_LABEL, SITUATION_COLOR,
-  type Payment, type PaymentWrite, type PaymentSituation,
+  SITUATION_LABEL, SITUATION_COLOR, REMINDER_KIND_LABEL, addMonthsYMD,
+  type Payment, type PaymentCreate, type PaymentSituation,
 } from '../../../services/payments';
 import { listClients, type ClientListItem } from '../../../services/clients';
 import { ApiError, getSessionClaims } from '../../../services/api';
@@ -18,6 +19,7 @@ import styles from './Pagamentos.module.css';
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DIAS_SEMANA_HEADER = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
 const CHIPS_POR_CELULA = 3;
+const MESES_RECORRENCIA = [2, 3, 4, 5, 6, 10, 12, 18, 24, 36, 48, 60];
 
 type Filtro = 'TODOS' | PaymentSituation;
 
@@ -62,6 +64,8 @@ type FormState = {
   payment_date: string;
   amount: string;
   description: string;
+  recorrente: boolean;
+  meses: number;
 };
 
 const EMPTY_FORM: FormState = {
@@ -69,6 +73,8 @@ const EMPTY_FORM: FormState = {
   payment_date: '',
   amount: '',
   description: '',
+  recorrente: false,
+  meses: 12,
 };
 
 function paymentToForm(p: Payment): FormState {
@@ -78,16 +84,28 @@ function paymentToForm(p: Payment): FormState {
     payment_date: p.payment_date,
     amount: valor ? valor.toFixed(2).replace('.', ',') : '',
     description: p.description ?? '',
+    recorrente: false,
+    meses: 12,
   };
 }
 
-function formToPayload(form: FormState): PaymentWrite {
+function formToPayload(form: FormState): PaymentCreate {
   return {
     client_id: form.client_id as number,
     payment_date: form.payment_date,
     amount: parseValor(form.amount),
     description: form.description.trim() || null,
+    ...(form.recorrente ? { recurrence_months: form.meses } : {}),
   };
+}
+
+function parcela(p: Payment): string | undefined {
+  return p.installment && p.installments ? `${p.installment}/${p.installments}` : undefined;
+}
+
+function mesAno(ymd: string) {
+  const [y, m] = ymd.split('-');
+  return `${m}/${y}`;
 }
 
 // ── Modal de cadastro / edição / visualização ──────────────
@@ -95,6 +113,8 @@ interface VencimentoModalProps {
   titulo: string;
   initial: FormState;
   paymentId?: number;
+  installment?: string;
+  isAdmin?: boolean;
   clients: ClientListItem[];
   saving: boolean;
   error: string;
@@ -105,7 +125,7 @@ interface VencimentoModalProps {
 }
 
 // ── Histórico de Lembretes ─────────────────────────────────
-function HistoricoLembretes({ paymentId }: { paymentId: number }) {
+function HistoricoLembretes({ paymentId, isAdmin }: { paymentId: number; isAdmin: boolean }) {
   const [reminders, setReminders] = useState<PaymentReminder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -126,7 +146,9 @@ function HistoricoLembretes({ paymentId }: { paymentId: number }) {
     return (
       <div className={styles.mField}>
         <label className={styles.mLabel}>LEMBRETES DE E-MAIL</label>
-        <span className={styles.mHelp}>Nenhum lembrete disparado até o momento.</span>
+        <span className={styles.mHelp}>
+          Nenhum lembrete disparado até o momento. O primeiro sai 5 dias antes do vencimento e o segundo no dia.
+        </span>
       </div>
     );
   }
@@ -136,6 +158,13 @@ function HistoricoLembretes({ paymentId }: { paymentId: number }) {
       return (
         <span style={{ color: '#1E7A46', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
           <Mail size={13} /> Enviado
+        </span>
+      );
+    }
+    if (r.status === 'QUEUED') {
+      return (
+        <span style={{ color: '#3949AB', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+          <Clock size={13} /> Na fila
         </span>
       );
     }
@@ -174,7 +203,7 @@ function HistoricoLembretes({ paymentId }: { paymentId: number }) {
             }}
           >
             <div>
-              <strong>{r.kind === 'D_MINUS_1' ? 'Lembrete D-1 (Véspera)' : 'Lembrete D-0 (Dia do Vencimento)'}</strong>
+              <strong>{REMINDER_KIND_LABEL[r.kind]}</strong>
               <div style={{ fontSize: '11px', color: '#64748b' }}>
                 {r.sent_at ? new Date(r.sent_at).toLocaleString('pt-BR') : 'Data não informada'}
                 {r.email && ` • ${r.email}`}
@@ -184,12 +213,20 @@ function HistoricoLembretes({ paymentId }: { paymentId: number }) {
           </div>
         ))}
       </div>
+      {isAdmin && (
+        <Link
+          to={`/sistema/emails?related_type=payment&related_id=${paymentId}`}
+          className={styles.verEmails}
+        >
+          <Mail size={14} /> Ver e-mails deste vencimento
+        </Link>
+      )}
     </div>
   );
 }
 
 function VencimentoModal({
-  titulo, initial, paymentId, clients, saving, error, onCancel, onSave, onDelete,
+  titulo, initial, paymentId, installment, isAdmin = false, clients, saving, error, onCancel, onSave, onDelete,
 }: VencimentoModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [confirmando, setConfirmando] = useState(false);
@@ -211,6 +248,8 @@ function VencimentoModal({
 
   const valorInvalido = form.amount.trim() !== '' && parseValor(form.amount) === null;
   const valid = Boolean(form.client_id) && Boolean(form.payment_date) && !valorInvalido;
+  const podeRepetir = !readOnly && !paymentId;
+  const ultimoVencimento = form.payment_date ? addMonthsYMD(form.payment_date, form.meses - 1) : '';
 
   return (
     <div className={styles.overlay} onClick={onCancel} role="presentation">
@@ -222,7 +261,10 @@ function VencimentoModal({
         aria-label={titulo}
       >
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}>{titulo}</h2>
+          <h2 className={styles.modalTitle}>
+            {titulo}
+            {installment && <span className={styles.modalBadge}>Parcela {installment}</span>}
+          </h2>
           <button className={styles.modalClose} onClick={onCancel} aria-label="Fechar">
             <X size={18} />
           </button>
@@ -294,7 +336,40 @@ function VencimentoModal({
             />
           </div>
 
-          {paymentId && <HistoricoLembretes paymentId={paymentId} />}
+          {podeRepetir && (
+            <fieldset className={styles.recorrencia}>
+              <legend className={styles.mLabel}>RECORRÊNCIA</legend>
+              <label className={styles.recorrenciaToggle}>
+                <input
+                  type="checkbox"
+                  checked={form.recorrente}
+                  onChange={e => update('recorrente', e.target.checked)}
+                />
+                <Repeat size={15} aria-hidden="true" />
+                Repetir todo mês
+              </label>
+              {form.recorrente && (
+                <div className={styles.mField}>
+                  <label className={styles.mLabel} htmlFor="pg-meses">QUANTIDADE DE MESES</label>
+                  <select
+                    id="pg-meses"
+                    className={styles.mSelect}
+                    value={form.meses}
+                    onChange={e => update('meses', Number(e.target.value))}
+                  >
+                    {MESES_RECORRENCIA.map(n => <option key={n} value={n}>{n} meses</option>)}
+                  </select>
+                  <span className={styles.mHelp}>
+                    {form.payment_date
+                      ? `Cria ${form.meses} vencimentos, um por mês no mesmo dia, de ${mesAno(form.payment_date)} a ${mesAno(ultimoVencimento)}. Cada um pode ser editado depois.`
+                      : 'Escolha a data do primeiro vencimento.'}
+                  </span>
+                </div>
+              )}
+            </fieldset>
+          )}
+
+          {paymentId && <HistoricoLembretes paymentId={paymentId} isAdmin={isAdmin} />}
 
           <div className={styles.modalFooter}>
             {onDelete && (
@@ -502,11 +577,17 @@ export default function Pagamentos() {
         const updated = await updatePayment(modal.payment.id, formToPayload(form));
         setPayments(prev => prev.map(p => (p.id === updated.id ? updated : p)));
       } else {
-        const created = await createPayment(formToPayload(form));
-        const dentroDoMes = created.payment_date.startsWith(
-          `${year}-${String(month + 1).padStart(2, '0')}`,
-        );
-        if (dentroDoMes) setPayments(prev => [...prev, created]);
+        const payload = formToPayload(form);
+        const created = await createPayment(payload);
+        if (payload.recurrence_months) {
+          // Vários meses de uma vez: recarrega o mês visível.
+          void loadMonth(year, month);
+        } else {
+          const dentroDoMes = created.payment_date.startsWith(
+            `${year}-${String(month + 1).padStart(2, '0')}`,
+          );
+          if (dentroDoMes) setPayments(prev => [...prev, created]);
+        }
       }
       setModal(null);
       setDaySheet(null);
@@ -680,7 +761,10 @@ export default function Pagamentos() {
                         onClick={e => { e.stopPropagation(); setFormError(''); setModal({ kind: 'editar', payment: p }); }}
                       >
                         <span className={styles.chipDot} style={{ background: cor }} />
-                        <span className={styles.chipName}>{clientName(p.client_id)}</span>
+                        <span className={styles.chipName}>
+                          {clientName(p.client_id)}
+                          {parcela(p) && <span className={styles.chipParcela}> {parcela(p)}</span>}
+                        </span>
                         <span className={styles.chipValue}>{formatBRL(paymentAmount(p.amount))}</span>
                       </button>
                     );
@@ -759,6 +843,8 @@ export default function Pagamentos() {
             titulo="Editar Vencimento"
             initial={paymentToForm(modal.payment)}
             paymentId={modal.payment.id}
+            installment={parcela(modal.payment)}
+            isAdmin
             clients={clients}
             saving={saving}
             error={formError}
@@ -771,6 +857,7 @@ export default function Pagamentos() {
             titulo="Visualizar Vencimento"
             initial={paymentToForm(modal.payment)}
             paymentId={modal.payment.id}
+            installment={parcela(modal.payment)}
             clients={clients}
             saving={false}
             error=""

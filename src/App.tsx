@@ -55,6 +55,7 @@ import Processos from './pages/sistema/Processos/Processos';
 import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
+import EmailLogs from './pages/sistema/EmailLogs/EmailLogs';
 import ModelosEmail from './pages/sistema/ModelosEmail/ModelosEmail';
 import ConfiguracoesEmail from './pages/sistema/ConfiguracoesEmail/ConfiguracoesEmail';
 import Feriados from './pages/sistema/Feriados/Feriados';
@@ -131,6 +132,7 @@ export default function App() {
             <Route path="notificacoes" element={<Notificacoes />} />
             <Route element={<AdminRoute />}>
               <Route path="logs-api" element={<LogsAPI />} />
+              <Route path="emails" element={<EmailLogs />} />
               <Route path="modelos-email" element={<ModelosEmail />} />
               <Route path="configuracoes-email" element={<ConfiguracoesEmail />} />
             </Route>
