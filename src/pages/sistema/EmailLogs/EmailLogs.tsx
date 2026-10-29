@@ -38,6 +38,16 @@ const STATUS_ICON: Record<EmailStatus, typeof CheckCircle2> = {
   CANCELLED: Ban,
 };
 
+// Contas da cadeia de envio (nomes do backend).
+const PROVIDER_LABEL: Record<string, string> = {
+  own: 'E-mail do escritório',
+  system: 'E-mail do sistema',
+};
+
+function providerLabel(name: string | null): string {
+  return name ? PROVIDER_LABEL[name] ?? name : '';
+}
+
 const RELATED_LABEL: Record<string, string> = {
   payment: 'Vencimento',
   user: 'Usuário',
@@ -152,7 +162,7 @@ function HealthPanel({ health }: { health: EmailHealth }) {
           <ul className={styles.providers}>
             {health.providers.map(p => (
               <li key={p.provider}>
-                <span className={styles.providerName}>{p.provider}</span>
+                <span className={styles.providerName}>{providerLabel(p.provider)}</span>
                 <span className={`${styles.breaker} ${styles[`breaker${p.state}`]}`}>
                   {p.state === 'CLOSED' ? <CheckCircle2 size={12} aria-hidden="true" /> : <AlertTriangle size={12} aria-hidden="true" />}
                   {BREAKER_LABEL[p.state]}
@@ -305,7 +315,7 @@ function EmailDrawer({ emailId, onClose, onChanged }: DrawerProps) {
                 {detail.status === 'FAILED' && (
                   <div><dt>Próxima tentativa</dt><dd>{formatDateTime(detail.next_attempt_at)}</dd></div>
                 )}
-                {detail.provider && <div><dt>Provedor</dt><dd>{detail.provider}</dd></div>}
+                {detail.provider && <div><dt>Enviado por</dt><dd>{providerLabel(detail.provider)}</dd></div>}
                 {detail.related_type && detail.related_id !== null && (
                   <div><dt>Origem</dt><dd>{RELATED_LABEL[detail.related_type] ?? detail.related_type} #{detail.related_id}</dd></div>
                 )}
@@ -347,7 +357,7 @@ function EmailDrawer({ emailId, onClose, onChanged }: DrawerProps) {
                           <strong>Tentativa {a.attempt}: {a.success ? 'entregue' : 'falhou'}</strong>
                           <span className={styles.tlMeta}>
                             {formatDateTime(a.created_at)}
-                            {a.provider && ` · ${a.provider}`}
+                            {a.provider && ` · ${providerLabel(a.provider)}`}
                             {a.duration_ms !== null && ` · ${a.duration_ms} ms`}
                           </span>
                           {a.error && <span className={styles.tlError}>{a.error}</span>}

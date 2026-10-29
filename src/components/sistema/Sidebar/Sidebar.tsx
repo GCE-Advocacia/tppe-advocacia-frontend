@@ -41,7 +41,7 @@ const NAV_ITEMS = [
   { label: 'E-mails',       href: '/sistema/emails',         icon: Mail,         adminOnly: true  },
   { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
   { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
-  { label: 'Configurações', href: '/sistema/configuracoes-email', icon: AtSign,   adminOnly: true  },
+  { label: 'E-mail do escritório', href: '/sistema/configuracoes-email', icon: AtSign, adminOnly: true },
 ];
 
 export default function Sidebar() {
