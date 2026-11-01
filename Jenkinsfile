@@ -47,7 +47,7 @@ pipeline {
 
         stage('Deploy Prod via Ansible') {
             when {
-                branch 'main'
+                branch 'homol'
             }
             steps {
                 withCredentials([
