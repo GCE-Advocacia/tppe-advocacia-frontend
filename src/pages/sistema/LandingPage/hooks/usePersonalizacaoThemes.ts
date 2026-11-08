@@ -10,7 +10,6 @@ import {
   updateOfficeConfig,
 } from '../../../../services/officeConfigService';
 import {
-  DEFAULT_COLORS,
   type LandingPageData,
   type LandingPageTheme,
 } from '../types';
@@ -169,18 +168,55 @@ export function usePersonalizacaoThemes({
     });
   }, [baseTheme, isColorMatching, setData]);
 
-  const restoreDefaultColors = useCallback(() => {
-    const defaultTheme = themes.find(t => t.is_predefined) || null;
+  const isColorsDirty = useMemo(() => {
+    return (
+      (data.colorBgPrimary || '').toLowerCase() !== (saved.colorBgPrimary || '').toLowerCase() ||
+      (data.colorBgSecondary || '').toLowerCase() !== (saved.colorBgSecondary || '').toLowerCase() ||
+      (data.colorBgSobre || '').toLowerCase() !== (saved.colorBgSobre || '').toLowerCase() ||
+      (data.colorButtons || '').toLowerCase() !== (saved.colorButtons || '').toLowerCase() ||
+      (data.colorButtonsHover || '').toLowerCase() !== (saved.colorButtonsHover || '').toLowerCase() ||
+      (data.colorButtonsText || '').toLowerCase() !== (saved.colorButtonsText || '').toLowerCase() ||
+      (data.colorTitlePrimary || '').toLowerCase() !== (saved.colorTitlePrimary || '').toLowerCase() ||
+      (data.colorTitleSecondary || '').toLowerCase() !== (saved.colorTitleSecondary || '').toLowerCase() ||
+      (data.colorTextPrimary || '').toLowerCase() !== (saved.colorTextPrimary || '').toLowerCase() ||
+      (data.colorTextSecondary || '').toLowerCase() !== (saved.colorTextSecondary || '').toLowerCase() ||
+      (data.colorLinkPrimary || '').toLowerCase() !== (saved.colorLinkPrimary || '').toLowerCase() ||
+      (data.colorLinkSecondary || '').toLowerCase() !== (saved.colorLinkSecondary || '').toLowerCase() ||
+      (data.systemUsesLandingButtons ?? true) !== (saved.systemUsesLandingButtons ?? true) ||
+      (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
+      (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
+      (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase() ||
+      data.themeId !== saved.themeId
+    );
+  }, [data, saved]);
+
+  const discardColorChanges = useCallback(() => {
     setData(d => ({
       ...d,
-      ...DEFAULT_COLORS,
-      themeId: defaultTheme ? defaultTheme.id : null,
+      themeId: saved.themeId,
+      color: saved.color,
+      colorBgPrimary: saved.colorBgPrimary,
+      colorBgSecondary: saved.colorBgSecondary,
+      colorBgSobre: saved.colorBgSobre,
+      colorButtons: saved.colorButtons,
+      colorButtonsHover: saved.colorButtonsHover,
+      colorButtonsText: saved.colorButtonsText,
+      systemUsesLandingButtons: saved.systemUsesLandingButtons,
+      colorButtonsSystem: saved.colorButtonsSystem,
+      colorButtonsSystemHover: saved.colorButtonsSystemHover,
+      colorButtonsSystemText: saved.colorButtonsSystemText,
+      colorTitlePrimary: saved.colorTitlePrimary,
+      colorTitleSecondary: saved.colorTitleSecondary,
+      colorTextPrimary: saved.colorTextPrimary,
+      colorTextSecondary: saved.colorTextSecondary,
+      colorLinkPrimary: saved.colorLinkPrimary,
+      colorLinkSecondary: saved.colorLinkSecondary,
     }));
-    if (defaultTheme) {
-      setBaseThemeId(defaultTheme.id);
-      setSelectedThemeId(defaultTheme.id);
+    setSelectedThemeId(saved.themeId ?? null);
+    if (saved.themeId) {
+      setBaseThemeId(saved.themeId);
     }
-  }, [setData, themes]);
+  }, [saved, setData]);
 
   const matchedTheme = useMemo(() => {
     const activeId = data.themeId ?? selectedThemeId;
@@ -257,10 +293,12 @@ export function usePersonalizacaoThemes({
   }, []);
 
   const handleSaveCurrentAsTheme = useCallback(async (
+    name: string,
+    desc: string,
     brandingSave: () => Promise<void>,
     applyConfigCallback?: (cfg: OfficeConfigAPI) => void
   ) => {
-    if (!newThemeName.trim()) {
+    if (!name.trim()) {
       setSaveNewError('Informe um nome para o tema.');
       return;
     }
@@ -269,8 +307,8 @@ export function usePersonalizacaoThemes({
     try {
       await brandingSave();
       const created = await createTheme({
-        name: newThemeName.trim(),
-        description: newThemeDesc.trim() || null,
+        name: name.trim(),
+        description: desc.trim() || null,
         color: data.color || '#232C43',
         color_bg_primary: data.colorBgPrimary || '#232C43',
         color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
@@ -307,7 +345,7 @@ export function usePersonalizacaoThemes({
     } finally {
       setSavingNewTheme(false);
     }
-  }, [newThemeName, newThemeDesc, data, defaultApplyConfig, fetchThemes, setData, setSaved]);
+  }, [data, defaultApplyConfig, fetchThemes, setData, setSaved]);
 
   return {
     themes,
@@ -320,10 +358,11 @@ export function usePersonalizacaoThemes({
     baseTheme,
     matchedTheme,
     isBaseThemeModified,
+    isColorsDirty,
+    discardColorChanges,
     isColorMatching,
     updateColor,
     updateSystemButtons,
-    restoreDefaultColors,
     handleThemeSelected,
     handleSelectFromLibrary,
     // Modais

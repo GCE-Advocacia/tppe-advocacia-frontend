@@ -31,6 +31,8 @@
   --brand-primary-muted:    color-mix(in srgb, var(--brand-primary-text) 65%, transparent);
   --brand-primary-border:   color-mix(in srgb, var(--brand-primary-text) 12%, transparent);
   --brand-primary-hover-bg: color-mix(in srgb, var(--brand-primary-text) 8%, transparent);
+  --brand-nav-link:         var(--link-primary, #FFFFFF);
+  --brand-nav-link-muted:   color-mix(in srgb, var(--brand-nav-link) 70%, transparent);
   --brand-accent:           #111827;
   --brand-accent-hover:     #1F2937;
   --brand-accent-text:      #FFFFFF;

@@ -73,7 +73,7 @@
   align-items: center;
   gap: 14px;
   padding: 12px 20px;
-  color: var(--brand-primary-muted);
+  color: var(--brand-nav-link-muted);
   text-decoration: none;
   font-size: .95rem;
   font-family: var(--font-body);
@@ -83,11 +83,11 @@
 }
 .navItem:hover {
   background: var(--brand-primary-hover-bg);
-  color: var(--brand-primary-text);
+  color: var(--brand-nav-link);
 }
 .navItem.active {
   background: var(--brand-primary-hover-bg);
-  color: var(--brand-primary-text);
+  color: var(--brand-nav-link);
   border-left-color: var(--brand-accent);
 }
 

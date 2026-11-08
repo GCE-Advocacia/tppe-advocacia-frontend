@@ -59,7 +59,7 @@ export default function LandingPageConfig() {
       <header className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Personalização do Sistema</h1>
         <p className={styles.pageSubtitle}>
-          Gerencie a identidade visual da sua marca e o conteúdo da vitrine pública do seu escritório.
+          Gerencie a identidade visual da sua marca e o conteúdo da landing page pública do seu escritório.
         </p>
       </header>
 

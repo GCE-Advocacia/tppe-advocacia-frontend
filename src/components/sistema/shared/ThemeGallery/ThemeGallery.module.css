@@ -271,7 +271,6 @@
   justify-content: center;
   z-index: 400;
   padding: 20px;
-  will-change: opacity;
 }
 
 .galleryModalBox {
@@ -416,7 +415,6 @@
   align-items: center;
   justify-content: center;
   z-index: 500;
-  backdrop-filter: blur(2px);
 }
 
 .modalBox {

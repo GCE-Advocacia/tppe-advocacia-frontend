@@ -271,12 +271,13 @@
   font-weight: 500;
   letter-spacing: normal;
   text-transform: none;
-  line-height: 1.4;
+  line-height: 1.45;
+  white-space: pre-line;
   padding: 8px 12px;
   border-radius: 6px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   width: max-content;
-  max-width: 280px;
+  max-width: 320px;
   text-align: left;
   pointer-events: none;
   z-index: 100;
@@ -815,7 +816,6 @@
   align-items: center;
   justify-content: center;
   z-index: 400;
-  backdrop-filter: blur(2px);
 }
 
 .modalBox {

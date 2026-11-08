@@ -1,4 +1,4 @@
-import { Palette, BookOpen } from 'lucide-react';
+import { Palette, BookOpen, Info, RotateCcw } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import type { PersonalizacaoThemesController } from '../hooks/usePersonalizacaoThemes';
 import type { OfficeConfigAPI } from '../../../../services/officeConfigService';
@@ -27,10 +27,11 @@ export default function CoresSection({
 }: CoresSectionProps) {
   const {
     baseTheme, matchedTheme, isBaseThemeModified, updateColor, updateSystemButtons,
-    restoreDefaultColors, handleSelectFromLibrary, fetchThemes,
+    isColorsDirty, discardColorChanges,
+    handleSelectFromLibrary, fetchThemes,
     showThemeGalleryModal, setShowThemeGalleryModal,
     showSaveCurrentModal, isForkingPredefined,
-    newThemeName, setNewThemeName, newThemeDesc, setNewThemeDesc,
+    newThemeName, newThemeDesc,
     savingNewTheme, saveNewError, openCopyModal, closeSaveModal,
     handleSaveCurrentAsTheme, themeQuota,
   } = themes;
@@ -49,13 +50,26 @@ export default function CoresSection({
             <button
               type="button"
               style={{
-                background: 'none', border: '1px solid #d1d5db', borderRadius: '6px',
-                padding: '6px 14px', fontSize: '0.82rem', fontWeight: 600,
-                color: 'var(--navy)', cursor: 'pointer', fontFamily: 'var(--font-body)',
+                background: 'none',
+                border: `1px solid ${isColorsDirty ? '#d1d5db' : '#e5e7eb'}`,
+                borderRadius: '6px',
+                padding: '6px 14px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: isColorsDirty ? 'var(--navy)' : '#9ca3af',
+                cursor: isColorsDirty ? 'pointer' : 'not-allowed',
+                fontFamily: 'var(--font-body)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                opacity: isColorsDirty ? 1 : 0.6,
+                transition: 'all 0.15s ease',
               }}
-              onClick={restoreDefaultColors}
+              disabled={!isColorsDirty}
+              onClick={discardColorChanges}
+              title={isColorsDirty ? "Desfaz apenas as alterações de cores e restaura a configuração salva no escritório" : "Nenhuma alteração de cor pendente"}
             >
-              ↺ Restaurar Cores Padrão
+              <RotateCcw size={13} /> Descartar Alterações de Cores
             </button>
           </div>
 
@@ -114,15 +128,24 @@ export default function CoresSection({
               <div>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>1. Cores de Fundo</h3>
                 <div className={styles.row2}>
-                  <Field label="BACKGROUND 1" tooltip="Aplica-se à Navbar, Hero, Diferenciais, Artigos, Rodapé e à Barra Lateral (Sidebar) do sistema.">
+                  <Field
+                    label="BACKGROUND 1"
+                    tooltip={`Landing Page: fundo das seções principais (Navbar, Hero, Diferenciais, Artigos e Rodapé).\nSistema: fundo da Barra Lateral (Sidebar), cabeçalhos de modais e painel da calculadora de prazos.`}
+                  >
                     <ColorPicker value={data.colorBgPrimary || '#232C43'} onChange={v => updateColor('colorBgPrimary', v)} />
                   </Field>
-                  <Field label="BACKGROUND 2" tooltip="Aplica-se a Escritório, Áreas, Contato e ao fundo do sistema no modo imersivo.">
+                  <Field
+                    label="BACKGROUND 2"
+                    tooltip="Landing Page: fundo das seções claras alternadas (Sobre o Escritório, Áreas de Atuação e Contato)."
+                  >
                     <ColorPicker value={data.colorBgSecondary || '#F5F3EF'} onChange={v => updateColor('colorBgSecondary', v)} />
                   </Field>
                 </div>
                 <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
-                  <Field label="BACKGROUND 3" tooltip="Aplica-se ao Sobre o Advogado e aos cards/painéis do sistema no modo imersivo.">
+                  <Field
+                    label="BACKGROUND 3"
+                    tooltip='Landing Page: fundo exclusivo da seção "Sobre o Advogado".'
+                  >
                     <ColorPicker value={data.colorBgSobre || '#FFFFFF'} onChange={v => updateColor('colorBgSobre', v)} />
                   </Field>
                 </div>
@@ -153,19 +176,38 @@ export default function CoresSection({
                       }}
                     />
                     <span>Usar as mesmas cores de botões no sistema</span>
+                    <span
+                      className={styles.tooltipWrapper}
+                      tabIndex={0}
+                      aria-label="Quando marcado, os botões primários do sistema interno e da tela de login herdam automaticamente as cores dos botões da landing page pública. Desmarque para definir cores exclusivas para o sistema."
+                    >
+                      <Info size={13} className={styles.tooltipIcon} />
+                      <span className={styles.tooltipText}>
+                        Quando marcado, os botões primários do sistema interno e da tela de login herdam automaticamente as cores dos botões da landing page pública. Desmarque para definir cores exclusivas para o sistema.
+                      </span>
+                    </span>
                   </label>
                 </div>
 
                 <div className={styles.row2}>
-                  <Field label="FUNDO DOS BOTÕES" tooltip="Aplica-se à cor de fundo dos botões da vitrine pública (e do sistema quando vinculado).">
+                  <Field
+                    label="FUNDO DOS BOTÕES"
+                    tooltip={`Landing Page: cor principal dos botões de ação (Agendar Consulta, WhatsApp e Enviar Mensagem).\nSistema e Login (quando vinculado): botões primários, filtros ativos, paginação ativa e destaque da aba selecionada.`}
+                  >
                     <ColorPicker value={data.colorButtons || '#661C16'} onChange={v => updateColor('colorButtons', v)} />
                   </Field>
-                  <Field label="HOVER DOS BOTÕES" tooltip="Aplica-se ao hover dos botões da vitrine pública (e do sistema quando vinculado).">
+                  <Field
+                    label="HOVER DOS BOTÕES"
+                    tooltip="Landing Page (e Sistema/Login quando vinculado): cor exibida ao passar o mouse sobre os botões primários de ação."
+                  >
                     <ColorPicker value={data.colorButtonsHover || '#A52020'} onChange={v => updateColor('colorButtonsHover', v)} />
                   </Field>
                 </div>
                 <div style={{ marginTop: 16, maxWidth: 'calc(50% - 12px)' }}>
-                  <Field label="TEXTO DOS BOTÕES" tooltip="Aplica-se ao texto dos botões da vitrine pública (e do sistema quando vinculado).">
+                  <Field
+                    label="TEXTO DOS BOTÕES"
+                    tooltip="Landing Page (e Sistema/Login quando vinculado): cor do texto e dos ícones internos dos botões primários."
+                  >
                     <ColorPicker value={data.colorButtonsText || '#FFFFFF'} onChange={v => updateColor('colorButtonsText', v)} />
                   </Field>
                 </div>
@@ -177,17 +219,23 @@ export default function CoresSection({
                         Cores dos Botões no Sistema
                       </h4>
                       <p style={{ color: 'var(--gray)', fontSize: '.8rem', margin: 0 }}>
-                        Personalize os botões das páginas internas e da tela de login de forma independente da vitrine.
+                        Personalize os botões das páginas internas e da tela de login de forma independente da landing page.
                       </p>
                     </div>
                     <div className={styles.row2}>
-                      <Field label="FUNDO DOS BOTÕES (SISTEMA)" tooltip="Aplica-se à cor de fundo dos botões primários no sistema e na tela de login.">
+                      <Field
+                        label="FUNDO DOS BOTÕES (SISTEMA)"
+                        tooltip='Sistema e Login: cor de fundo exclusiva para os botões primários, filtros ativos, paginação selecionada e botão "Entrar".'
+                      >
                         <ColorPicker
                           value={data.colorButtonsSystem || data.colorButtons || '#661C16'}
                           onChange={v => updateSystemButtons({ colorButtonsSystem: v })}
                         />
                       </Field>
-                      <Field label="HOVER DOS BOTÕES (SISTEMA)" tooltip="Aplica-se ao hover dos botões primários no sistema e na tela de login.">
+                      <Field
+                        label="HOVER DOS BOTÕES (SISTEMA)"
+                        tooltip="Sistema e Login: cor exibida ao passar o mouse sobre os botões primários do painel interno e da tela de login."
+                      >
                         <ColorPicker
                           value={data.colorButtonsSystemHover || data.colorButtonsHover || '#A52020'}
                           onChange={v => updateSystemButtons({ colorButtonsSystemHover: v })}
@@ -195,7 +243,10 @@ export default function CoresSection({
                       </Field>
                     </div>
                     <div style={{ maxWidth: 'calc(50% - 12px)' }}>
-                      <Field label="TEXTO DOS BOTÕES (SISTEMA)" tooltip="Aplica-se ao texto dos botões primários no sistema e na tela de login.">
+                      <Field
+                        label="TEXTO DOS BOTÕES (SISTEMA)"
+                        tooltip="Sistema e Login: cor do texto e dos ícones internos dos botões primários do painel e do login."
+                      >
                         <ColorPicker
                           value={data.colorButtonsSystemText || data.colorButtonsText || '#FFFFFF'}
                           onChange={v => updateSystemButtons({ colorButtonsSystemText: v })}
@@ -212,26 +263,44 @@ export default function CoresSection({
               <div>
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 16 }}>3. Cores das Fontes</h3>
                 <div className={styles.row2}>
-                  <Field label="TÍTULOS 1" tooltip="Aplica-se aos títulos das seções escuras da landing page (Hero, Diferenciais, Artigos, Rodapé) e à tela de login.">
+                  <Field
+                    label="TÍTULOS 1"
+                    tooltip="Landing Page: títulos principais sobre as seções de fundo escuro/Background 1 (Hero, Diferenciais e Artigos) e botão secundário vazado do Hero."
+                  >
                     <ColorPicker value={data.colorTitlePrimary || '#FFFFFF'} onChange={v => updateColor('colorTitlePrimary', v)} />
                   </Field>
-                  <Field label="TÍTULOS 2" tooltip="Aplica-se aos títulos das seções claras da landing page e aos títulos das páginas internas do sistema.">
+                  <Field
+                    label="TÍTULOS 2"
+                    tooltip={`Landing Page: títulos sobre as seções claras (Sobre o Escritório, Áreas de Atuação, Sobre o Advogado e Contato).\nSistema e Login: títulos principais das páginas internas e cabeçalho da tela de login.`}
+                  >
                     <ColorPicker value={data.colorTitleSecondary || '#232C43'} onChange={v => updateColor('colorTitleSecondary', v)} />
                   </Field>
                 </div>
                 <div className={styles.row2} style={{ marginTop: 16 }}>
-                  <Field label="TEXTOS 1" tooltip="Aplica-se aos parágrafos das seções escuras da landing page e à tela de login.">
+                  <Field
+                    label="TEXTOS 1"
+                    tooltip={`Landing Page: parágrafos, subtítulos e datas sobre as seções de fundo escuro/Background 1 (Hero, Diferenciais, Artigos e Rodapé).\nSistema: textos informativos sobre superfícies escuras (rodapé de perfil na Sidebar, títulos de modais e calculadora de prazos).`}
+                  >
                     <ColorPicker value={data.colorTextPrimary || '#FFFFFF'} onChange={v => updateColor('colorTextPrimary', v)} />
                   </Field>
-                  <Field label="TEXTOS 2" tooltip="Aplica-se aos parágrafos das seções claras da landing page e ao texto secundário do sistema.">
+                  <Field
+                    label="TEXTOS 2"
+                    tooltip="Landing Page: parágrafos, descrições e rótulos informativos sobre as seções claras (Sobre o Escritório, Áreas de Atuação, Sobre o Advogado e Contato)."
+                  >
                     <ColorPicker value={data.colorTextSecondary || '#6B7280'} onChange={v => updateColor('colorTextSecondary', v)} />
                   </Field>
                 </div>
                 <div className={styles.row2} style={{ marginTop: 16 }}>
-                  <Field label="LINKS 1" tooltip="Aplica-se aos links das seções escuras da landing page (Navbar, Artigos, Rodapé).">
+                  <Field
+                    label="LINKS 1"
+                    tooltip={`Landing Page: links de navegação sobre as seções de fundo escuro/Background 1 (menu da Navbar, links de Artigos e Rodapé).\nSistema: títulos e ícones de navegação do menu lateral (Sidebar).`}
+                  >
                     <ColorPicker value={data.colorLinkPrimary || '#FFFFFF'} onChange={v => updateColor('colorLinkPrimary', v)} />
                   </Field>
-                  <Field label="LINKS 2" tooltip="Aplica-se aos links textuais e às ações secundárias do sistema.">
+                  <Field
+                    label="LINKS 2"
+                    tooltip={`Landing Page: links de destaque nas seções claras ("Conheça nossa história" e links de Contato).\nSistema e Login: links e ações secundárias ("Esqueceu a senha?", aba ativa, subtítulos de módulo e ação "Limpar filtros").`}
+                  >
                     <ColorPicker value={data.colorLinkSecondary || '#661C16'} onChange={v => updateColor('colorLinkSecondary', v)} />
                   </Field>
                 </div>
@@ -258,13 +327,11 @@ export default function CoresSection({
         isForkingPredefined={isForkingPredefined}
         baseThemeName={baseTheme?.name}
         colors={data}
-        themeName={newThemeName}
-        onThemeNameChange={setNewThemeName}
-        themeDesc={newThemeDesc}
-        onThemeDescChange={setNewThemeDesc}
+        initialThemeName={newThemeName}
+        initialThemeDesc={newThemeDesc}
         saving={savingNewTheme}
         error={saveNewError}
-        onConfirm={() => handleSaveCurrentAsTheme(brandingSave, applyConfig)}
+        onConfirm={(name, desc) => handleSaveCurrentAsTheme(name, desc, brandingSave, applyConfig)}
       />
     </>
   );
