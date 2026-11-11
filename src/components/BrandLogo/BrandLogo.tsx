@@ -37,15 +37,27 @@ function landingBackground(color: string): LogoBackground {
 
 interface BrandLogoProps {
   className?: string;
-  background?: LogoBackground | 'auto';
+  background?: LogoBackground | 'auto' | 'auto-surface';
   scope?: LogoScope;
 }
 
 export default function BrandLogo({ className = '', background = 'dark', scope = 'landing' }: BrandLogoProps) {
   const { config } = useBranding();
   const [failedSource, setFailedSource] = useState<string | null>(null);
-  const surface = background === 'auto'
-    ? landingBackground(config?.color_bg_primary || config?.color || '#232C43') : background;
+
+  let surface: LogoBackground;
+  if (background === 'auto-surface') {
+    const isImmersive = typeof document !== 'undefined' && document.documentElement.dataset.systemThemeMode === 'immersive';
+    const surfaceColor = isImmersive ? (config?.color_bg_secondary || '#f0f4f8') : '#f0f4f8';
+    surface = landingBackground(surfaceColor);
+  } else if (background === 'auto') {
+    const surfaceColor = scope === 'system'
+      ? (config?.color || config?.color_bg_primary || '#232C43')
+      : (config?.color_bg_primary || config?.color || '#232C43');
+    surface = landingBackground(surfaceColor);
+  } else {
+    surface = background;
+  }
   const source = resolveLogo(config, scope, surface);
   const fallback = surface === 'light' ? '/logo-dark.png' : '/logo.png';
   return (

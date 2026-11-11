@@ -1,7 +1,7 @@
 /* ── Background ── */
 .bg {
   min-height: 100vh;
-  background: #f0f4f8;
+  background: var(--sys-auth-bg, #f0f4f8);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,7 +43,7 @@
 
 /* Card */
 .card {
-  background: var(--white);
+  background: var(--sys-surface, var(--white));
   border-radius: 12px;
   width: 100%;
   max-width: 400px;
@@ -55,7 +55,7 @@
 
 .cardBar {
   height: 5px;
-  background: var(--crimson);
+  background: var(--brand-accent);
   width: 100%;
 }
 
@@ -66,14 +66,14 @@
   font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--brand-title);
   text-align: center;
   margin-bottom: 28px;
 }
 
 .cardSubtitle {
   font-size: .9rem;
-  color: var(--gray);
+  color: var(--sys-text-muted, var(--gray));
   margin-bottom: 24px;
   line-height: 1.5;
 }
@@ -87,16 +87,16 @@
 .fieldLabel {
   position: absolute;
   top: -8px; left: 12px;
-  background: var(--white);
+  background: var(--sys-surface, var(--white));
   padding: 0 4px;
   font-size: .68rem;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--gray);
+  color: var(--sys-text-muted, var(--gray));
   z-index: 1;
 }
-.fieldLabelError { color: var(--crimson); }
+.fieldLabelError { color: var(--color-danger); }
 
 .fieldInner {
   display: flex;
@@ -106,8 +106,8 @@
   overflow: hidden;
   transition: border-color .2s;
 }
-.fieldInner:focus-within { border-color: var(--navy); }
-.fieldInnerError { border-color: var(--crimson) !important; }
+.fieldInner:focus-within { border-color: var(--brand-primary); }
+.fieldInnerError { border-color: var(--color-danger) !important; }
 
 .fieldIcon {
   padding: 0 12px;
@@ -140,7 +140,7 @@
   flex-shrink: 0;
   transition: color .2s;
 }
-.eyeBtn:hover { color: var(--navy); }
+.eyeBtn:hover { color: var(--brand-primary); }
 
 /* Row between fields */
 .forgotRow {
@@ -152,7 +152,7 @@
 
 .forgotLink {
   font-size: .82rem;
-  color: var(--crimson);
+  color: var(--brand-link);
   background: none;
   border: none;
   cursor: pointer;
@@ -164,8 +164,8 @@
 /* Submit button */
 .btnSubmit {
   width: 100%;
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
   border: none;
   padding: 14px;
   border-radius: var(--btn-radius, 6px);
@@ -178,7 +178,7 @@
   transition: background .2s;
   margin-bottom: 16px;
 }
-.btnSubmit:hover { background: var(--navy-mid); }
+.btnSubmit:hover { background: var(--brand-accent-hover); }
 .btnSubmit:disabled {
   cursor: not-allowed;
   opacity: .6;
@@ -186,17 +186,17 @@
 
 /* Error message */
 .errorMsg {
-  color: var(--crimson);
+  color: var(--color-danger);
   font-size: .82rem;
   text-align: center;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--crimson);
+  border-bottom: 1px solid var(--color-danger);
   margin-bottom: 4px;
 }
 
 /* Success message */
 .successMsg {
-  color: var(--navy);
+  color: var(--brand-title);
   font-size: .95rem;
   line-height: 1.6;
   margin-bottom: 20px;
@@ -209,14 +209,14 @@
   gap: 6px;
   background: none;
   border: none;
-  color: var(--gray);
+  color: var(--sys-text-muted, var(--gray));
   font-size: .85rem;
   cursor: pointer;
   font-family: var(--font-body);
   margin-top: 8px;
   transition: color .2s;
 }
-.backLink:hover { color: var(--navy); }
+.backLink:hover { color: var(--brand-title); }
 
 @media (max-width: 400px) {
   .bg { padding: 32px 16px 32px; }

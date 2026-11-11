@@ -37,7 +37,7 @@ export const SITUATION_LABEL: Record<PaymentSituation, string> = {
 };
 
 export const SITUATION_COLOR: Record<PaymentSituation, string> = {
-  VENCIDO: '#A52020',
+  VENCIDO: '#c62828',
   HOJE: '#B26A00',
   A_VENCER: '#1E7A46',
 };

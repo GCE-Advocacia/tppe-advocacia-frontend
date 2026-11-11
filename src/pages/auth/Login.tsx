@@ -103,7 +103,7 @@ export default function Login() {
   return (
     <div className={styles.bg}>
       <div className={styles.logo}>
-        <BrandLogo scope="system" background="light" className={styles.logoImg} />
+        <BrandLogo scope="system" background="auto-surface" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

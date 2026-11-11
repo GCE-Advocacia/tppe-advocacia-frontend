@@ -107,8 +107,8 @@
   white-space: nowrap;
 }
 .filterClear:hover {
-  border-color: var(--crimson, #c0392b);
-  color: var(--crimson, #c0392b);
+  border-color: var(--brand-link);
+  color: var(--brand-link);
 }
 
 /* Contagem de resultados */
