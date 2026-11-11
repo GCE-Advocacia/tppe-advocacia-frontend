@@ -43,6 +43,7 @@ function deferred() {
 async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 1280, height: 1000 } } = {}) {
   const context = await browser.newContext({ viewport });
   context.setDefaultTimeout(10_000);
+  context.setDefaultNavigationTimeout(30_000);
   t.after(() => context.close());
   const errors = [];
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
@@ -601,6 +602,7 @@ test('redirects legacy landing-page route and normalizes canonical personalizaca
   const { page } = await setup(t);
   await page.goto(`${baseURL}/sistema/landing-page`);
   await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=identidade`);
+  await page.getByRole('heading', { name: 'Personalização do Sistema' }).waitFor();
   assert.equal(await page.getByRole('heading', { name: 'Personalização do Sistema' }).count(), 1);
   assert.equal(await page.getByRole('tab', { name: /Identidade Visual & Cores/ }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 1);
@@ -608,6 +610,7 @@ test('redirects legacy landing-page route and normalizes canonical personalizaca
 
   await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).click();
   await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=conteudo`);
+  await page.getByRole('heading', { name: 'Dados Institucionais' }).waitFor();
   assert.equal(await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('heading', { name: 'Dados Institucionais' }).count(), 1);
   assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);

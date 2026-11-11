@@ -94,6 +94,7 @@ export default function LandingPageConfig() {
         <div id="panel-identidade" role="tabpanel" aria-labelledby="tab-identidade">
           <IdentidadeVisualTab
             data={form.data}
+            onChange={form.set}
             themes={themes}
             branding={form.branding}
             saving={form.saving}

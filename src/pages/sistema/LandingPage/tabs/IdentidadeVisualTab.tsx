@@ -1,6 +1,7 @@
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, RectangleHorizontal } from 'lucide-react';
 import SectionCard from '../components/SectionCard';
 import CoresSection from '../components/CoresSection';
+import ButtonRadiusSettings from '../components/ButtonRadiusSettings';
 import LogoSettings from '../../../../components/sistema/shared/Logo config/LogoSettings';
 import type { LandingPageData } from '../types';
 import type { PersonalizacaoThemesController } from '../hooks/usePersonalizacaoThemes';
@@ -9,6 +10,7 @@ import type useBrandingDraft from '../../../../components/sistema/shared/Logo co
 
 export interface IdentidadeVisualTabProps {
   data: LandingPageData;
+  onChange: <K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => void;
   themes: PersonalizacaoThemesController;
   branding: ReturnType<typeof useBrandingDraft>;
   saving: boolean;
@@ -18,6 +20,7 @@ export interface IdentidadeVisualTabProps {
 
 export default function IdentidadeVisualTab({
   data,
+  onChange,
   themes,
   branding,
   saving,
@@ -31,7 +34,14 @@ export default function IdentidadeVisualTab({
         <LogoSettings draft={branding} saving={saving} />
       </SectionCard>
 
-      {/* ── 2º Card: Paleta de Cores e Temas ── */}
+      <SectionCard icon={<RectangleHorizontal size={20} />} title="Curvatura dos botões">
+        <ButtonRadiusSettings
+          value={data.buttonRadius}
+          onChange={value => onChange('buttonRadius', value)}
+          disabled={saving}
+        />
+      </SectionCard>
+
       <CoresSection
         data={data}
         themes={themes}
