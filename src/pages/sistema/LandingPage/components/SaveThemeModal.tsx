@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { X, Check, Loader2 } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
@@ -8,13 +9,11 @@ export interface SaveThemeModalProps {
   isForkingPredefined: boolean;
   baseThemeName?: string;
   colors: LandingPageData;
-  themeName: string;
-  onThemeNameChange: (val: string) => void;
-  themeDesc: string;
-  onThemeDescChange: (val: string) => void;
+  initialThemeName?: string;
+  initialThemeDesc?: string;
   saving: boolean;
   error: string | null;
-  onConfirm: () => void;
+  onConfirm: (name: string, desc: string) => void;
 }
 
 export default function SaveThemeModal({
@@ -23,14 +22,22 @@ export default function SaveThemeModal({
   isForkingPredefined,
   baseThemeName,
   colors,
-  themeName,
-  onThemeNameChange,
-  themeDesc,
-  onThemeDescChange,
+  initialThemeName = '',
+  initialThemeDesc = '',
   saving,
   error,
   onConfirm,
 }: SaveThemeModalProps) {
+  const [themeName, setThemeName] = useState(initialThemeName);
+  const [themeDesc, setThemeDesc] = useState(initialThemeDesc);
+
+  useEffect(() => {
+    if (isOpen) {
+      setThemeName(initialThemeName);
+      setThemeDesc(initialThemeDesc);
+    }
+  }, [isOpen, initialThemeName, initialThemeDesc]);
+
   if (!isOpen) return null;
 
   return (
@@ -53,7 +60,7 @@ export default function SaveThemeModal({
                 Informe um nome para criar o novo tema personalizado:
               </>
             ) : (
-              'As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado na sua biblioteca.'
+              'As cores atualmente configuradas serão salvas como um novo tema personalizado na sua biblioteca.'
             )}
           </p>
 
@@ -70,6 +77,9 @@ export default function SaveThemeModal({
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorTextSecondary || '#6B7280' }} title="Textos 2" />
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorLinkPrimary || '#FFFFFF' }} title="Links 1" />
             <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorLinkSecondary || '#661C16' }} title="Links 2" />
+            {colors.systemUsesLandingButtons === false && (
+              <span className={styles.palettePreviewMiniSegment} style={{ background: colors.colorButtonsSystem || '#111827' }} title="Botões do Sistema" />
+            )}
           </div>
 
           <div className={styles.inputGroup}>
@@ -79,7 +89,7 @@ export default function SaveThemeModal({
               className={styles.textInput}
               placeholder="Ex: Corporativo Noturno, Minimalista Ouro..."
               value={themeName}
-              onChange={e => onThemeNameChange(e.target.value)}
+              onChange={e => setThemeName(e.target.value)}
               maxLength={50}
               autoFocus
             />
@@ -92,7 +102,7 @@ export default function SaveThemeModal({
               rows={2}
               placeholder="Breve descrição da identidade deste tema..."
               value={themeDesc}
-              onChange={e => onThemeDescChange(e.target.value)}
+              onChange={e => setThemeDesc(e.target.value)}
             />
           </div>
 
@@ -111,7 +121,7 @@ export default function SaveThemeModal({
           <button
             type="button"
             className={styles.btnConfirm}
-            onClick={onConfirm}
+            onClick={() => onConfirm(themeName, themeDesc)}
             disabled={saving || !themeName.trim()}
           >
             {saving ? (

@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Eye, Pencil, UserX, UserCheck, ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Plus, Eye, Pencil, UserX, UserCheck, ArrowLeft, ChevronLeft, ChevronRight, X, Send, MailX } from 'lucide-react';
 import Modal from '../../../components/sistema/Modal/Modal';
-import { listUsers, createUser, updateUser, listAuditLogs } from '../../../services/users';
-import type { ApiUser, AuditLog, UserRole } from '../../../services/users';
+import { listUsers, createUser, updateUser, listAuditLogs, resendInvite, cancelInvite } from '../../../services/users';
+import type { ApiUser, AuditLog, InviteStatus, UserRole } from '../../../services/users';
 import { ApiError } from '../../../services/api';
 import styles from './Usuarios.module.css';
 
 type View = 'lista' | 'registros';
-type ModalType = 'novo' | 'ver' | 'editar' | 'desativar' | 'reativar' | null;
+type ModalType = 'novo' | 'ver' | 'editar' | 'desativar' | 'reativar' | 'reenviarConvite' | 'cancelarConvite' | null;
 
 const ROLE_LABEL: Record<UserRole, string> = { ADMIN: 'Administrador', USER: 'Usuário' };
 
@@ -16,6 +16,7 @@ const ACTION_LABEL: Record<AuditLog['action'], string> = {
   USER_UPDATED: 'Edição de Usuário',
   USER_DEACTIVATED: 'Desativação de Usuário',
   CLIENT_ANONYMIZED: 'Anonimização de Cliente',
+  EMAIL_SETTINGS_UPDATED: 'Configuração de E-mail',
 };
 
 const ACTION_COLOR: Record<AuditLog['action'], string> = {
@@ -23,12 +24,29 @@ const ACTION_COLOR: Record<AuditLog['action'], string> = {
   USER_UPDATED: '#1976d2',
   USER_DEACTIVATED: '#ef5350',
   CLIENT_ANONYMIZED: '#ff9800',
+  EMAIL_SETTINGS_UPDATED: '#6d4c41',
+};
+
+// Convite de quem ainda não ativou a conta (status INVITED).
+const INVITE_BADGE: Record<InviteStatus, { label: string; background: string; color: string }> = {
+  PENDING: { label: 'Convite pendente', background: '#fff8e1', color: '#8a5a00' },
+  EXPIRED: { label: 'Convite expirado', background: '#fce4ec', color: '#c62828' },
+  CANCELLED: { label: 'Convite cancelado', background: '#f5f5f5', color: '#757575' },
+  USED: { label: 'Ativo', background: '#e8f5e9', color: '#2e7d32' },
 };
 
 const LIMIT = 20;
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function isInvited(u: ApiUser) {
+  return u.status === 'INVITED';
 }
 
 export default function Usuarios() {
@@ -125,6 +143,8 @@ export default function Usuarios() {
 
   function openDesativar(u: ApiUser) { setSelectedUser(u); setFormError(''); setModalType('desativar'); }
   function openReativar(u: ApiUser) { setSelectedUser(u); setFormError(''); setModalType('reativar'); }
+  function openReenviarConvite(u: ApiUser) { setSelectedUser(u); setFormError(''); setModalType('reenviarConvite'); }
+  function openCancelarConvite(u: ApiUser) { setSelectedUser(u); setFormError(''); setModalType('cancelarConvite'); }
 
   function closeModal() { setModalType(null); setSelectedUser(null); setFormError(''); }
 
@@ -215,6 +235,40 @@ export default function Usuarios() {
     }
   }
 
+  async function confirmarReenviarConvite() {
+    if (!selectedUser) return;
+    setSubmitting(true);
+    setFormError('');
+    try {
+      const res = await resendInvite(selectedUser.id);
+      setUsuarios(prev => prev.map(u => u.id === selectedUser.id ? res.data : u));
+      closeModal();
+    } catch (err) {
+      setFormError(
+        err instanceof ApiError && err.code === 'INVITE_RESEND_LIMIT'
+          ? err.message
+          : 'Não foi possível reenviar o convite.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function confirmarCancelarConvite() {
+    if (!selectedUser) return;
+    setSubmitting(true);
+    setFormError('');
+    try {
+      const res = await cancelInvite(selectedUser.id);
+      setUsuarios(prev => prev.map(u => u.id === selectedUser.id ? res.data : u));
+      closeModal();
+    } catch {
+      setFormError('Não foi possível cancelar o convite.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const totalPagesUsuarios = Math.max(1, Math.ceil(totalUsuarios / LIMIT));
   const totalPagesLogs = Math.max(1, Math.ceil(totalLogs / LIMIT));
 
@@ -270,14 +324,30 @@ export default function Usuarios() {
                         </span>
                       </td>
                       <td>
-                        <span
-                          className={styles.cargoBadge}
-                          style={u.is_active
-                            ? { background: '#e8f5e9', color: '#2e7d32' }
-                            : { background: '#fce4ec', color: '#c62828' }}
-                        >
-                          {u.is_active ? 'Ativo' : 'Inativo'}
-                        </span>
+                        {isInvited(u) && u.is_active ? (
+                          <div className={styles.inviteCell}>
+                            {(() => {
+                              const badge = INVITE_BADGE[u.invite?.status ?? 'CANCELLED'];
+                              return (
+                                <span className={styles.cargoBadge} style={{ background: badge.background, color: badge.color }}>
+                                  {badge.label}
+                                </span>
+                              );
+                            })()}
+                            {u.invite && (
+                              <span className={styles.inviteSent}>Enviado em {formatDateTime(u.invite.sent_at)}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span
+                            className={styles.cargoBadge}
+                            style={u.is_active
+                              ? { background: '#e8f5e9', color: '#2e7d32' }
+                              : { background: '#fce4ec', color: '#c62828' }}
+                          >
+                            {u.is_active ? 'Ativo' : 'Inativo'}
+                          </span>
+                        )}
                       </td>
                       <td>
                         <span
@@ -294,6 +364,16 @@ export default function Usuarios() {
                         <div className={styles.acoes}>
                           <button className={styles.iconBtn} onClick={() => openVer(u)} title="Visualizar"><Eye size={16} /></button>
                           <button className={styles.iconBtn} onClick={() => openEditar(u)} title="Editar"><Pencil size={16} /></button>
+                          {isInvited(u) && u.is_active && (
+                            <button className={styles.iconBtn} onClick={() => openReenviarConvite(u)} title="Reenviar convite">
+                              <Send size={16} />
+                            </button>
+                          )}
+                          {isInvited(u) && u.is_active && u.invite?.status === 'PENDING' && (
+                            <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => openCancelarConvite(u)} title="Cancelar convite">
+                              <MailX size={16} />
+                            </button>
+                          )}
                           {u.is_active
                             ? <button className={`${styles.iconBtn} ${styles.danger}`} onClick={() => openDesativar(u)} title="Desativar"><UserX size={16} /></button>
                             : <button className={styles.iconBtn} onClick={() => openReativar(u)} title="Reativar"><UserCheck size={16} /></button>
@@ -353,6 +433,7 @@ export default function Usuarios() {
               <option value="USER_UPDATED">Edição de Usuário</option>
               <option value="USER_DEACTIVATED">Desativação de Usuário</option>
               <option value="CLIENT_ANONYMIZED">Anonimização de Cliente</option>
+              <option value="EMAIL_SETTINGS_UPDATED">Configuração de E-mail</option>
             </select>
 
             <div className={styles.filterDateGroup}>
@@ -395,7 +476,7 @@ export default function Usuarios() {
                 const d = new Date(log.created_at);
                 const dia = d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
                 const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                const afetado = log.target_user_name ?? log.target_client_name ?? '—';
+                const afetado = log.target_user_name ?? log.target_client_name ?? log.details?.profile ?? '—';
                 return (
                   <div key={log.id} className={styles.logItem}>
                     <div className={styles.logDate}>
@@ -455,7 +536,7 @@ export default function Usuarios() {
             canViewPayments={formCanViewPayments} setCanViewPayments={setFormCanViewPayments}
           />
           <div className={styles.infoBox}>
-            <p>O sistema gerará uma senha temporária registrada nos logs do servidor.</p>
+            <p>O usuário receberá um convite por e-mail com um link para definir a própria senha. O link vale por 48 horas e pode ser reenviado.</p>
           </div>
           {formError && <p className={styles.errorMsg}>{formError}</p>}
           <div className={styles.modalFooter}>
@@ -547,6 +628,40 @@ export default function Usuarios() {
             <button className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
             <button className={styles.btnDanger} onClick={() => void confirmarDesativar()} disabled={submitting}>
               {submitting ? 'Desativando...' : 'Confirmar'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── MODAL REENVIAR CONVITE ── */}
+      {modalType === 'reenviarConvite' && selectedUser && (
+        <Modal title="Reenviar convite" onClose={closeModal} width={420}>
+          <p className={styles.deleteText}>
+            Enviar um novo convite para <strong>{selectedUser.email}</strong>?
+            O link enviado antes deixará de funcionar.
+          </p>
+          {formError && <p className={styles.errorMsg}>{formError}</p>}
+          <div className={styles.modalFooter}>
+            <button className={styles.btnCancel} onClick={closeModal}>Cancelar</button>
+            <button className={styles.btnPrimary} onClick={() => void confirmarReenviarConvite()} disabled={submitting}>
+              <Send size={16} /> {submitting ? 'Enviando...' : 'Reenviar'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── MODAL CANCELAR CONVITE ── */}
+      {modalType === 'cancelarConvite' && selectedUser && (
+        <Modal title="Cancelar convite" onClose={closeModal} width={420}>
+          <p className={styles.deleteText}>
+            Cancelar o convite de <strong>{selectedUser.name}</strong>?
+            O link deixará de funcionar. Você pode enviar um novo convite depois.
+          </p>
+          {formError && <p className={styles.errorMsg}>{formError}</p>}
+          <div className={styles.modalFooter}>
+            <button className={styles.btnCancel} onClick={closeModal}>Voltar</button>
+            <button className={styles.btnDanger} onClick={() => void confirmarCancelarConvite()} disabled={submitting}>
+              {submitting ? 'Cancelando...' : 'Cancelar convite'}
             </button>
           </div>
         </Modal>

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { memo, type CSSProperties } from 'react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
 
@@ -6,7 +6,7 @@ export interface LandingPreviewProps {
   data: LandingPageData;
 }
 
-export default function LandingPreview({ data }: LandingPreviewProps) {
+const LandingPreview = memo(function LandingPreview({ data }: LandingPreviewProps) {
   const previewVars = {
     '--pv-button-radius': data.buttonRadius ?? '6px',
     '--pv-bg-primary': data.colorBgPrimary || data.color || '#232C43',
@@ -67,4 +67,6 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
       </div>
     </div>
   );
-}
+});
+
+export default LandingPreview;

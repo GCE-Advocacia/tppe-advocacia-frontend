@@ -12,6 +12,33 @@
       rel="stylesheet"
     />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var mode = params.get('themeMode');
+          if (mode === 'immersive' || mode === 'highlights') {
+            localStorage.setItem('advocacia_system_theme_mode', mode);
+          } else {
+            mode = localStorage.getItem('advocacia_system_theme_mode');
+          }
+          if (mode === 'immersive' || mode === 'highlights') {
+            document.documentElement.dataset.systemThemeMode = mode;
+          }
+          var raw = localStorage.getItem('advocacia_theme_cache');
+          if (raw) {
+            var tokens = JSON.parse(raw);
+            if (tokens && typeof tokens === 'object') {
+              for (var key in tokens) {
+                if (Object.prototype.hasOwnProperty.call(tokens, key) && typeof tokens[key] === 'string' && key.startsWith('--')) {
+                  document.documentElement.style.setProperty(key, tokens[key]);
+                }
+              }
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -77,6 +77,10 @@ export default function Login() {
       const from = (location.state as { from?: string } | null)?.from;
       navigate(from ?? '/sistema', { replace: true });
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'INVITE_NOT_ACCEPTED') {
+        setErroLogin('Você ainda não aceitou o convite. Use o link enviado por e-mail para definir sua senha.');
+        return;
+      }
       setErroLogin(
         error instanceof ApiError && error.status >= 500
           ? 'A API está indisponível no momento.'
@@ -103,7 +107,7 @@ export default function Login() {
   return (
     <div className={styles.bg}>
       <div className={styles.logo}>
-        <BrandLogo scope="system" background="light" className={styles.logoImg} />
+        <BrandLogo scope="system" background="auto-surface" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

@@ -2,20 +2,37 @@ import { apiRequest, PaginatedResponse, SuccessResponse } from './api';
 
 export type UserRole = 'ADMIN' | 'USER';
 
+export type UserStatus = 'INVITED' | 'ACTIVE';
+export type InviteStatus = 'PENDING' | 'EXPIRED' | 'USED' | 'CANCELLED';
+
+export interface InviteSummary {
+  status: InviteStatus;
+  sent_at: string;
+  expires_at: string;
+}
+
 export interface ApiUser {
   id: number;
   name: string;
   email: string;
   role: UserRole;
+  status: UserStatus;
   is_active: boolean;
   can_view_payments: boolean;
   created_at: string;
   updated_at: string;
+  /** Último convite enviado; null se o usuário nunca foi convidado. */
+  invite: InviteSummary | null;
 }
 
 export interface AuditLog {
   id: number;
-  action: 'USER_CREATED' | 'USER_UPDATED' | 'USER_DEACTIVATED' | 'CLIENT_ANONYMIZED';
+  action:
+    | 'USER_CREATED'
+    | 'USER_UPDATED'
+    | 'USER_DEACTIVATED'
+    | 'CLIENT_ANONYMIZED'
+    | 'EMAIL_SETTINGS_UPDATED';
   performed_by_id: number;
   performed_by_name: string;
   target_user_id: number | null;
@@ -24,6 +41,7 @@ export interface AuditLog {
   target_user_role: UserRole | null;
   target_client_id: number | null;
   target_client_name: string | null;
+  details: { profile?: string; changes?: Record<string, unknown> } | null;
   created_at: string;
 }
 
@@ -73,4 +91,13 @@ export function listAuditLogs(params?: {
   if (params?.limit) q.set('limit', String(params.limit));
   const qs = q.toString();
   return apiRequest<PaginatedResponse<AuditLog>>(`/audit-logs${qs ? `?${qs}` : ''}`);
+}
+
+/** Revoga o link anterior e envia um convite novo. */
+export function resendInvite(id: number) {
+  return apiRequest<SuccessResponse<ApiUser>>(`/users/${id}/invite/resend`, { method: 'POST' });
+}
+
+export function cancelInvite(id: number) {
+  return apiRequest<SuccessResponse<ApiUser>>(`/users/${id}/invite`, { method: 'DELETE' });
 }

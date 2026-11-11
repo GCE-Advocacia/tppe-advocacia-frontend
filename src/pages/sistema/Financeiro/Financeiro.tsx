@@ -208,11 +208,11 @@ export default function Financeiro() {
         <div className={styles.summaryCard}>
           <div className={styles.summaryTop}>
             <div className={styles.summaryIcon} style={{ background: '#fce4ec' }}>
-              <ArrowDownCircle size={20} color="#661C16" />
+              <ArrowDownCircle size={20} color="var(--color-danger, #c62828)" />
             </div>
           </div>
           <p className={styles.summaryLabel}>Total de Saídas</p>
-          <p className={styles.summaryValue} style={{ color: 'var(--crimson)' }}>
+          <p className={styles.summaryValue} style={{ color: 'var(--color-danger, #c62828)' }}>
             {summary ? formatCurrency(summary.total_expense) : '—'}
           </p>
           <p className={styles.summarySub}>Despesas no período</p>
@@ -221,7 +221,7 @@ export default function Financeiro() {
         <div className={styles.summaryCard}>
           <div className={styles.summaryTop}>
             <div className={styles.summaryIcon} style={{ background: '#e8eaf6' }}>
-              <Wallet size={20} color="#232C43" />
+              <Wallet size={20} color="var(--brand-primary, #232C43)" />
             </div>
           </div>
           <p className={styles.summaryLabel}>Saldo</p>

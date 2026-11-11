@@ -7,17 +7,17 @@
 
 .pageTitle {
   font-family: var(--font-display);
-  font-size: 2rem; font-weight: 700; color: var(--navy);
+  font-size: 2rem; font-weight: 700; color: var(--brand-title);
 }
 
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnPrimary:hover { background: var(--navy-mid); }
+.btnPrimary:hover { background: var(--brand-accent-hover); }
 .btnPrimary:disabled { opacity: .6; cursor: default; }
 
 .btnBack {
@@ -52,7 +52,7 @@
 
 /* Table */
 .tableWrap {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   overflow-x: auto;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
@@ -93,7 +93,7 @@
   padding: 4px; border-radius: 4px; transition: color .2s;
 }
 .iconBtn:hover { color: var(--navy); }
-.iconBtn.danger:hover { color: var(--crimson); }
+.iconBtn.danger:hover { color: var(--color-danger); }
 
 /* Pagination */
 .pagination {
@@ -120,7 +120,7 @@
   color: var(--gray); transition: background .2s;
 }
 .pageNum:hover { background: #f5f5f5; }
-.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
+.pageActive { background: var(--brand-accent) !important; color: var(--brand-accent-text) !important; border-color: var(--brand-accent) !important; }
 
 /* Modal form */
 .fieldGroup { margin-bottom: 16px; }
@@ -159,12 +159,12 @@
 .btnCancel:hover { color: var(--text); }
 
 .btnDanger {
-  background: var(--crimson); color: var(--white);
+  background: var(--color-danger); color: var(--white);
   border: none; padding: 10px 24px; border-radius: 8px;
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnDanger:hover { background: var(--crimson-light); }
+.btnDanger:hover { background: var(--color-danger-hover); }
 .btnDanger:disabled { opacity: .6; cursor: default; }
 
 .deleteText {
@@ -176,7 +176,7 @@
 .statusMsg { padding: 24px 0; color: var(--gray); font-size: .9rem; text-align: center; }
 .errorMsg {
   padding: 10px 14px; margin: 8px 0;
-  background: #fce4ec; color: var(--crimson);
+  background: var(--color-danger-bg); color: var(--color-danger);
   border-radius: 8px; font-size: .85rem;
 }
 

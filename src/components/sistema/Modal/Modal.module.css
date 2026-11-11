@@ -10,7 +10,7 @@
 }
 
 .modal {
-  background: var(--white);
+  background: var(--sys-surface, var(--white));
   border-radius: 12px;
   overflow: hidden;
   max-height: 90vh;
@@ -21,7 +21,7 @@
 }
 
 .header {
-  background: var(--navy);
+  background: var(--brand-primary);
   padding: 20px 24px;
   display: flex;
   align-items: center;
@@ -30,7 +30,7 @@
 }
 
 .title {
-  color: var(--white);
+  color: var(--brand-primary-text);
   font-size: 1.1rem;
   font-weight: 600;
   font-family: var(--font-body);
@@ -39,7 +39,7 @@
 .closeBtn {
   background: none;
   border: none;
-  color: rgba(255,255,255,.7);
+  color: var(--brand-primary-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -48,7 +48,7 @@
   border-radius: 4px;
   transition: color .2s;
 }
-.closeBtn:hover { color: var(--white); }
+.closeBtn:hover { color: var(--brand-primary-text); }
 
 .body {
   padding: 28px 28px 24px;
