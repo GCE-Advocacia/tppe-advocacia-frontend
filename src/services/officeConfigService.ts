@@ -20,6 +20,7 @@ export interface OfficeConfigAPI {
   logo_same_for_themes: boolean;
   system_logo_same_for_themes: boolean;
   system_uses_landing_logo: boolean;
+  button_radius: string;
   cnpj: string | null;
   address: string | null;
   phone: string | null;
@@ -98,6 +99,7 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
       descricao: a.description,
     })),
     color: api.color ?? '#232C43',
+    buttonRadius: api.button_radius ?? '6px',
     colorBgPrimary: api.color_bg_primary ?? '#232C43',
     colorBgSecondary: api.color_bg_secondary ?? '#F5F3EF',
     colorBgSobre: api.color_bg_sobre ?? '#FFFFFF',
@@ -139,6 +141,7 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     differentials: ui.diferenciais.map(d => ({ title: d.titulo, description: d.descricao })),
     areas_of_practice: ui.areas.map(a => ({ title: a.titulo, description: a.descricao })),
     color: ui.color || null,
+    button_radius: ui.buttonRadius,
     color_bg_primary: ui.colorBgPrimary || null,
     color_bg_secondary: ui.colorBgSecondary || null,
     color_bg_sobre: ui.colorBgSobre || null,

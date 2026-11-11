@@ -8,6 +8,7 @@ export interface LandingPreviewProps {
 
 export default function LandingPreview({ data }: LandingPreviewProps) {
   const previewVars = {
+    '--pv-button-radius': data.buttonRadius ?? '6px',
     '--pv-bg-primary': data.colorBgPrimary || data.color || '#232C43',
     '--pv-bg-secondary': data.colorBgSecondary || '#F5F3EF',
     '--pv-bg-about': data.colorBgSobre || '#FFFFFF',
@@ -25,7 +26,7 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
   const placeholder = '/placeholder.png';
   return (
     <div className={styles.previewFrame}>
-      <div className={styles.previewLanding} style={previewVars}>
+      <div className={styles.previewLanding} style={previewVars} data-landing-preview>
         <nav className={styles.pvNav}>
           <a href="#pv-hero"><img src="/logo.png" alt="Vitor França" /></a>
           <div>{['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>)}</div>

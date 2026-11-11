@@ -37,7 +37,7 @@ export default function CoresSection({
 
   return (
     <>
-      <SectionCard icon={<Palette size={20} />} title="Cores da Landing Page">
+      <SectionCard icon={<Palette size={20} />} title="Paleta de Cores e Temas">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--navy)', marginBottom: 12 }}>Preview em tempo real</h3>

@@ -39,7 +39,7 @@ import Artigos from './components/Artigos/Artigos';
 import Contato from './components/Contato/Contato';
 import Footer from './components/Footer/Footer';
 import { BrandingProvider } from './contexts/BrandingContext';
-import { OfficeConfigProvider } from './contexts/OfficeConfigContext';
+import { OfficeConfigProvider, OfficeButtonRadius } from './contexts/OfficeConfigContext';
 import ArtigoPage from './pages/public/ArtigoPage';
 
 // Sistema
@@ -98,6 +98,7 @@ function SistemaIndexRedirect() {
 export default function App() {
   return (
     <BrandingProvider>
+    <OfficeButtonRadius />
     <BrowserRouter>
       <ScrollToHash />
       <Routes>
@@ -116,7 +117,8 @@ export default function App() {
             <Route index element={<SistemaIndexRedirect />} />
             <Route element={<AdminRoute />}>
               <Route path="usuarios" element={<Usuarios />} />
-              <Route path="landing-page" element={<LandingPageConfig />} />
+              <Route path="personalizacao" element={<LandingPageConfig />} />
+              <Route path="landing-page" element={<Navigate to="/sistema/personalizacao" replace />} />
             </Route>
             <Route path="artigos" element={<Artigos_ />} />
             <Route element={<AdminRoute />}>
