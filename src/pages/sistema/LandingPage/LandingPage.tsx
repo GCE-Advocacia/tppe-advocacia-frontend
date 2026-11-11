@@ -49,7 +49,7 @@ export default function LandingPageConfig() {
   if (form.loadError) {
     return (
       <div className={styles.page}>
-        <p style={{ color: '#c0392b', fontSize: '0.95rem' }}>{form.loadError}</p>
+        <p style={{ color: 'var(--color-danger)', fontSize: '0.95rem' }}>{form.loadError}</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default function LandingPageConfig() {
       <header className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Personalização do Sistema</h1>
         <p className={styles.pageSubtitle}>
-          Gerencie a identidade visual da sua marca e o conteúdo da vitrine pública do seu escritório.
+          Gerencie a identidade visual da sua marca e o conteúdo da landing page pública do seu escritório.
         </p>
       </header>
 

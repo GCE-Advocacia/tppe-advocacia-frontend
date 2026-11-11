@@ -176,7 +176,7 @@ function HistoricoLembretes({ paymentId, isAdmin }: { paymentId: number; isAdmin
       );
     }
     return (
-      <span style={{ color: '#A52020', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+      <span style={{ color: 'var(--color-danger, #c62828)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
         <AlertTriangle size={13} /> Falhou
       </span>
     );

@@ -97,6 +97,7 @@ export function usePersonalizacaoForm() {
 
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
     if (
+      formDirty &&
       (!themesCtrl.baseTheme || themesCtrl.baseTheme.is_predefined || data.themeId === null) &&
       themesCtrl.isBaseThemeModified
     ) {
@@ -131,6 +132,10 @@ export function usePersonalizacaoForm() {
             color_buttons: data.colorButtons || '#661C16',
             color_buttons_hover: data.colorButtonsHover || '#A52020',
             color_buttons_text: data.colorButtonsText || '#FFFFFF',
+            system_uses_landing_buttons: data.systemUsesLandingButtons ?? true,
+            color_buttons_system: data.colorButtonsSystem || null,
+            color_buttons_system_hover: data.colorButtonsSystemHover || null,
+            color_buttons_system_text: data.colorButtonsSystemText || null,
             color_title_primary: data.colorTitlePrimary || '#FFFFFF',
             color_title_secondary: data.colorTitleSecondary || '#232C43',
             color_text_primary: data.colorTextPrimary || '#FFFFFF',

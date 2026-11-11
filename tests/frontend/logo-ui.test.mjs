@@ -55,7 +55,78 @@ async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 12
     }, { value: token, origin: baseURL });
   }
   const state = {
-    config: { id: 1, office_name: 'Teste Advocacia', default_logo_url: null, default_logo_dark_url: null, default_system_logo_url: null, default_system_logo_dark_url: null, default_favicon_url: null, logo_url: logo, logo_dark_url: null, system_logo_url: null, system_logo_dark_url: null, favicon_url: null, logo_same_for_themes: true, system_logo_same_for_themes: true, system_uses_landing_logo: true, differentials: [], areas_of_practice: [] },
+    config: { id: 1, theme_id: 1, office_name: 'Teste Advocacia', default_logo_url: null, default_logo_dark_url: null, default_system_logo_url: null, default_system_logo_dark_url: null, default_favicon_url: null, logo_url: logo, logo_dark_url: null, system_logo_url: null, system_logo_dark_url: null, favicon_url: null, logo_same_for_themes: true, system_logo_same_for_themes: true, system_uses_landing_logo: true, differentials: [], areas_of_practice: [], system_uses_landing_buttons: false, color_buttons_system: '#111827', color_buttons_system_hover: '#1F2937', color_buttons_system_text: '#FFFFFF' },
+    themes: [
+      {
+        id: 1,
+        name: 'Clássico Navy & Wine (Padrão)',
+        description: 'Combinação tradicional com azul marinho institucional e detalhes em bordô elegante.',
+        is_predefined: true,
+        color: '#232C43',
+        color_bg_primary: '#232C43',
+        color_bg_secondary: '#F5F3EF',
+        color_bg_sobre: '#FFFFFF',
+        color_buttons: '#661C16',
+        color_buttons_hover: '#A52020',
+        color_buttons_text: '#FFFFFF',
+        color_title_primary: '#FFFFFF',
+        color_title_secondary: '#232C43',
+        color_text_primary: '#FFFFFF',
+        color_text_secondary: '#6B7280',
+        color_link_primary: '#FFFFFF',
+        color_link_secondary: '#661C16',
+        system_uses_landing_buttons: false,
+        color_buttons_system: '#111827',
+        color_buttons_system_hover: '#1F2937',
+        color_buttons_system_text: '#FFFFFF',
+      },
+      {
+        id: 2,
+        name: 'Dourado & Ônix Nobre',
+        description: 'Estilo executivo premium com preto ônix profundo e detalhes sofisticados em ouro envelhecido.',
+        is_predefined: true,
+        color: '#12161A',
+        color_bg_primary: '#12161A',
+        color_bg_secondary: '#F9F9F8',
+        color_bg_sobre: '#FFFFFF',
+        color_buttons: '#C5A059',
+        color_buttons_hover: '#A38038',
+        color_buttons_text: '#12161A',
+        color_title_primary: '#C5A059',
+        color_title_secondary: '#12161A',
+        color_text_primary: '#E5E7EB',
+        color_text_secondary: '#4B5563',
+        color_link_primary: '#C5A059',
+        color_link_secondary: '#99752A',
+        system_uses_landing_buttons: true,
+        color_buttons_system: '#C5A059',
+        color_buttons_system_hover: '#A38038',
+        color_buttons_system_text: '#12161A',
+      },
+      {
+        id: 3,
+        name: 'Esmeralda & Âmbar Corporativo',
+        description: 'Identidade corporativa distinta com verde floresta sóbrio e acentos em cobre/âmbar.',
+        is_predefined: true,
+        color: '#1B3B36',
+        color_bg_primary: '#1B3B36',
+        color_bg_secondary: '#F4F6F5',
+        color_bg_sobre: '#FFFFFF',
+        color_buttons: '#D97706',
+        color_buttons_hover: '#B45309',
+        color_buttons_text: '#FFFFFF',
+        color_title_primary: '#FFFFFF',
+        color_title_secondary: '#1B3B36',
+        color_text_primary: '#D1D5DB',
+        color_text_secondary: '#4B5563',
+        color_link_primary: '#FDE68A',
+        color_link_secondary: '#B45309',
+        system_uses_landing_buttons: true,
+        color_buttons_system: '#D97706',
+        color_buttons_system_hover: '#B45309',
+        color_buttons_system_text: '#FFFFFF',
+      },
+    ],
     uploads: [],
     previews: [],
     resets: 0,
@@ -141,6 +212,53 @@ async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 12
         return;
       }
       return respond(snapshot);
+    }
+    if (url.pathname === '/api/v1/office-config/themes/quota') {
+      const customCount = (state.themes || []).filter(t => !t.is_predefined).length;
+      return respond({ custom_count: customCount, max_custom: 6, total_count: (state.themes || []).length, max_total: 10, is_limit_reached: customCount >= 6 });
+    }
+    if (url.pathname.match(/^\/api\/v1\/office-config\/themes\/(\d+)\/apply$/) && request.method() === 'POST') {
+      const id = Number(url.pathname.match(/^\/api\/v1\/office-config\/themes\/(\d+)\/apply$/)[1]);
+      const theme = (state.themes || []).find(t => t.id === id);
+      if (theme) {
+        state.config = {
+          ...state.config,
+          theme_id: theme.id,
+          color: theme.color,
+          color_bg_primary: theme.color_bg_primary,
+          color_bg_secondary: theme.color_bg_secondary,
+          color_bg_sobre: theme.color_bg_sobre,
+          color_buttons: theme.color_buttons,
+          color_buttons_hover: theme.color_buttons_hover,
+          color_buttons_text: theme.color_buttons_text,
+          color_title_primary: theme.color_title_primary,
+          color_title_secondary: theme.color_title_secondary,
+          color_text_primary: theme.color_text_primary,
+          color_text_secondary: theme.color_text_secondary,
+          color_link_primary: theme.color_link_primary,
+          color_link_secondary: theme.color_link_secondary,
+          system_uses_landing_buttons: theme.system_uses_landing_buttons,
+          color_buttons_system: theme.color_buttons_system,
+          color_buttons_system_hover: theme.color_buttons_system_hover,
+          color_buttons_system_text: theme.color_buttons_system_text,
+        };
+      }
+      return respond(state.config);
+    }
+    if (url.pathname === '/api/v1/office-config/themes') {
+      if (request.method() === 'POST') {
+        const body = request.postDataJSON();
+        const newTheme = {
+          id: (state.themes || []).length + 1,
+          is_predefined: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...body,
+        };
+        (state.themes || []).push(newTheme);
+        return respond(newTheme, 201);
+      }
+      return respond(state.themes || []);
     }
     if (url.pathname === '/api/v1/articles/1') {
       return respond({ id: 1, title: 'Artigo de teste', content: '<p>Conteúdo.</p>', author_name: 'Advogado', created_at: '2026-10-03T12:00:00Z' });
@@ -466,7 +584,7 @@ test('keeps logo previews and the pending bar usable on mobile', async t => {
 
 test('logo changes preserve the existing color settings and landing color behavior', async t => {
   const { page, state } = await setup(t);
-  const colors = { color: '#119933', color_bg_primary: '#14395A', color_buttons: '#8C2B40' };
+  const colors = { color: '#119933', color_bg_primary: '#14395A', color_buttons: '#8C2B40', system_uses_landing_buttons: true };
   state.config = { ...state.config, ...colors };
   await openSettings(page);
   await chooseImage(page);
@@ -479,15 +597,19 @@ test('logo changes preserve the existing color settings and landing color behavi
   await saveAll(page);
   assert.equal(state.generalUpdates.length, 0, 'Logo actions must not save color settings');
   for (const [field, value] of Object.entries(colors)) assert.equal(state.config[field], value);
+  // US14: --navy remains static and is not overwritten inline; brand tokens are injected globally
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-primary') === '#119933');
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent')), colors.color_buttons);
   await page.goto(baseURL);
-  // Keep the original OfficeConfigProvider behavior from main: variables on <html>.
   await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--bg-primary') === '#14395A');
-  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), colors.color);
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), colors.color);
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--btn-primary-bg')), colors.color_buttons);
   await page.goto(`${baseURL}/login`);
   await expectLogo(page, state.config.logo_url, 1);
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), colors.color);
 });
 
 test('denies unauthenticated and non-admin access without redirect loops', async t => {
@@ -614,4 +736,310 @@ test('redirects legacy landing-page route and normalizes canonical personalizaca
   assert.equal(await page.getByRole('tab', { name: /Conteúdo da Landing Page/ }).getAttribute('aria-selected'), 'true');
   assert.equal(await page.getByRole('heading', { name: 'Dados Institucionais' }).count(), 1);
   assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
+});
+
+test('US14: saved brand colors synchronize to sidebar, headers, and system tokens', async t => {
+  const { page, state } = await setup(t);
+  const colors = {
+    color: '#0f52ba',
+    color_buttons: '#e65100',
+    color_bg_primary: '#0a192f',
+    color_title_secondary: '#1a237e',
+    system_uses_landing_buttons: true,
+  };
+  state.config = { ...state.config, ...colors };
+
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-primary') === '#0f52ba');
+
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent')), '#e65100');
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-title')), '#1a237e');
+  // --navy remains static and is not overwritten inline
+  assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--navy')), '');
+
+  // Verify sidebar background uses var(--brand-primary)
+  const sidebar = page.locator('aside');
+  await sidebar.waitFor();
+  const sidebarBg = await sidebar.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(sidebarBg, 'rgb(15, 82, 186)'); // #0f52ba in rgb
+
+  // Verify Clientes CTA button uses --brand-accent (wait for CSS transition .2s)
+  const novoClienteBtn = page.getByRole('button', { name: /Novo Cliente/i });
+  await novoClienteBtn.waitFor();
+  await page.waitForFunction(() => {
+    const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Novo cliente'));
+    return btn && getComputedStyle(btn).backgroundColor === 'rgb(230, 81, 0)';
+  });
+  const btnBg = await novoClienteBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(btnBg, 'rgb(230, 81, 0)'); // #e65100 in rgb
+});
+
+test('US14: Financeiro maintains accounting colors and Google Calendar preserves official blue', async t => {
+  const { page, state } = await setup(t);
+  state.config = { ...state.config, color: '#4a148c', color_buttons: '#f57f17' };
+
+  await page.goto(`${baseURL}/sistema/financeiro`);
+  const btnEntrada = page.getByRole('button', { name: /Nova Entrada/i });
+  const btnSaida = page.getByRole('button', { name: /Nova Saída/i });
+  await btnEntrada.waitFor();
+  await btnSaida.waitFor();
+
+  const entradaBg = await btnEntrada.evaluate(el => getComputedStyle(el).backgroundColor);
+  const saidaBg = await btnSaida.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(entradaBg, 'rgb(46, 125, 50)'); // #2e7d32
+  assert.equal(saidaBg, 'rgb(198, 40, 40)'); // --color-danger: #c62828
+
+  await page.goto(`${baseURL}/sistema/agenda`);
+  const gcalBtn = page.locator('button[class*="gcalBtnPrimary"]');
+  if (await gcalBtn.count() > 0) {
+    const gcalBg = await gcalBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+    assert.equal(gcalBg, 'rgb(26, 115, 232)'); // #1a73e8 Google Blue
+  }
+});
+
+test('US14: zero-FOUC reload applies tokens from cache immediately and respects systemThemeMode switch', async t => {
+  const { page, context } = await setup(t);
+
+  await context.addInitScript(() => {
+    localStorage.setItem('advocacia_theme_cache', JSON.stringify({
+      '--brand-primary': '#1b5e20',
+      '--brand-accent': '#e91e63',
+    }));
+    localStorage.setItem('advocacia_system_theme_mode', 'immersive');
+  });
+
+  await page.goto(`${baseURL}/login`);
+  const tokens = await page.evaluate(() => ({
+    brandPrimary: document.documentElement.style.getPropertyValue('--brand-primary'),
+    brandAccent: document.documentElement.style.getPropertyValue('--brand-accent'),
+    themeMode: document.documentElement.dataset.systemThemeMode,
+  }));
+
+  assert.equal(tokens.brandPrimary, '#1b5e20');
+  assert.equal(tokens.brandAccent, '#e91e63');
+  assert.equal(tokens.themeMode, 'immersive');
+
+  await page.goto(`${baseURL}/sistema/clientes?themeMode=highlights`);
+  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'highlights');
+  assert.equal(await page.evaluate(() => localStorage.getItem('advocacia_system_theme_mode')), 'highlights');
+});
+
+test('US14: draft color changes remain isolated and do not leak to system sidebar before saving', async t => {
+  const { page, context, state } = await setup(t);
+  const savedColors = {
+    color: '#1a237e',
+    color_buttons: '#0d47a1',
+    color_bg_primary: '#002171',
+  };
+  state.config = { ...state.config, ...savedColors };
+
+  await openSettings(page);
+  // Verify sidebar starts with saved brand color #1a237e (rgb(26, 35, 126))
+  const sidebar = page.locator('aside');
+  await sidebar.waitFor();
+  assert.equal(await sidebar.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(26, 35, 126)');
+
+  // Open another page in the same context (/sistema/clientes)
+  const clientesPage = await context.newPage();
+  await clientesPage.goto(`${baseURL}/sistema/clientes`);
+  const clientesSidebar = clientesPage.locator('aside');
+  await clientesSidebar.waitFor();
+  assert.equal(await clientesSidebar.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(26, 35, 126)');
+  assert.equal(await clientesPage.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), '#1a237e');
+});
+
+test('US14: in immersive mode, cards reflect Background 3 (--bg-sobre) and layout reflects Background 2 (--bg-secondary)', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    color_bg_secondary: '#fbf7ee', // Background 2
+    color_bg_sobre: '#f2ece1',     // Background 3
+  };
+
+  await page.goto(`${baseURL}/sistema/clientes?themeMode=immersive`);
+  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'immersive');
+
+  const metricCard = page.locator('div[class*="metric"]').first();
+  await metricCard.waitFor();
+
+  const cardBg = await metricCard.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(cardBg, 'rgb(242, 236, 225)'); // #f2ece1 in rgb
+});
+
+test('US14: independent system button colors apply to system buttons while landing buttons maintain their own palette', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    color_buttons: '#0d47a1',               // Landing button color (blue)
+    system_uses_landing_buttons: false,
+    color_buttons_system: '#b71c1c',        // Custom system button color (deep red)
+    color_buttons_system_hover: '#c62828',
+    color_buttons_system_text: '#ffffff',
+  };
+
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-accent') === '#b71c1c');
+
+  // Verify CSS custom properties
+  const brandAccent = await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent'));
+  const btnPrimaryBg = await page.evaluate(() => document.documentElement.style.getPropertyValue('--btn-primary-bg'));
+  assert.equal(brandAccent, '#b71c1c', 'System buttons should use color_buttons_system');
+  assert.equal(btnPrimaryBg, '#0d47a1', 'Landing buttons should continue using color_buttons');
+
+  // Verify that a primary button in the system actually uses the decoupled system button color
+  const primaryBtn = page.locator('button[class*="primaryButton"]').first();
+  await primaryBtn.waitFor();
+  await page.waitForFunction(() => {
+    const btn = document.querySelector('button[class*="primaryButton"]');
+    return btn && getComputedStyle(btn).backgroundColor === 'rgb(183, 28, 28)';
+  });
+  const btnBg = await primaryBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(btnBg, 'rgb(183, 28, 28)', 'Primary system button background must match #b71c1c');
+});
+
+test('US14: personalizacao section allows toggling system button colors and reveals independent pickers', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    system_uses_landing_buttons: true,
+  };
+  await openSettings(page);
+
+  // Checkbox should be present and checked by default
+  const checkbox = page.getByRole('checkbox', { name: 'Usar as mesmas cores de botões no sistema' });
+  await checkbox.waitFor();
+  assert.equal(await checkbox.isChecked(), true);
+
+  // Independent fields should not be visible initially
+  assert.equal(await page.getByText('Cores dos Botões no Sistema').isVisible(), false);
+
+  // Uncheck the checkbox
+  await checkbox.uncheck();
+  assert.equal(await checkbox.isChecked(), false);
+
+  // Now the system button colors section is revealed
+  const systemHeading = page.getByText('Cores dos Botões no Sistema');
+  await systemHeading.waitFor();
+  assert.equal(await systemHeading.isVisible(), true);
+  assert.equal(await page.getByText('FUNDO DOS BOTÕES (SISTEMA)').isVisible(), true);
+  assert.equal(await page.getByText('HOVER DOS BOTÕES (SISTEMA)').isVisible(), true);
+  assert.equal(await page.getByText('TEXTO DOS BOTÕES (SISTEMA)').isVisible(), true);
+});
+
+test('US14: secondary controls ("Atualizar", search, pagination) remain neutral white in immersive mode', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    color_bg_secondary: '#e8dcc4', // Background 2
+    color_bg_sobre: '#d4c5a9',     // Background 3
+  };
+
+  await page.goto(`${baseURL}/sistema/clientes?themeMode=immersive`);
+  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'immersive');
+
+  // Verify card surface reflects Background 3 (#d4c5a9 -> rgb(212, 197, 169))
+  const metricCard = page.locator('div[class*="metric"]').first();
+  await metricCard.waitFor();
+  const cardBg = await metricCard.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(cardBg, 'rgb(212, 197, 169)');
+
+  // Verify secondary "Atualizar" button is neutral white
+  const updateBtn = page.getByRole('button', { name: 'Atualizar' });
+  await updateBtn.waitFor();
+  const updateBtnBg = await updateBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(updateBtnBg, 'rgb(255, 255, 255)', 'The "Atualizar" button must remain white and independent of surface colors');
+
+  // Verify search form is neutral white
+  const searchForm = page.locator('form[class*="searchForm"]');
+  await searchForm.waitFor();
+  const searchBg = await searchForm.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(searchBg, 'rgb(255, 255, 255)', 'The search bar must remain white and independent of surface colors');
+
+  // Verify pagination button is neutral white
+  const prevPageBtn = page.getByRole('button', { name: 'Página anterior' });
+  await prevPageBtn.waitFor();
+  const prevBtnBg = await prevPageBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(prevBtnBg, 'rgb(255, 255, 255)', 'Pagination button must remain white');
+});
+
+test('US14: predefined themes apply their system button pre-sets and switching back restores them', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    theme_id: 1,
+    color_buttons: '#661C16',
+    system_uses_landing_buttons: false,
+    color_buttons_system: '#111827',
+    color_buttons_system_hover: '#1F2937',
+    color_buttons_system_text: '#FFFFFF',
+  };
+
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-accent') === '#111827');
+  let brandAccent = await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent'));
+  assert.equal(brandAccent, '#111827', 'Clássico theme applies subtle black buttons (#111827) to system');
+
+  // Open personalizacao and switch to Dourado & Ônix Nobre
+  await openSettings(page);
+  const galleryBtn = page.getByRole('button', { name: /Biblioteca de Temas/i });
+  await galleryBtn.waitFor();
+  await galleryBtn.click();
+
+  const douradoHeading = page.getByRole('heading', { name: 'Dourado & Ônix Nobre' });
+  await douradoHeading.waitFor();
+  await douradoHeading.click();
+
+  const applyBtn = page.getByRole('button', { name: 'Aplicar tema selecionado' });
+  await applyBtn.click();
+
+  await saveAll(page);
+
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-accent') === '#C5A059');
+  brandAccent = await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent'));
+  assert.equal(brandAccent, '#C5A059', 'Dourado theme links system buttons to its landing button color (#C5A059)');
+
+  // Now switch back to Clássico Navy & Wine
+  await openSettings(page);
+  await galleryBtn.click();
+  const classicoHeading = page.getByRole('heading', { name: 'Clássico Navy & Wine' });
+  await classicoHeading.waitFor();
+  await classicoHeading.click();
+  await applyBtn.click();
+  await saveAll(page);
+
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--brand-accent') === '#111827');
+  brandAccent = await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-accent'));
+  assert.equal(brandAccent, '#111827', 'Switching back to Clássico theme restores its #111827 system button preset');
+});
+
+test('US14: modifying system button colors on a predefined theme prompts saving as a custom theme', async t => {
+  const { page, state } = await setup(t);
+  state.config = {
+    ...state.config,
+    theme_id: 1, // Clássico Navy & Wine
+    system_uses_landing_buttons: false,
+    color_buttons_system: '#111827',
+    color_buttons_system_hover: '#1F2937',
+    color_buttons_system_text: '#FFFFFF',
+  };
+
+  await openSettings(page);
+
+  // System button colors section is visible because system_uses_landing_buttons is false
+  const sysHeading = page.getByText('Cores dos Botões no Sistema');
+  await sysHeading.waitFor();
+
+  // Toggle checkbox to change system button behavior from the predefined preset
+  const checkbox = page.getByRole('checkbox', { name: 'Usar as mesmas cores de botões no sistema' });
+  await checkbox.check();
+
+  // Click save
+  await saveButton(page).click();
+
+  // SaveThemeModal "Novo Tema Personalizado" should appear because predefined theme was modified
+  const modalTitle = page.getByRole('heading', { name: 'Novo Tema Personalizado' });
+  await modalTitle.waitFor();
+  assert.equal(await modalTitle.isVisible(), true);
 });

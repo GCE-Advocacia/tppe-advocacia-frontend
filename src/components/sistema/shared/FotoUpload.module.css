@@ -8,7 +8,7 @@
   position: relative; overflow: visible;
 }
 .clickable { cursor: pointer; }
-.clickable:hover { border-color: var(--navy); }
+.clickable:hover { border-color: var(--brand-primary); }
 
 .foto { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 
@@ -16,7 +16,7 @@
 
 .cameraBtn {
   position: absolute; bottom: 0; right: 0;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
 }
