@@ -36,8 +36,6 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
         </div>
       </div>
       <div className={`${styles.previewStage} ${styles[`previewStage${viewport[0].toUpperCase()}${viewport.slice(1)}`]}`}>
-      <div className={styles.previewFrame}>
-      <div className={styles.previewLanding} style={previewVars}>
     <div className={styles.previewFrame}>
       <div className={styles.previewLanding} style={previewVars} data-landing-preview>
         <nav className={styles.pvNav}>
