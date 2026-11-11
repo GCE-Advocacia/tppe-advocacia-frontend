@@ -1,10 +1,12 @@
 import { apiRequest } from './api';
 
+
 /**
  * O módulo /payments do backend devolve o recurso cru (sem o envelope
  * { success, data } usado nos demais módulos) — as funções abaixo seguem
  * o contrato real da API.
  */
+
 export type Payment = {
   id: number;
   client_id: number;
@@ -83,4 +85,45 @@ export async function updatePayment(paymentId: number, payload: PaymentUpdate): 
 
 export async function deletePayment(paymentId: number): Promise<void> {
   await apiRequest(`/payments/${paymentId}`, { method: 'DELETE' });
+}
+
+export type ReminderKind = 'D_MINUS_1' | 'D_ZERO';
+export type ReminderStatus = 'SENT' | 'FAILED' | 'NO_EMAIL';
+
+export type PaymentReminder = {
+  id: number;
+  payment_id: number;
+  client_id: number;
+  client_name: string;
+  payment_date: string;
+  amount: number | null;
+  kind: ReminderKind;
+  email: string | null;
+  status: ReminderStatus;
+  error_message: string | null;
+  sent_at: string;
+};
+
+export type GetRemindersFilters = {
+  start_date?: string;
+  end_date?: string;
+  client_id?: number;
+  status?: ReminderStatus;
+  kind?: ReminderKind;
+};
+
+export async function getReminders(params: GetRemindersFilters = {}): Promise<PaymentReminder[]> {
+  const query = new URLSearchParams();
+  if (params.start_date) query.set('start_date', params.start_date);
+  if (params.end_date) query.set('end_date', params.end_date);
+  if (params.client_id) query.set('client_id', params.client_id.toString());
+  if (params.status) query.set('status', params.status);
+  if (params.kind) query.set('kind', params.kind);
+  
+  const suffix = query.toString() ? `?${query}` : '';
+  return apiRequest<PaymentReminder[]>(`/payments/reminders${suffix}`);
+}
+
+export async function getPaymentReminders(paymentId: number): Promise<PaymentReminder[]> {
+  return apiRequest<PaymentReminder[]>(`/payments/${paymentId}/reminders`);
 }

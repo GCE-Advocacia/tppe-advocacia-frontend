@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { ApiError } from '../../services/api';
 import { login, requestPasswordReset } from '../../services/auth';
+import BrandLogo from '../../components/BrandLogo/BrandLogo';
 import styles from './Auth.module.css';
 
 type Tela = 'login' | 'esqueci' | 'solicitado';
@@ -102,7 +103,7 @@ export default function Login() {
   return (
     <div className={styles.bg}>
       <div className={styles.logo}>
-        <img src="/logo-dark.png" alt="Vitor França" className={styles.logoImg} />
+        <BrandLogo scope="system" background="light" className={styles.logoImg} />
       </div>
 
       <div className={styles.card}>

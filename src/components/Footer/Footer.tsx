@@ -1,4 +1,5 @@
 import { useOfficeConfig } from '../../contexts/OfficeConfigContext';
+import BrandLogo from '../BrandLogo/BrandLogo';
 import styles from './Footer.module.css';
 
 const LINKS = [
@@ -23,7 +24,7 @@ export default function Footer() {
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <a href="#" className={styles.logo}>
-          <img src="/logo.png" alt="Vitor França" className={styles.logoImg} />
+          <BrandLogo background="auto" className={styles.logoImg} />
         </a>
 
         <ul className={styles.links}>

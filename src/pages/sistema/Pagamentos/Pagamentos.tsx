@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ChevronLeft, ChevronRight, Plus, X, Trash2,
-  AlertTriangle, CalendarClock, CheckCircle2, Wallet,
+  AlertTriangle, CalendarClock, CheckCircle2, Wallet, Bell, Mail, MailX,
 } from 'lucide-react';
 import {
   listPayments, createPayment, updatePayment, deletePayment,
   paymentSituation, paymentAmount, formatBRL,
+  getPaymentReminders, type PaymentReminder,
   SITUATION_LABEL, SITUATION_COLOR,
   type Payment, type PaymentWrite, type PaymentSituation,
 } from '../../../services/payments';
 import { listClients, type ClientListItem } from '../../../services/clients';
-import { ApiError } from '../../../services/api';
+import { ApiError, getSessionClaims } from '../../../services/api';
 import styles from './Pagamentos.module.css';
 
 // ── Constants ──────────────────────────────────────────────
@@ -89,23 +90,110 @@ function formToPayload(form: FormState): PaymentWrite {
   };
 }
 
-// ── Modal de cadastro / edição ─────────────────────────────
+// ── Modal de cadastro / edição / visualização ──────────────
 interface VencimentoModalProps {
   titulo: string;
   initial: FormState;
+  paymentId?: number;
   clients: ClientListItem[];
   saving: boolean;
   error: string;
   onCancel: () => void;
-  onSave: (form: FormState) => void;
+  /** Sem onSave o modal abre somente para visualização. */
+  onSave?: (form: FormState) => void;
   onDelete?: () => void;
 }
 
+// ── Histórico de Lembretes ─────────────────────────────────
+function HistoricoLembretes({ paymentId }: { paymentId: number }) {
+  const [reminders, setReminders] = useState<PaymentReminder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getPaymentReminders(paymentId)
+      .then(data => { if (active) setReminders(data); })
+      .catch(() => {})
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [paymentId]);
+
+  if (loading) {
+    return <p className={styles.mHelp}>Carregando histórico de lembretes...</p>;
+  }
+
+  if (reminders.length === 0) {
+    return (
+      <div className={styles.mField}>
+        <label className={styles.mLabel}>LEMBRETES DE E-MAIL</label>
+        <span className={styles.mHelp}>Nenhum lembrete disparado até o momento.</span>
+      </div>
+    );
+  }
+
+  const statusBadge = (r: PaymentReminder) => {
+    if (r.status === 'SENT') {
+      return (
+        <span style={{ color: '#1E7A46', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+          <Mail size={13} /> Enviado
+        </span>
+      );
+    }
+    if (r.status === 'NO_EMAIL') {
+      return (
+        <span style={{ color: '#B26A00', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+          <MailX size={13} /> Cliente sem e-mail
+        </span>
+      );
+    }
+    return (
+      <span style={{ color: '#A52020', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+        <AlertTriangle size={13} /> Falhou
+      </span>
+    );
+  };
+
+  return (
+    <div className={styles.mField} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '12px', marginTop: '8px' }}>
+      <label className={styles.mLabel} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Bell size={14} /> HISTÓRICO DE LEMBRETES AUTOMÁTICOS
+      </label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+        {reminders.map(r => (
+          <div
+            key={r.id}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              fontSize: '13px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <strong>{r.kind === 'D_MINUS_1' ? 'Lembrete D-1 (Véspera)' : 'Lembrete D-0 (Dia do Vencimento)'}</strong>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                {r.sent_at ? new Date(r.sent_at).toLocaleString('pt-BR') : 'Data não informada'}
+                {r.email && ` • ${r.email}`}
+              </div>
+            </div>
+            <div>{statusBadge(r)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VencimentoModal({
-  titulo, initial, clients, saving, error, onCancel, onSave, onDelete,
+  titulo, initial, paymentId, clients, saving, error, onCancel, onSave, onDelete,
 }: VencimentoModalProps) {
   const [form, setForm] = useState<FormState>(initial);
   const [confirmando, setConfirmando] = useState(false);
+  const readOnly = !onSave;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
@@ -142,7 +230,7 @@ function VencimentoModal({
 
         <form
           className={styles.modalBody}
-          onSubmit={e => { e.preventDefault(); if (valid && !saving) onSave(form); }}
+          onSubmit={e => { e.preventDefault(); if (onSave && valid && !saving) onSave(form); }}
         >
           {error && <p className={styles.formError} role="alert">{error}</p>}
 
@@ -154,6 +242,7 @@ function VencimentoModal({
               value={form.client_id ?? ''}
               onChange={e => update('client_id', e.target.value ? Number(e.target.value) : null)}
               required
+              disabled={readOnly}
             >
               <option value="">Selecione o cliente</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -171,6 +260,7 @@ function VencimentoModal({
                 value={form.payment_date}
                 onChange={e => update('payment_date', e.target.value)}
                 required
+                disabled={readOnly}
               />
             </div>
             <div className={styles.mField}>
@@ -183,6 +273,7 @@ function VencimentoModal({
                 onChange={e => update('amount', e.target.value)}
                 placeholder="1.500,00"
                 aria-invalid={valorInvalido}
+                disabled={readOnly}
               />
               {valorInvalido
                 ? <span className={styles.mError}>Informe um valor válido, ex: 1.500,00.</span>
@@ -199,8 +290,11 @@ function VencimentoModal({
               value={form.description}
               onChange={e => update('description', e.target.value)}
               placeholder="Ex: 2ª parcela dos honorários contratuais"
+              disabled={readOnly}
             />
           </div>
+
+          {paymentId && <HistoricoLembretes paymentId={paymentId} />}
 
           <div className={styles.modalFooter}>
             {onDelete && (
@@ -226,10 +320,16 @@ function VencimentoModal({
               )
             )}
             <div className={styles.footerRight}>
-              <button type="button" className={styles.btnGhost} onClick={onCancel}>Cancelar</button>
-              <button type="submit" className={styles.btnPrimary} disabled={!valid || saving}>
-                {saving ? 'Salvando...' : 'Salvar'}
-              </button>
+              {readOnly ? (
+                <button type="button" className={styles.btnGhost} onClick={onCancel}>Fechar</button>
+              ) : (
+                <>
+                  <button type="button" className={styles.btnGhost} onClick={onCancel}>Cancelar</button>
+                  <button type="submit" className={styles.btnPrimary} disabled={!valid || saving}>
+                    {saving ? 'Salvando...' : 'Salvar'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </form>
@@ -246,7 +346,7 @@ interface DaySheetProps {
   todayYMD: string;
   onClose: () => void;
   onEdit: (p: Payment) => void;
-  onNew: (date: string) => void;
+  onNew?: (date: string) => void;
 }
 
 function DaySheet({ date, payments, clientName, todayYMD, onClose, onEdit, onNew }: DaySheetProps) {
@@ -277,9 +377,11 @@ function DaySheet({ date, payments, clientName, todayYMD, onClose, onEdit, onNew
             );
           })}
         </div>
-        <button className={styles.daySheetAdd} onClick={() => onNew(date)}>
-          <Plus size={16} /> Novo vencimento neste dia
-        </button>
+        {onNew && (
+          <button className={styles.daySheetAdd} onClick={() => onNew(date)}>
+            <Plus size={16} /> Novo vencimento neste dia
+          </button>
+        )}
       </div>
     </div>
   );
@@ -309,6 +411,7 @@ type ModalState =
 export default function Pagamentos() {
   const today = useMemo(() => new Date(), []);
   const todayYMD = localYMD(today);
+  const isAdmin = getSessionClaims()?.role === 'ADMIN';
 
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -335,8 +438,12 @@ export default function Pagamentos() {
       ]);
       setPayments(paymentList);
       setClients(clientRes.data);
-    } catch {
-      setPageError('Não foi possível carregar os pagamentos deste mês.');
+    } catch (e) {
+      setPageError(
+        e instanceof ApiError && e.status === 403
+          ? 'Você não tem permissão para visualizar vencimentos.'
+          : 'Não foi possível carregar os pagamentos deste mês.',
+      );
     } finally {
       setLoading(false);
     }
@@ -431,6 +538,7 @@ export default function Pagamentos() {
       setDaySheet({ date: ymd, payments: doDia });
       return;
     }
+    if (!isAdmin) return;
     setFormError('');
     setModal({ kind: 'novo', date: ymd });
   }
@@ -514,12 +622,14 @@ export default function Pagamentos() {
       </button>
     </div>
     <button className={styles.btnSecondary} onClick={irParaHoje}>Hoje</button>
-    <button
-      className={styles.btnPrimary}
-      onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
-    >
-      <Plus size={16} /> Novo Vencimento
-    </button>
+    {isAdmin && (
+      <button
+        className={styles.btnPrimary}
+        onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
+      >
+        <Plus size={16} /> Novo Vencimento
+      </button>
+    )}
   </div>
 </div>
 
@@ -608,12 +718,14 @@ export default function Pagamentos() {
               ? 'Cadastre o primeiro vencimento de um cliente para ele aparecer no calendário.'
               : 'Nenhum pagamento com essa situação em ' + MESES[month].toLowerCase() + '.'}
           </p>
-          <button
-            className={styles.btnPrimary}
-            onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
-          >
-            <Plus size={16} /> Novo Vencimento
-          </button>
+          {isAdmin && (
+            <button
+              className={styles.btnPrimary}
+              onClick={() => { setFormError(''); setModal({ kind: 'novo', date: '' }); }}
+            >
+              <Plus size={16} /> Novo Vencimento
+            </button>
+          )}
         </div>
       )}
 
@@ -642,16 +754,29 @@ export default function Pagamentos() {
       )}
 
       {modal?.kind === 'editar' && (
-        <VencimentoModal
-          titulo="Editar Vencimento"
-          initial={paymentToForm(modal.payment)}
-          clients={clients}
-          saving={saving}
-          error={formError}
-          onCancel={() => setModal(null)}
-          onSave={form => void handleSave(form)}
-          onDelete={() => void handleDelete()}
-        />
+        isAdmin ? (
+          <VencimentoModal
+            titulo="Editar Vencimento"
+            initial={paymentToForm(modal.payment)}
+            paymentId={modal.payment.id}
+            clients={clients}
+            saving={saving}
+            error={formError}
+            onCancel={() => setModal(null)}
+            onSave={form => void handleSave(form)}
+            onDelete={() => void handleDelete()}
+          />
+        ) : (
+          <VencimentoModal
+            titulo="Visualizar Vencimento"
+            initial={paymentToForm(modal.payment)}
+            paymentId={modal.payment.id}
+            clients={clients}
+            saving={false}
+            error=""
+            onCancel={() => setModal(null)}
+          />
+        )
       )}
 
       {daySheet && (
@@ -662,7 +787,7 @@ export default function Pagamentos() {
           todayYMD={todayYMD}
           onClose={() => setDaySheet(null)}
           onEdit={p => { setDaySheet(null); setFormError(''); setModal({ kind: 'editar', payment: p }); }}
-          onNew={date => { setDaySheet(null); setFormError(''); setModal({ kind: 'novo', date }); }}
+          onNew={isAdmin ? date => { setDaySheet(null); setFormError(''); setModal({ kind: 'novo', date }); } : undefined}
         />
       )}
     </div>

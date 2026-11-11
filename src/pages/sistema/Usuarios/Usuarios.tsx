@@ -55,6 +55,7 @@ export default function Usuarios() {
   const [formEmail, setFormEmail] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('USER');
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formCanViewPayments, setFormCanViewPayments] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -109,7 +110,7 @@ export default function Usuarios() {
   }, [fetchLogs, pageLogs, view, filterAction, filterDateFrom, filterDateTo]);
 
   function openNovo() {
-    setFormNome(''); setFormEmail(''); setFormRole('USER'); setFormError('');
+    setFormNome(''); setFormEmail(''); setFormRole('USER'); setFormCanViewPayments(false); setFormError('');
     setModalType('novo');
   }
 
@@ -118,7 +119,7 @@ export default function Usuarios() {
   function openEditar(u: ApiUser) {
     setSelectedUser(u);
     setFormNome(u.name); setFormEmail(u.email);
-    setFormRole(u.role); setFormIsActive(u.is_active); setFormError('');
+    setFormRole(u.role); setFormIsActive(u.is_active); setFormCanViewPayments(u.can_view_payments); setFormError('');
     setModalType('editar');
   }
 
@@ -136,9 +137,10 @@ export default function Usuarios() {
     setFormError('');
     try {
       const created = await createUser(formNome.trim(), formEmail.trim());
-      // POST /api/v1/users sempre cria como USER; promoção a ADMIN requer PATCH subsequente
-      const final = formRole === 'ADMIN'
-        ? (await updateUser(created.data.id, { role: 'ADMIN' })).data
+      // POST /api/v1/users sempre cria como USER sem acesso a vencimentos; papel e permissão requerem PATCH subsequente
+      const precisaPatch = formRole === 'ADMIN' || formCanViewPayments;
+      const final = precisaPatch
+        ? (await updateUser(created.data.id, { role: formRole, can_view_payments: formCanViewPayments })).data
         : created.data;
       setUsuarios(prev => [final, ...prev]);
       setTotalUsuarios(prev => prev + 1);
@@ -168,6 +170,7 @@ export default function Usuarios() {
         email: formEmail.trim(),
         role: formRole,
         is_active: formIsActive,
+        can_view_payments: formCanViewPayments,
       });
       setUsuarios(prev => prev.map(u => u.id === selectedUser.id ? res.data : u));
       closeModal();
@@ -243,13 +246,14 @@ export default function Usuarios() {
                     <th>E-mail</th>
                     <th>Papel</th>
                     <th>Status</th>
+                    <th>Vencimentos</th>
                     <th>Criado em</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {usuarios.length === 0 && (
-                    <tr><td colSpan={6}><p className={styles.statusMsg}>Nenhum usuário encontrado.</p></td></tr>
+                    <tr><td colSpan={7}><p className={styles.statusMsg}>Nenhum usuário encontrado.</p></td></tr>
                   )}
                   {usuarios.map(u => (
                     <tr key={u.id} style={{ opacity: u.is_active ? 1 : 0.6 }}>
@@ -273,6 +277,16 @@ export default function Usuarios() {
                             : { background: '#fce4ec', color: '#c62828' }}
                         >
                           {u.is_active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={styles.cargoBadge}
+                          style={u.role === 'ADMIN' || u.can_view_payments
+                            ? { background: '#e8f5e9', color: '#2e7d32' }
+                            : { background: '#f5f5f5', color: '#757575' }}
+                        >
+                          {u.role === 'ADMIN' || u.can_view_payments ? 'Sim' : 'Não'}
                         </span>
                       </td>
                       <td><div className={styles.date}>{formatDate(u.created_at)}</div></td>
@@ -438,6 +452,7 @@ export default function Usuarios() {
             nome={formNome} setNome={setFormNome}
             email={formEmail} setEmail={setFormEmail}
             role={formRole} setRole={setFormRole}
+            canViewPayments={formCanViewPayments} setCanViewPayments={setFormCanViewPayments}
           />
           <div className={styles.infoBox}>
             <p>O sistema gerará uma senha temporária registrada nos logs do servidor.</p>
@@ -479,6 +494,14 @@ export default function Usuarios() {
               <div className={styles.fieldReadonly}>{formatDate(selectedUser.created_at)}</div>
             </div>
           </div>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Pode visualizar vencimentos</label>
+            <div className={styles.fieldReadonly}>
+              {selectedUser.role === 'ADMIN'
+                ? 'Sim (administradores sempre visualizam)'
+                : selectedUser.can_view_payments ? 'Sim' : 'Não'}
+            </div>
+          </div>
         </Modal>
       )}
 
@@ -489,6 +512,7 @@ export default function Usuarios() {
             nome={formNome} setNome={setFormNome}
             email={formEmail} setEmail={setFormEmail}
             role={formRole} setRole={setFormRole}
+            canViewPayments={formCanViewPayments} setCanViewPayments={setFormCanViewPayments}
           />
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>Status</label>
@@ -553,9 +577,13 @@ interface UserFormFieldsProps {
   nome: string; setNome: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   role: UserRole; setRole: (v: UserRole) => void;
+  canViewPayments: boolean; setCanViewPayments: (v: boolean) => void;
 }
 
-function UserFormFields({ nome, setNome, email, setEmail, role, setRole }: UserFormFieldsProps) {
+function UserFormFields({
+  nome, setNome, email, setEmail, role, setRole, canViewPayments, setCanViewPayments,
+}: UserFormFieldsProps) {
+  const isAdminRole = role === 'ADMIN';
   return (
     <>
       <div className={styles.fieldGroup}>
@@ -585,6 +613,24 @@ function UserFormFields({ nome, setNome, email, setEmail, role, setRole }: UserF
             <option value="ADMIN">Administrador</option>
           </select>
         </div>
+      </div>
+      <div className={styles.fieldGroup}>
+        <label
+          className={styles.fieldLabel}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: isAdminRole ? 'default' : 'pointer' }}
+        >
+          <input
+            id="usuario-pode-ver-vencimentos"
+            type="checkbox"
+            checked={isAdminRole || canViewPayments}
+            disabled={isAdminRole}
+            onChange={e => setCanViewPayments(e.target.checked)}
+          />
+          Pode visualizar vencimentos
+        </label>
+        {isAdminRole && (
+          <span style={{ fontSize: '.78rem', color: 'var(--gray)' }}>Administradores sempre visualizam</span>
+        )}
       </div>
     </>
   );
