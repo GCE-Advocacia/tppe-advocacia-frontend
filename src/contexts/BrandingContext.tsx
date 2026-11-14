@@ -10,11 +10,31 @@ interface BrandingCtx {
 const Ctx = createContext<BrandingCtx>({ config: null, loading: true });
 const ActionsCtx = createContext<{ applyConfig: (config: OfficeConfigAPI) => void } | null>(null);
 const CONFIG_UPDATED_KEY = 'advocacia_office_config_updated';
+const BRANDING_CACHE_KEY = 'advocacia_branding_cache';
 const REFRESH_INTERVAL_MS = 30_000;
+
+function readCachedBranding(): OfficeConfigAPI | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(BRANDING_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as OfficeConfigAPI) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedBranding(config: OfficeConfigAPI): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(config));
+  } catch {
+    // Ignore storage quota or privacy mode errors.
+  }
+}
 
 /** Share logo state across routes without changing the existing OfficeConfigProvider. */
 export function BrandingProvider({ children }: { children: React.ReactNode }) {
-  const [config, setConfig] = useState<OfficeConfigAPI | null>(null);
+  const [config, setConfig] = useState<OfficeConfigAPI | null>(() => readCachedBranding());
   const [loading, setLoading] = useState(true);
   const revision = useRef(0);
   const lastRefresh = useRef(0);
@@ -24,6 +44,7 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
     revision.current += 1;
     lastRefresh.current = Date.now();
     setConfig(nextConfig);
+    writeCachedBranding(nextConfig);
     setLoading(false);
     try {
       localStorage.setItem(CONFIG_UPDATED_KEY, `${Date.now()}-${Math.random()}`);
@@ -41,7 +62,10 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
       const requestRevision = ++revision.current;
       try {
         const nextConfig = await getOfficeConfig();
-        if (active && requestRevision === revision.current) setConfig(nextConfig);
+        if (active && requestRevision === revision.current) {
+          setConfig(nextConfig);
+          writeCachedBranding(nextConfig);
+        }
       } catch {
         // Keep the last known configuration (or the default logo) on network failure.
       } finally {

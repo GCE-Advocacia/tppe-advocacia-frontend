@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { memo, useState, type CSSProperties } from 'react';
 import { Monitor, Smartphone, Tablet } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
@@ -7,7 +7,7 @@ export interface LandingPreviewProps {
   data: LandingPageData;
 }
 
-export default function LandingPreview({ data }: LandingPreviewProps) {
+const LandingPreview = memo(function LandingPreview({ data }: LandingPreviewProps) {
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const previewVars = {
     '--pv-button-radius': data.buttonRadius ?? '6px',
@@ -80,4 +80,6 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
       </div>
     </section>
   );
-}
+});
+
+export default LandingPreview;

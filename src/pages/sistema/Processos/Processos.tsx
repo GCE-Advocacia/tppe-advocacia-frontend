@@ -234,16 +234,14 @@ function CreateProcessModal({
     <div className={styles.overlay} onClick={onCancel}>
       <div className={styles.modal} onClick={event => event.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div>
-            <h2 className={styles.modalTitle}>Novo Registro de Processo</h2>
-            <p className={styles.modalSub}>Cadastre o processo e prepare a integração com o DataJud.</p>
-          </div>
+          <h2 className={styles.modalTitle}>Novo Registro de Processo</h2>
           <button className={styles.modalClose} onClick={onCancel} aria-label="Fechar">
             <X size={18} />
           </button>
         </div>
 
         <div className={styles.modalBody}>
+          <p className={styles.modalSub}>Cadastre o processo e prepare a integração com o DataJud.</p>
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.mField}>
             <label className={styles.mLabel}>Número do processo (CNJ)</label>
@@ -404,17 +402,14 @@ function DeadlineFormModal({
     <div className={styles.overlay} onClick={event => { event.stopPropagation(); onCancel(); }}>
       <div className={styles.modal} onClick={event => event.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <div>
-            <p className={styles.modalEyebrow}>Prazo processual</p>
-            <h2 className={styles.modalTitle}>{deadline ? 'Editar prazo' : 'Adicionar prazo'}</h2>
-            <p className={styles.modalSub}>{process.number} · {process.court}</p>
-          </div>
+          <h2 className={styles.modalTitle}>{deadline ? 'Editar prazo' : 'Adicionar prazo'}</h2>
           <button className={styles.modalClose} onClick={onCancel} aria-label="Fechar">
             <X size={18} />
           </button>
         </div>
 
         <div className={styles.modalBody}>
+          <p className={styles.modalSub}>{process.number} · {process.court}</p>
           {error && <p className={styles.formError}>{error}</p>}
           <div className={styles.mField}>
             <label className={styles.mLabel}>Providência / tipo do prazo</label>
@@ -692,13 +687,13 @@ function ProcessDetailsModal({
   return (
     <div className={styles.overlay} onClick={onCancel}>
       <div className={`${styles.modal} ${styles.detailModal}`} onClick={event => event.stopPropagation()}>
-        <div className={styles.modalHeader}>
+        <div className={styles.detailModalHeader}>
           <div>
             <p className={styles.modalEyebrow}>Ficha processual</p>
-            <h2 className={styles.modalTitle}>{process?.number ?? 'Carregando processo...'}</h2>
-            {process && <p className={styles.modalSub}>{process.action_type} · {process.court}</p>}
+            <h2 className={styles.detailModalTitle}>{process?.number ?? 'Carregando processo...'}</h2>
+            {process && <p className={styles.detailModalSub}>{process.action_type} · {process.court}</p>}
           </div>
-          <button className={styles.modalClose} onClick={onCancel} aria-label="Fechar">
+          <button className={styles.detailModalClose} onClick={onCancel} aria-label="Fechar">
             <X size={18} />
           </button>
         </div>
@@ -1046,16 +1041,13 @@ function ProcessDetailsModal({
                 <div className={styles.overlay} onClick={() => setDeletingTask(null)}>
                   <div className={styles.modal} onClick={event => event.stopPropagation()}>
                     <div className={styles.modalHeader}>
-                      <div>
-                        <p className={styles.modalEyebrow}>Tarefa do processo</p>
-                        <h2 className={styles.modalTitle}>Excluir tarefa</h2>
-                        <p className={styles.modalSub}>Esta ação não pode ser desfeita.</p>
-                      </div>
+                      <h2 className={styles.modalTitle}>Excluir tarefa</h2>
                       <button className={styles.modalClose} onClick={() => setDeletingTask(null)} aria-label="Fechar">
                         <X size={18} />
                       </button>
                     </div>
                     <div className={styles.modalBody}>
+                      <p className={styles.modalSub}>Esta ação não pode ser desfeita.</p>
                       {taskDeleteError && <p className={styles.formError}>{taskDeleteError}</p>}
                       <p className={styles.deleteConfirm}>
                         A tarefa “{deletingTask.title}” será removida deste processo e do quadro de tarefas.

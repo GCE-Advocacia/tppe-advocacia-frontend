@@ -1,10 +1,10 @@
 .page { max-width: 1440px; margin: 0 auto; }
 .toast { margin-bottom: 16px; padding: 10px 12px; border-radius: 6px; font-size: .8rem; }
 .toastSuccess { color: #256b2a; background: #e8f5e9; }
-.toastError { color: var(--crimson); background: #fdecea; }
+.toastError { color: var(--color-danger); background: var(--color-danger-bg); }
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
-.eyebrow { color: var(--crimson); font-size: .7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-.header h1 { color: var(--navy); font-size: 2rem; margin-bottom: 5px; }
+.eyebrow { color: var(--brand-link); font-size: .7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+.header h1 { color: var(--brand-title); font-size: 2rem; margin-bottom: 5px; }
 .subtitle { color: var(--gray); font-size: .9rem; }
 .refreshButton {
   min-height: 40px; display: flex; align-items: center; gap: 7px; padding: 0 14px;
@@ -13,7 +13,7 @@
 }
 .refreshButton:disabled { cursor: wait; opacity: .6; }
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
-.metric { display: flex; align-items: center; gap: 13px; background: var(--white); border: 1px solid #e4e7ed; border-radius: 8px; padding: 17px; }
+.metric { display: flex; align-items: center; gap: 13px; background: var(--sys-surface); border: 1px solid #e4e7ed; border-radius: 8px; padding: 17px; }
 .metricIcon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 7px; flex-shrink: 0; }
 .navy { color: #263859; background: #e8edf5; }
 .blue { color: #315e96; background: #e7f0fa; }
@@ -21,7 +21,7 @@
 .green { color: #247252; background: #e4f3ec; }
 .metric div > span { display: block; color: var(--gray); font-size: .73rem; line-height: 1.4; }
 .metric strong { display: block; color: var(--navy); font-size: 1.45rem; margin-top: 2px; }
-.panel { background: var(--white); border: 1px solid #e4e7ed; border-radius: 8px; overflow: hidden; }
+.panel { background: var(--sys-surface); border: 1px solid #e4e7ed; border-radius: 8px; overflow: hidden; }
 .filters { display: flex; gap: 10px; padding: 18px 20px; border-bottom: 1px solid #eceef2; }
 .filters select, .field select {
   min-height: 38px; border: 1px solid #dfe2e8; border-radius: 6px; padding: 0 30px 0 10px;
@@ -39,7 +39,7 @@
 .serviceStatus { color: #94620b; background: #fff1ce; }
 .closedStatus { color: #247252; background: #e4f3ec; }
 .discardedStatus { color: #6d7078; background: #eff0f2; }
-.openButton { border: none; background: transparent; color: var(--crimson); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.openButton { border: none; background: transparent; color: var(--brand-link); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
 .empty { padding: 40px !important; text-align: center; color: var(--gray) !important; }
 .footer { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; color: var(--gray); font-size: .75rem; }
 .footer strong { color: var(--navy); }
@@ -47,7 +47,7 @@
 .pagination button { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #dfe2e8; border-radius: 5px; background: var(--white); color: var(--navy); cursor: pointer; }
 .pagination button:disabled { opacity: .35; cursor: default; }
 .overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.45); display: flex; justify-content: flex-end; }
-.drawer { width: min(440px, 100%); height: 100%; background: var(--white); box-shadow: -12px 0 40px rgba(0,0,0,.16); overflow-y: auto; }
+.drawer { width: min(440px, 100%); height: 100%; background: var(--sys-surface); box-shadow: -12px 0 40px rgba(0,0,0,.16); overflow-y: auto; }
 .drawerHeader { min-height: 90px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 24px; border-bottom: 1px solid #eceef2; }
 .drawerHeader h2 { color: var(--navy); font-size: 1.15rem; }
 .drawerHeader button { border: none; background: transparent; color: var(--gray); cursor: pointer; }
@@ -55,7 +55,7 @@
 .contactLinks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .contactLinks a { display: flex; align-items: center; gap: 8px; color: var(--navy); font-size: .8rem; font-weight: 600; }
 .messageBox { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 7px; background: #f6f7f9; color: var(--gray); font-size: .8rem; line-height: 1.55; margin-bottom: 22px; }
-.messageBox svg { color: var(--crimson); flex-shrink: 0; }
+.messageBox svg { color: var(--brand-link); flex-shrink: 0; }
 .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
 .field label { color: var(--gray); font-size: .7rem; font-weight: 700; text-transform: uppercase; }
 .details { display: grid; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #eceef2; }

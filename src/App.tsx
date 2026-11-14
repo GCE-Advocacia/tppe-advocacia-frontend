@@ -59,7 +59,7 @@ import Financeiro from './pages/sistema/Financeiro/Financeiro';
 
 function LandingPage() {
   return (
-    <OfficeConfigProvider>
+    <>
       <Navbar />
       <main>
         <Hero />
@@ -71,7 +71,7 @@ function LandingPage() {
         <Contato />
       </main>
       <Footer />
-    </OfficeConfigProvider>
+    </>
   );
 }
 
@@ -94,10 +94,11 @@ function SistemaIndexRedirect() {
 export default function App() {
   return (
     <BrandingProvider>
-    <OfficeButtonRadius />
-    <BrowserRouter>
-      <ScrollToHash />
-      <Routes>
+      <OfficeConfigProvider>
+        <OfficeButtonRadius />
+        <BrowserRouter>
+          <ScrollToHash />
+          <Routes>
         {/* Landing page pública */}
         <Route path="/" element={<><GoogleCalendarRedirect /><LandingPage /></>} />
         <Route path="/artigos/:id" element={<ArtigoPage />} />
@@ -140,6 +141,7 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </OfficeConfigProvider>
     </BrandingProvider>
   );
 }

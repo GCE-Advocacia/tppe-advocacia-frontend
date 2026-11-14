@@ -42,6 +42,10 @@ interface ThemeFormState {
   color_text_secondary: string;
   color_link_primary: string;
   color_link_secondary: string;
+  system_uses_landing_buttons?: boolean;
+  color_buttons_system?: string | null;
+  color_buttons_system_hover?: string | null;
+  color_buttons_system_text?: string | null;
 }
 
 const DEFAULT_FORM_STATE: ThemeFormState = {
@@ -60,6 +64,10 @@ const DEFAULT_FORM_STATE: ThemeFormState = {
   color_text_secondary: '#6B7280',
   color_link_primary: '#FFFFFF',
   color_link_secondary: '#661C16',
+  system_uses_landing_buttons: true,
+  color_buttons_system: null,
+  color_buttons_system_hover: null,
+  color_buttons_system_text: null,
 };
 
 export default function ThemeGallery({
@@ -75,8 +83,6 @@ export default function ThemeGallery({
   // Modal de Criação / Edição de Tema
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [formData, setFormData] = useState<ThemeFormState>(DEFAULT_FORM_STATE);
-  const [savingTheme, setSavingTheme] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
 
   // Modal de Exclusão
   const [themeToDelete, setThemeToDelete] = useState<LandingPageTheme | null>(null);
@@ -93,7 +99,7 @@ export default function ThemeGallery({
     if (activeThemeId !== undefined && activeThemeId !== null) {
       return theme.id === activeThemeId;
     }
-    return (
+    const landingMatches = (
       theme.color_bg_primary.toLowerCase() === (currentLandingColors.colorBgPrimary || '').toLowerCase() &&
       theme.color_bg_secondary.toLowerCase() === (currentLandingColors.colorBgSecondary || '').toLowerCase() &&
       theme.color_bg_sobre.toLowerCase() === (currentLandingColors.colorBgSobre || '').toLowerCase() &&
@@ -107,6 +113,27 @@ export default function ThemeGallery({
       theme.color_link_primary.toLowerCase() === (currentLandingColors.colorLinkPrimary || '').toLowerCase() &&
       theme.color_link_secondary.toLowerCase() === (currentLandingColors.colorLinkSecondary || '').toLowerCase()
     );
+    if (!landingMatches) return false;
+
+    const themeUsesLanding = theme.system_uses_landing_buttons ?? true;
+    const currentUsesLanding = currentLandingColors.systemUsesLandingButtons ?? true;
+    if (themeUsesLanding !== currentUsesLanding) return false;
+
+    if (!themeUsesLanding) {
+      const tSysBg = (theme.color_buttons_system || theme.color_buttons || '').toLowerCase();
+      const tSysHover = (theme.color_buttons_system_hover || theme.color_buttons_hover || '').toLowerCase();
+      const tSysText = (theme.color_buttons_system_text || theme.color_buttons_text || '').toLowerCase();
+
+      const cSysBg = (currentLandingColors.colorButtonsSystem || currentLandingColors.colorButtons || '').toLowerCase();
+      const cSysHover = (currentLandingColors.colorButtonsSystemHover || currentLandingColors.colorButtonsHover || '').toLowerCase();
+      const cSysText = (currentLandingColors.colorButtonsSystemText || currentLandingColors.colorButtonsText || '').toLowerCase();
+
+      if (tSysBg !== cSysBg || tSysHover !== cSysHover || tSysText !== cSysText) {
+        return false;
+      }
+    }
+
+    return true;
   }, [activeThemeId, currentLandingColors]);
 
   const defaultThemeId = useMemo(() => {
@@ -163,7 +190,6 @@ export default function ThemeGallery({
 
   function openDuplicateModal(baseTheme: LandingPageTheme) {
     if (isLimitReached) return;
-    setModalError(null);
     setFormData({
       name: `Cópia de ${baseTheme.name}`,
       description: baseTheme.description || '',
@@ -180,13 +206,16 @@ export default function ThemeGallery({
       color_text_secondary: baseTheme.color_text_secondary,
       color_link_primary: baseTheme.color_link_primary,
       color_link_secondary: baseTheme.color_link_secondary,
+      system_uses_landing_buttons: baseTheme.system_uses_landing_buttons ?? true,
+      color_buttons_system: baseTheme.color_buttons_system ?? null,
+      color_buttons_system_hover: baseTheme.color_buttons_system_hover ?? null,
+      color_buttons_system_text: baseTheme.color_buttons_system_text ?? null,
     });
     setModalMode('duplicate');
   }
 
   function openCreateFromLandingModal() {
     if (isLimitReached) return;
-    setModalError(null);
     setFormData({
       ...DEFAULT_FORM_STATE,
       color: currentLandingColors.color || DEFAULT_FORM_STATE.color,
@@ -202,12 +231,15 @@ export default function ThemeGallery({
       color_text_secondary: currentLandingColors.colorTextSecondary || DEFAULT_FORM_STATE.color_text_secondary,
       color_link_primary: currentLandingColors.colorLinkPrimary || DEFAULT_FORM_STATE.color_link_primary,
       color_link_secondary: currentLandingColors.colorLinkSecondary || DEFAULT_FORM_STATE.color_link_secondary,
+      system_uses_landing_buttons: currentLandingColors.systemUsesLandingButtons ?? true,
+      color_buttons_system: currentLandingColors.colorButtonsSystem ?? null,
+      color_buttons_system_hover: currentLandingColors.colorButtonsSystemHover ?? null,
+      color_buttons_system_text: currentLandingColors.colorButtonsSystemText ?? null,
     });
     setModalMode('create');
   }
 
   function openEditModal(theme: LandingPageTheme) {
-    setModalError(null);
     setFormData({
       id: theme.id,
       name: theme.name,
@@ -225,64 +257,64 @@ export default function ThemeGallery({
       color_text_secondary: theme.color_text_secondary,
       color_link_primary: theme.color_link_primary,
       color_link_secondary: theme.color_link_secondary,
+      system_uses_landing_buttons: theme.system_uses_landing_buttons ?? true,
+      color_buttons_system: theme.color_buttons_system ?? null,
+      color_buttons_system_hover: theme.color_buttons_system_hover ?? null,
+      color_buttons_system_text: theme.color_buttons_system_text ?? null,
     });
     setModalMode('edit');
   }
 
-  async function handleSaveTheme() {
-    if (!formData.name.trim()) {
-      setModalError('Informe um nome para o tema.');
-      return;
+  async function handleSaveTheme({ name, description }: { name: string; description: string }) {
+    if (modalMode === 'duplicate' || modalMode === 'create') {
+      const payload: ThemeCreatePayload = {
+        name,
+        description: description || null,
+        color: formData.color_bg_primary,
+        color_bg_primary: formData.color_bg_primary,
+        color_bg_secondary: formData.color_bg_secondary,
+        color_bg_sobre: formData.color_bg_sobre,
+        color_buttons: formData.color_buttons,
+        color_buttons_hover: formData.color_buttons_hover,
+        color_buttons_text: formData.color_buttons_text,
+        color_title_primary: formData.color_title_primary,
+        color_title_secondary: formData.color_title_secondary,
+        color_text_primary: formData.color_text_primary,
+        color_text_secondary: formData.color_text_secondary,
+        color_link_primary: formData.color_link_primary,
+        color_link_secondary: formData.color_link_secondary,
+        system_uses_landing_buttons: formData.system_uses_landing_buttons ?? true,
+        color_buttons_system: formData.color_buttons_system ?? null,
+        color_buttons_system_hover: formData.color_buttons_system_hover ?? null,
+        color_buttons_system_text: formData.color_buttons_system_text ?? null,
+      };
+      await createTheme(payload);
+    } else if (modalMode === 'edit' && formData.id) {
+      await updateTheme(formData.id, {
+        name,
+        description: description || null,
+        color: formData.color_bg_primary,
+        color_bg_primary: formData.color_bg_primary,
+        color_bg_secondary: formData.color_bg_secondary,
+        color_bg_sobre: formData.color_bg_sobre,
+        color_buttons: formData.color_buttons,
+        color_buttons_hover: formData.color_buttons_hover,
+        color_buttons_text: formData.color_buttons_text,
+        color_title_primary: formData.color_title_primary,
+        color_title_secondary: formData.color_title_secondary,
+        color_text_primary: formData.color_text_primary,
+        color_text_secondary: formData.color_text_secondary,
+        color_link_primary: formData.color_link_primary,
+        color_link_secondary: formData.color_link_secondary,
+        system_uses_landing_buttons: formData.system_uses_landing_buttons ?? true,
+        color_buttons_system: formData.color_buttons_system ?? null,
+        color_buttons_system_hover: formData.color_buttons_system_hover ?? null,
+        color_buttons_system_text: formData.color_buttons_system_text ?? null,
+      });
     }
-    setSavingTheme(true);
-    setModalError(null);
-    try {
-      if (modalMode === 'duplicate' || modalMode === 'create') {
-        const payload: ThemeCreatePayload = {
-          name: formData.name.trim(),
-          description: formData.description.trim() || null,
-          color: formData.color_bg_primary,
-          color_bg_primary: formData.color_bg_primary,
-          color_bg_secondary: formData.color_bg_secondary,
-          color_bg_sobre: formData.color_bg_sobre,
-          color_buttons: formData.color_buttons,
-          color_buttons_hover: formData.color_buttons_hover,
-          color_buttons_text: formData.color_buttons_text,
-          color_title_primary: formData.color_title_primary,
-          color_title_secondary: formData.color_title_secondary,
-          color_text_primary: formData.color_text_primary,
-          color_text_secondary: formData.color_text_secondary,
-          color_link_primary: formData.color_link_primary,
-          color_link_secondary: formData.color_link_secondary,
-        };
-        await createTheme(payload);
-      } else if (modalMode === 'edit' && formData.id) {
-        await updateTheme(formData.id, {
-          name: formData.name.trim(),
-          description: formData.description.trim() || null,
-          color: formData.color_bg_primary,
-          color_bg_primary: formData.color_bg_primary,
-          color_bg_secondary: formData.color_bg_secondary,
-          color_bg_sobre: formData.color_bg_sobre,
-          color_buttons: formData.color_buttons,
-          color_buttons_hover: formData.color_buttons_hover,
-          color_buttons_text: formData.color_buttons_text,
-          color_title_primary: formData.color_title_primary,
-          color_title_secondary: formData.color_title_secondary,
-          color_text_primary: formData.color_text_primary,
-          color_text_secondary: formData.color_text_secondary,
-          color_link_primary: formData.color_link_primary,
-          color_link_secondary: formData.color_link_secondary,
-        });
-      }
-      await onRefreshThemes();
-      await fetchQuota();
-      setModalMode(null);
-    } catch (err) {
-      setModalError(err instanceof Error ? err.message : 'Erro ao salvar tema.');
-    } finally {
-      setSavingTheme(false);
-    }
+    await onRefreshThemes();
+    await fetchQuota();
+    setModalMode(null);
   }
 
   async function handleDeleteTheme() {
@@ -501,95 +533,14 @@ export default function ThemeGallery({
           </div>
         </div>
 
-      {/* Modal: Duplicar / Editar / Salvar Tema (Apenas Nome e Descrição) */}
+      {/* Modal: Duplicar / Editar / Salvar Tema */}
       {modalMode && (
-        <div className={styles.modalOverlay} onMouseDown={() => setModalMode(null)}>
-          <div className={styles.modalBox} onMouseDown={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
-                {modalMode === 'duplicate' && 'Duplicar Tema'}
-                {modalMode === 'edit' && 'Editar Tema'}
-                {modalMode === 'create' && 'Salvar Novo Tema na Biblioteca'}
-              </h3>
-              <button className={styles.modalClose} onClick={() => setModalMode(null)}>
-                <X size={18} />
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
-                {modalMode === 'duplicate' &&
-                  'Crie uma cópia deste tema na sua biblioteca mantendo exatamente as mesmas cores. Você pode escolher um novo nome e descrição.'}
-                {modalMode === 'edit' &&
-                  'Altere o nome ou descrição deste tema personalizado. Para alterar as cores, utilize os seletores na página de configurações.'}
-                {modalMode === 'create' &&
-                  'As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado.'}
-              </p>
-
-              {/* Preview visual das 12 cores do tema copiado/editado */}
-              <div className={styles.swatchStrip} title="Paleta de cores deste tema">
-                <span style={{ backgroundColor: formData.color_bg_primary }} title="Background 1" />
-                <span style={{ backgroundColor: formData.color_bg_secondary }} title="Background 2" />
-                <span style={{ backgroundColor: formData.color_bg_sobre }} title="Background Sobre" />
-                <span style={{ backgroundColor: formData.color_buttons }} title="Botões" />
-                <span style={{ backgroundColor: formData.color_buttons_hover }} title="Hover Botões" />
-                <span style={{ backgroundColor: formData.color_buttons_text }} title="Texto Botões" />
-                <span style={{ backgroundColor: formData.color_title_primary }} title="Títulos 1" />
-                <span style={{ backgroundColor: formData.color_title_secondary }} title="Títulos 2" />
-                <span style={{ backgroundColor: formData.color_text_primary }} title="Textos 1" />
-                <span style={{ backgroundColor: formData.color_text_secondary }} title="Textos 2" />
-                <span style={{ backgroundColor: formData.color_link_primary }} title="Links 1" />
-                <span style={{ backgroundColor: formData.color_link_secondary }} title="Links 2" />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Nome do Tema *</label>
-                <input
-                  className={styles.input}
-                  placeholder="Ex: Cópia de Clássico Navy"
-                  maxLength={100}
-                  value={formData.name}
-                  onChange={e => setFormData(f => ({ ...f, name: e.target.value }))}
-                  autoFocus
-                />
-              </div>
-
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>Descrição (Opcional)</label>
-                <textarea
-                  className={styles.textarea}
-                  placeholder="Descreva a proposta deste tema..."
-                  rows={2}
-                  maxLength={255}
-                  value={formData.description}
-                  onChange={e => setFormData(f => ({ ...f, description: e.target.value }))}
-                />
-              </div>
-
-              {modalError && <p className={styles.modalError}>{modalError}</p>}
-            </div>
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.btnCancel}
-                disabled={savingTheme}
-                onClick={() => setModalMode(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className={styles.btnConfirm}
-                disabled={savingTheme || !formData.name.trim()}
-                onClick={handleSaveTheme}
-              >
-                {savingTheme ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={15} />}
-                {modalMode === 'duplicate' && 'Duplicar Tema'}
-                {modalMode === 'edit' && 'Salvar Alterações'}
-                {modalMode === 'create' && 'Salvar Tema'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ThemeFormSubmodal
+          modalMode={modalMode}
+          initialData={formData}
+          onClose={() => setModalMode(null)}
+          onSave={handleSaveTheme}
+        />
       )}
 
       {/* Modal: Confirmar Exclusão */}
@@ -632,6 +583,131 @@ export default function ThemeGallery({
           </div>
         </div>
       )}
+      </div>
+    </div>
+  );
+}
+
+interface ThemeFormSubmodalProps {
+  modalMode: NonNullable<ModalMode>;
+  initialData: ThemeFormState;
+  onClose: () => void;
+  onSave: (data: { name: string; description: string }) => Promise<void>;
+}
+
+function ThemeFormSubmodal({
+  modalMode,
+  initialData,
+  onClose,
+  onSave,
+}: ThemeFormSubmodalProps) {
+  const [name, setName] = useState(initialData.name);
+  const [description, setDescription] = useState(initialData.description);
+  const [savingTheme, setSavingTheme] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  async function handleSubmit() {
+    if (!name.trim()) {
+      setModalError('Informe um nome para o tema.');
+      return;
+    }
+    setSavingTheme(true);
+    setModalError(null);
+    try {
+      await onSave({ name: name.trim(), description: description.trim() });
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : 'Erro ao salvar tema.');
+    } finally {
+      setSavingTheme(false);
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onMouseDown={onClose}>
+      <div className={styles.modalBox} onMouseDown={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>
+            {modalMode === 'duplicate' && 'Duplicar Tema'}
+            {modalMode === 'edit' && 'Editar Tema'}
+            {modalMode === 'create' && 'Salvar Novo Tema na Biblioteca'}
+          </h3>
+          <button className={styles.modalClose} onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className={styles.modalBody}>
+          <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0 }}>
+            {modalMode === 'duplicate' &&
+              'Crie uma cópia deste tema na sua biblioteca mantendo exatamente as mesmas cores. Você pode escolher um novo nome e descrição.'}
+            {modalMode === 'edit' &&
+              'Altere o nome ou descrição deste tema personalizado. Para alterar as cores, utilize os seletores na página de configurações.'}
+            {modalMode === 'create' &&
+              'As 12 cores atualmente configuradas na Landing Page serão salvas como um novo tema personalizado.'}
+          </p>
+
+          {/* Preview visual das 12 cores do tema copiado/editado */}
+          <div className={styles.swatchStrip} title="Paleta de cores deste tema">
+            <span style={{ backgroundColor: initialData.color_bg_primary }} title="Background 1" />
+            <span style={{ backgroundColor: initialData.color_bg_secondary }} title="Background 2" />
+            <span style={{ backgroundColor: initialData.color_bg_sobre }} title="Background Sobre" />
+            <span style={{ backgroundColor: initialData.color_buttons }} title="Botões" />
+            <span style={{ backgroundColor: initialData.color_buttons_hover }} title="Hover Botões" />
+            <span style={{ backgroundColor: initialData.color_buttons_text }} title="Texto Botões" />
+            <span style={{ backgroundColor: initialData.color_title_primary }} title="Títulos 1" />
+            <span style={{ backgroundColor: initialData.color_title_secondary }} title="Títulos 2" />
+            <span style={{ backgroundColor: initialData.color_text_primary }} title="Textos 1" />
+            <span style={{ backgroundColor: initialData.color_text_secondary }} title="Textos 2" />
+            <span style={{ backgroundColor: initialData.color_link_primary }} title="Links 1" />
+            <span style={{ backgroundColor: initialData.color_link_secondary }} title="Links 2" />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Nome do Tema *</label>
+            <input
+              className={styles.input}
+              placeholder="Ex: Cópia de Clássico Navy"
+              maxLength={100}
+              value={name}
+              onChange={e => setName(e.target.value)}
+              autoFocus
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Descrição (Opcional)</label>
+            <textarea
+              className={styles.textarea}
+              placeholder="Descreva a proposta deste tema..."
+              rows={2}
+              maxLength={255}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+          </div>
+
+          {modalError && <p className={styles.modalError}>{modalError}</p>}
+        </div>
+        <div className={styles.modalActions}>
+          <button
+            type="button"
+            className={styles.btnCancel}
+            disabled={savingTheme}
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className={styles.btnConfirm}
+            disabled={savingTheme || !name.trim()}
+            onClick={handleSubmit}
+          >
+            {savingTheme ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={15} />}
+            {modalMode === 'duplicate' && 'Duplicar Tema'}
+            {modalMode === 'edit' && 'Salvar Alterações'}
+            {modalMode === 'create' && 'Salvar Tema'}
+          </button>
+        </div>
       </div>
     </div>
   );
