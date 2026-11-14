@@ -88,7 +88,7 @@
 .navItem.active {
   background: var(--brand-primary-hover-bg);
   color: var(--brand-nav-link);
-  border-left-color: var(--brand-accent);
+  border-left-color: var(--brand-nav-link);
 }
 
 .icon { flex-shrink: 0; }
