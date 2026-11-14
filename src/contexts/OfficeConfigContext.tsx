@@ -4,10 +4,8 @@ import type { OfficeConfigAPI } from '../services/officeConfigService';
 import {
   applyThemeTokensToRoot,
   buildThemeTokens,
-  getEffectiveSystemThemeMode,
   persistThemeCache,
   THEME_CACHE_KEY,
-  SYSTEM_THEME_MODE_KEY,
 } from '../utils/themeSync';
 
 /** Apply only the saved geometry globally; keep the existing landing color scope. */
@@ -35,7 +33,7 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (!config) return;
     const tokens = buildThemeTokens(config);
-    applyThemeTokensToRoot(tokens, getEffectiveSystemThemeMode());
+    applyThemeTokensToRoot(tokens);
     persistThemeCache(config);
   }, [config]);
 
@@ -44,13 +42,9 @@ export function OfficeConfigProvider({ children }: { children: React.ReactNode }
       if (e.key === THEME_CACHE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          applyThemeTokensToRoot(parsed, getEffectiveSystemThemeMode());
+          applyThemeTokensToRoot(parsed);
         } catch {
           // ignore error
-        }
-      } else if (e.key === SYSTEM_THEME_MODE_KEY && e.newValue) {
-        if (e.newValue === 'immersive' || e.newValue === 'highlights') {
-          document.documentElement.dataset.systemThemeMode = e.newValue;
         }
       }
     };

@@ -1,9 +1,6 @@
 import type { OfficeConfigAPI } from '../services/officeConfigService';
 
 export const THEME_CACHE_KEY = 'advocacia_theme_cache';
-export const SYSTEM_THEME_MODE_KEY = 'advocacia_system_theme_mode';
-
-export type SystemThemeMode = 'highlights' | 'immersive';
 
 export function buildThemeTokens(config: Partial<OfficeConfigAPI> | null | undefined): Record<string, string> {
   const brandPrimary = config?.color || config?.color_bg_primary || '#232C43';
@@ -60,40 +57,7 @@ export function buildThemeTokens(config: Partial<OfficeConfigAPI> | null | undef
   };
 }
 
-export function getEffectiveSystemThemeMode(): SystemThemeMode {
-  if (typeof window === 'undefined') return 'highlights';
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const fromUrl = params.get('themeMode');
-    if (fromUrl === 'immersive' || fromUrl === 'highlights') {
-      localStorage.setItem(SYSTEM_THEME_MODE_KEY, fromUrl);
-      return fromUrl;
-    }
-    const fromStorage = localStorage.getItem(SYSTEM_THEME_MODE_KEY);
-    if (fromStorage === 'immersive' || fromStorage === 'highlights') {
-      return fromStorage;
-    }
-  } catch {
-    // localStorage not accessible
-  }
-  return 'highlights';
-}
-
-export function setSystemThemeMode(mode: SystemThemeMode): void {
-  try {
-    localStorage.setItem(SYSTEM_THEME_MODE_KEY, mode);
-  } catch {
-    // Ignore error
-  }
-  if (typeof document !== 'undefined') {
-    document.documentElement.dataset.systemThemeMode = mode;
-  }
-}
-
-export function applyThemeTokensToRoot(
-  tokens: Record<string, string>,
-  mode: SystemThemeMode = getEffectiveSystemThemeMode(),
-): void {
+export function applyThemeTokensToRoot(tokens: Record<string, string>): void {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
   for (const [key, value] of Object.entries(tokens)) {
@@ -101,7 +65,6 @@ export function applyThemeTokensToRoot(
       root.style.setProperty(key, value);
     }
   }
-  root.dataset.systemThemeMode = mode;
 }
 
 export function persistThemeCache(config: Partial<OfficeConfigAPI> | null | undefined): void {

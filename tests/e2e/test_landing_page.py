@@ -860,18 +860,3 @@ class TestSincronizacaoTemasUS14:
         assert colors["entrada"] == "rgb(46, 125, 50)", "Nova Entrada deve ser verde contábil (#2e7d32)"
         assert colors["saida"] == "rgb(198, 40, 40)", "Nova Saída deve ser vermelho semântico (#c62828)"
 
-    def test_alternancia_modo_destaque_e_imersivo_via_query_param(self, logged_in, wait):
-        logged_in.get(f"{CLIENTES_URL}?themeMode=immersive")
-        wait.until(lambda d: d.execute_script("return document.documentElement.dataset.systemThemeMode") == "immersive")
-        pause()
-
-        mode_storage = logged_in.execute_script("return localStorage.getItem('advocacia_system_theme_mode');")
-        assert mode_storage == "immersive"
-
-        logged_in.get(f"{CLIENTES_URL}?themeMode=highlights")
-        wait.until(lambda d: d.execute_script("return document.documentElement.dataset.systemThemeMode") == "highlights")
-        pause()
-
-        mode_storage2 = logged_in.execute_script("return localStorage.getItem('advocacia_system_theme_mode');")
-        assert mode_storage2 == "highlights"
-

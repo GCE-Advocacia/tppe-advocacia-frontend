@@ -75,21 +75,6 @@ function LandingPage() {
   );
 }
 
-function SystemThemeModeListener() {
-  const { search } = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(search);
-    const mode = params.get('themeMode');
-    if (mode === 'immersive' || mode === 'highlights') {
-      try {
-        localStorage.setItem('advocacia_system_theme_mode', mode);
-      } catch {}
-      document.documentElement.dataset.systemThemeMode = mode;
-    }
-  }, [search]);
-  return null;
-}
-
 function GoogleCalendarRedirect() {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
@@ -113,7 +98,6 @@ export default function App() {
         <OfficeButtonRadius />
         <BrowserRouter>
           <ScrollToHash />
-          <SystemThemeModeListener />
           <Routes>
         {/* Landing page pública */}
         <Route path="/" element={<><GoogleCalendarRedirect /><LandingPage /></>} />
