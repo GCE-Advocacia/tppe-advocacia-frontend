@@ -153,6 +153,51 @@ export default function LandingPageConfig() {
           </button>
         </div>
       </div>
+
+      {/* ── Modal: Alterações não salvas ao sair da página ── */}
+      {form.pendingNavigationPath && (
+        <div
+          className={styles.modalOverlay}
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) form.cancelNavigation();
+          }}
+        >
+          <div className={styles.modalBox} onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="unsaved-modal-title">
+            <div className={styles.modalHeader}>
+              <h3 id="unsaved-modal-title" className={styles.modalTitle}>Alterações não salvas</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={form.cancelNavigation}
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '0.9rem', color: '#334155', margin: 0, lineHeight: 1.55 }}>
+                Existem alterações não salvas na personalização. Se você sair agora, as alterações pendentes serão descartadas.
+              </p>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={form.cancelNavigation}
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                className={styles.btnConfirm}
+                onClick={form.confirmNavigation}
+              >
+                Sair e descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

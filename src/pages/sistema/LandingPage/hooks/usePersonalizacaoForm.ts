@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   getOfficeConfigUI,
   updateOfficeConfig,
@@ -16,6 +17,7 @@ import { useBrandingActions } from '../../../../contexts/BrandingContext';
 import type { PersonalizacaoThemesController } from './usePersonalizacaoThemes';
 
 export function usePersonalizacaoForm() {
+  const navigate = useNavigate();
   const { applyConfig } = useBrandingActions();
   const [saved, setSaved] = useState<LandingPageData>(EMPTY_DATA);
   const [data, setData] = useState<LandingPageData>(EMPTY_DATA);
@@ -23,6 +25,7 @@ export function usePersonalizacaoForm() {
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
   const branding = useBrandingDraft();
   const formDirty = !deepEqual(data, saved);
@@ -57,23 +60,36 @@ export function usePersonalizacaoForm() {
     return () => window.removeEventListener('beforeunload', warnBeforeUnload);
   }, [isDirty]);
 
-  // Guarda de rota 2: alerta ao clicar em links internos com rascunhos não salvos
+  // Guarda de rota 2: modal ao clicar em links internos com rascunhos não salvos
   useEffect(() => {
-    if (!isDirty) return;
+    if (!isDirty) {
+      setPendingNavigationPath(null);
+      return;
+    }
     const confirmInternalNavigation = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const link = target?.closest('a[href]') as HTMLAnchorElement | null;
       if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const destination = new URL(link.href, window.location.href);
       if (destination.origin !== window.location.origin || destination.pathname === window.location.pathname) return;
-      if (!window.confirm('Existem alterações não salvas. Deseja sair e descartá-las?')) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setPendingNavigationPath(`${destination.pathname}${destination.search}${destination.hash}`);
     };
     document.addEventListener('click', confirmInternalNavigation, true);
     return () => document.removeEventListener('click', confirmInternalNavigation, true);
   }, [isDirty]);
+
+  const cancelNavigation = useCallback(() => {
+    setPendingNavigationPath(null);
+  }, []);
+
+  const confirmNavigation = useCallback(() => {
+    if (!pendingNavigationPath) return;
+    const targetPath = pendingNavigationPath;
+    setPendingNavigationPath(null);
+    navigate(targetPath);
+  }, [pendingNavigationPath, navigate]);
 
   const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
     setData(d => ({ ...d, [key]: value }));
@@ -180,6 +196,9 @@ export function usePersonalizacaoForm() {
     branding,
     formDirty,
     isDirty,
+    pendingNavigationPath,
+    cancelNavigation,
+    confirmNavigation,
     applyConfig,
     set,
     discard,
