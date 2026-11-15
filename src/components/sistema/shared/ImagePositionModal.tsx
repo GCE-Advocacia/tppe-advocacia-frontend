@@ -44,7 +44,7 @@ export default function ImagePositionModal({ src, position, aspectRatio, label, 
   }
 
   return (
-    <div className={styles.overlay} onMouseDown={onCancel}>
+    <div className={styles.overlay} data-testid="image-position-modal" onMouseDown={onCancel}>
       <div className={styles.box} onMouseDown={e => e.stopPropagation()}>
         <div className={styles.header}>
           <span className={styles.title}>Reposicionar imagem</span>
@@ -56,6 +56,7 @@ export default function ImagePositionModal({ src, position, aspectRatio, label, 
         <div className={styles.frameWrap}>
           <div
             className={styles.frame}
+            data-testid="image-position-frame"
             style={{ width: frameW, height: frameH }}
             onMouseDown={handleMouseDown}
           >

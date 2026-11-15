@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ImageIcon, Loader2 } from 'lucide-react';
-import { uploadMedia } from '../../../../services/officeConfigService';
+import { uploadMedia, validateMediaFile, MEDIA_ACCEPT } from '../../../../services/officeConfigService';
 import ImagePositionModal from '../../../../components/sistema/shared/ImagePositionModal';
 import styles from '../LandingPage.module.css';
 
@@ -31,8 +31,13 @@ export default function ImageUpload({
   const [showModal, setShowModal] = useState(false);
 
   async function handleFile(file: File) {
-    setUploading(true);
     setError(null);
+    const validationError = validateMediaFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setUploading(true);
     try {
       const url = await uploadMedia(file);
       onChange(url);
@@ -108,10 +113,11 @@ export default function ImageUpload({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={MEDIA_ACCEPT}
           style={{ display: 'none' }}
           onChange={e => {
             const f = e.target.files?.[0];
+            e.target.value = '';
             if (f) handleFile(f);
           }}
         />

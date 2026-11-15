@@ -110,6 +110,7 @@
 .previewDevices button:hover { border-color: #94a3b8; }
 .previewDevices .previewControlActive { border-color: var(--navy); background: var(--navy); color: #fff; }
 .previewStage { width: 100%; margin: 0 auto; container-type: inline-size; transition: width .2s ease; }
+.previewStageDesktop { width: 100%; }
 .previewStageTablet { width: min(100%, 768px); }
 .previewStageMobile { box-sizing: border-box; flex: 0 0 401px; width: 401px; max-width: none; padding: 12px; border: 1px solid #20242d; border-radius: 34px; background: #171a20; box-shadow: 0 12px 32px rgba(15,23,42,.25), inset 0 0 0 2px #454952; }
 .previewShell:has(.previewStageMobile) { overflow-x: auto; padding: 2px 1px 14px; }

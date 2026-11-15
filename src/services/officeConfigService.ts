@@ -66,7 +66,7 @@ export interface OfficeConfigAPI {
 
 function parsePos(s: string | null): { x: number; y: number } {
   if (!s) return { x: 50, y: 50 };
-  const [x, y] = s.split(',').map(Number);
+  const [x, y] = s.split(',').map(v => Number(v.trim()));
   return (isNaN(x) || isNaN(y)) ? { x: 50, y: 50 } : { x, y };
 }
 
@@ -92,16 +92,22 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     advogadoConteudo: api.lawyer_description ?? '',
     advogadoImagem: api.lawyer_image_url ?? '',
     advogadoImagemPos: parsePos(api.lawyer_image_position),
-    diferenciais: (api.differentials ?? []).map((d, i) => ({
-      id: i + 1,
-      titulo: d.title,
-      descricao: d.description,
-    })),
-    areas: (api.areas_of_practice ?? []).map((a, i) => ({
-      id: i + 1,
-      titulo: a.title,
-      descricao: a.description,
-    })),
+    diferenciais: [1, 2, 3].map(i => {
+      const existing = (api.differentials ?? [])[i - 1];
+      return {
+        id: i,
+        titulo: existing?.title ?? '',
+        descricao: existing?.description ?? '',
+      };
+    }),
+    areas: [1, 2, 3, 4, 5, 6].map(i => {
+      const existing = (api.areas_of_practice ?? [])[i - 1];
+      return {
+        id: i,
+        titulo: existing?.title ?? '',
+        descricao: existing?.description ?? '',
+      };
+    }),
     color: api.color ?? '#232C43',
     buttonRadius: api.button_radius ?? '6px',
     colorBgPrimary: api.color_bg_primary ?? '#232C43',
@@ -146,8 +152,12 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     lawyer_description: ui.advogadoConteudo || null,
     lawyer_image_url: ui.advogadoImagem || null,
     lawyer_image_position: `${Math.round(ui.advogadoImagemPos.x)},${Math.round(ui.advogadoImagemPos.y)}`,
-    differentials: ui.diferenciais.map(d => ({ title: d.titulo, description: d.descricao })),
-    areas_of_practice: ui.areas.map(a => ({ title: a.titulo, description: a.descricao })),
+    differentials: ui.diferenciais
+      .filter(d => d.titulo.trim() !== '' || d.descricao.trim() !== '')
+      .map(d => ({ title: d.titulo.trim() || 'Diferencial', description: d.descricao })),
+    areas_of_practice: ui.areas
+      .filter(a => a.titulo.trim() !== '' || a.descricao.trim() !== '')
+      .map(a => ({ title: a.titulo.trim() || 'Área de Atuação', description: a.descricao })),
     color: ui.color || null,
     button_radius: ui.buttonRadius,
     color_bg_primary: ui.colorBgPrimary || null,
@@ -256,6 +266,20 @@ const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
 
 export const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 export const LOGO_ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml';
+
+export const MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+export const MEDIA_ACCEPT = '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp';
+
+export function validateMediaFile(file: File): string | null {
+  if (file.size === 0) return 'O arquivo está vazio. Selecione uma imagem.';
+  if (file.size > MEDIA_MAX_BYTES) return 'A imagem deve ter no máximo 5MB.';
+  const supportedMime = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
+  const supportedExtension = /\.(png|jpe?g|webp)$/i.test(file.name);
+  if (!supportedMime && !(supportedExtension && (!file.type || file.type === 'application/octet-stream'))) {
+    return 'Formato inválido. Use PNG, JPG ou WEBP.';
+  }
+  return null;
+}
 
 /** Early feedback only; the server also decodes and validates the actual image. */
 export function validateLogoFile(file: File): string | null {

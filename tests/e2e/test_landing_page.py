@@ -799,17 +799,48 @@ class TestPersonalizacaoNavegacaoAbas:
         link_processos = logged_in.find_element(By.XPATH, "//a[contains(@href, '/sistema/processos')]")
         scroll_and_click(logged_in, link_processos)
 
-        # Aguarda alerta de confirmação nativo
-        wait.until(EC.alert_is_present())
-        alert = logged_in.switch_to.alert
-        assert "alterações não salvas" in alert.text.lower()
-        alert.dismiss()  # Cancela saída, continua na página de personalização
+        # Aguarda modal customizado de alterações não salvas
+        wait.until(EC.presence_of_element_located((By.ID, "unsaved-modal-title")))
+        modal_title = logged_in.find_element(By.ID, "unsaved-modal-title")
+        assert "alterações não salvas" in modal_title.text.lower()
+
+        # Clica em 'Continuar editando' para cancelar a saída
+        btn_continuar = logged_in.find_element(By.XPATH, "//button[contains(.,'Continuar editando')]")
+        scroll_and_click(logged_in, btn_continuar)
+        wait.until(EC.invisibility_of_element_located((By.ID, "unsaved-modal-title")))
         pause()
+
+        # Permanece na rota de personalização
+        assert "personalizacao" in logged_in.current_url
 
         # Descarta para limpar o estado
         js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
         wait.until(lambda d: not _bottombar_visivel(d))
         pause()
+
+    def test_alternancia_preview_multidispositivo_desktop_tablet_mobile(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Dados Institucionais')]")))
+        pause()
+
+        btn_tablet = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Tablet (768px)']")))
+        scroll_and_click(logged_in, btn_tablet)
+        pause()
+        stage = logged_in.find_element(By.XPATH, "//*[contains(@class, 'previewStage')]")
+        wait.until(lambda d: stage.size["width"] <= 800)
+        assert stage.size["width"] <= 800
+
+        btn_mobile = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Mobile (390px)']")))
+        scroll_and_click(logged_in, btn_mobile)
+        pause()
+        wait.until(lambda d: stage.size["width"] <= 420)
+        assert stage.size["width"] <= 420
+
+        btn_desktop = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Desktop']")))
+        scroll_and_click(logged_in, btn_desktop)
+        pause()
+        wait.until(lambda d: stage.size["width"] > 800)
+        assert stage.size["width"] > 800
 
 
 # ─────────────────────────────────────────────────────────────────────────────
