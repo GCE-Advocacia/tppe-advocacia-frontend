@@ -63,6 +63,23 @@ export default function LandingPageConfig() {
         </p>
       </header>
 
+      {form.pendingNavigation && (
+        <div
+          className={styles.unsavedOverlay}
+          onMouseDown={event => { if (event.target === event.currentTarget) form.continueEditing(); }}
+        >
+          <section className={styles.unsavedDialog} role="dialog" aria-modal="true" aria-labelledby="unsaved-modal-title">
+            <button type="button" className={styles.unsavedClose} aria-label="Fechar" onClick={form.continueEditing}><X size={18} /></button>
+            <h2 id="unsaved-modal-title">Alterações não salvas</h2>
+            <p>Você tem alterações pendentes. Deseja continuar editando ou sair e descartá-las?</p>
+            <div className={styles.unsavedActions}>
+              <button type="button" onClick={form.continueEditing}>Continuar editando</button>
+              <button type="button" onClick={form.discardAndNavigate}>Sair e descartar</button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* ── Abas de Navegação ── */}
       <nav className={styles.tabsBar} role="tablist" aria-label="Abas de Personalização">
         <button

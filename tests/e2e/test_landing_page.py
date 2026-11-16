@@ -798,15 +798,20 @@ class TestPersonalizacaoNavegacaoAbas:
         link_processos = logged_in.find_element(By.XPATH, "//a[contains(@href, '/sistema/processos')]")
         scroll_and_click(logged_in, link_processos)
 
-        # Aguarda alerta de confirmação nativo
-        wait.until(EC.alert_is_present())
-        alert = logged_in.switch_to.alert
-        assert "alterações não salvas" in alert.text.lower()
-        alert.dismiss()  # Cancela saída, continua na página de personalização
-        pause()
+        modal_title = wait.until(EC.visibility_of_element_located((By.ID, "unsaved-modal-title")))
+        assert modal_title.text == "Alterações não salvas"
+        dialog = logged_in.find_element(By.XPATH, "//*[@role='dialog']")
+        assert dialog.is_displayed()
+        logged_in.find_element(By.XPATH, "//button[normalize-space()='Continuar editando']").click()
+        wait.until(EC.invisibility_of_element_located((By.ID, "unsaved-modal-title")))
+        assert "/sistema/personalizacao" in logged_in.current_url
+        assert tel_input.get_attribute("value") == "(11) 99999-0000"
 
-        # Descarta para limpar o estado
-        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
-        wait.until(lambda d: not _bottombar_visivel(d))
+        # Reabre a guarda e confirma a saída descartando o rascunho.
+        link_processos = logged_in.find_element(By.XPATH, "//a[contains(@href, '/sistema/processos')]")
+        scroll_and_click(logged_in, link_processos)
+        wait.until(EC.visibility_of_element_located((By.ID, "unsaved-modal-title")))
+        logged_in.find_element(By.XPATH, "//button[normalize-space()='Sair e descartar']").click()
+        wait.until(EC.url_contains("/sistema/processos"))
         pause()
 

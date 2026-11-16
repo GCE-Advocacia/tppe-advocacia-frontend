@@ -984,3 +984,29 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.unsavedOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 55%);
+}
+
+.unsavedDialog {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 28px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 24%);
+}
+
+.unsavedDialog h2 { margin: 0 36px 12px 0; color: #232c43; font-size: 1.2rem; }
+.unsavedDialog p { margin: 0 0 24px; color: #596273; line-height: 1.5; }
+.unsavedClose { position: absolute; top: 12px; right: 12px; border: 0; background: transparent; cursor: pointer; }
+.unsavedActions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.unsavedActions button { min-height: 40px; padding: 0 15px; border: 1px solid #cbd0d9; border-radius: var(--btn-radius, 6px); background: #fff; color: #232c43; cursor: pointer; }
+.unsavedActions button:last-child { border-color: #232c43; background: #232c43; color: #fff; }
