@@ -4,7 +4,9 @@ export const THEME_CACHE_KEY = 'advocacia_theme_cache';
 
 export function buildThemeTokens(config: Partial<OfficeConfigAPI> | null | undefined): Record<string, string> {
   const brandPrimary = config?.color || config?.color_bg_primary || '#232C43';
-  const brandPrimaryText = config?.color_text_primary || config?.color_title_primary || '#FFFFFF';
+  const brandPrimaryText = resolveSurfaceContrast(brandPrimary) === 'light'
+    ? '#1A1A2E'
+    : (config?.color_text_primary || config?.color_title_primary || '#FFFFFF');
 
   const usesLandingButtons = config?.system_uses_landing_buttons ?? true;
   const brandAccent = (!usesLandingButtons && config?.color_buttons_system)

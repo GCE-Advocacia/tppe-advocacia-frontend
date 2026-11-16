@@ -330,6 +330,8 @@ export default function CoresSection({
         initialThemeName={newThemeName}
         initialThemeDesc={newThemeDesc}
         saving={savingNewTheme}
+        limitReached={themeQuota?.is_limit_reached ?? themes.themes.filter(t => !t.is_predefined).length >= 6}
+        maxCustom={themeQuota?.max_custom ?? 6}
         error={saveNewError}
         onConfirm={(name, desc) => handleSaveCurrentAsTheme(name, desc, brandingSave, applyConfig)}
       />

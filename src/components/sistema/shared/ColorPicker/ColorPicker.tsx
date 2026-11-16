@@ -42,13 +42,13 @@ export function hexToRgb(hex: string, alpha?: number): ColorValue {
       .map((c) => c + c)
       .join("");
   }
-  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(cleanHex);
+  const result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(cleanHex);
   return result
     ? {
         r: Number.parseInt(result[1], 16),
         g: Number.parseInt(result[2], 16),
         b: Number.parseInt(result[3], 16),
-        a: alpha ?? 1,
+        a: alpha ?? (result[4] ? Number.parseInt(result[4], 16) / 255 : 1),
       }
     : { r: 0, g: 0, b: 0, a: alpha ?? 1 };
 }
@@ -59,7 +59,8 @@ export function rgbToHex(color: ColorValue): string {
     const hex = clamped.toString(16);
     return hex.length === 1 ? `0${hex}` : hex;
   };
-  return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`.toUpperCase();
+  const alpha = color.a < 1 ? toHex(color.a * 255) : '';
+  return `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}${alpha}`.toUpperCase();
 }
 
 export function rgbToHsv(color: ColorValue): HSVColorValue {
@@ -241,7 +242,7 @@ export function hslToRgb(
 export function parseColorString(value: string): ColorValue | null {
   const trimmed = value.trim();
   if (trimmed.startsWith("#")) {
-    const hexMatch = trimmed.match(/^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/);
+    const hexMatch = trimmed.match(/^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})$/);
     if (hexMatch) {
       return hexToRgb(trimmed);
     }
@@ -388,7 +389,8 @@ export function ColorPicker(props: ColorPickerProps) {
     setColorState(nextColor);
     setHsvState(rgbToHsv(nextColor));
     if (onValueChange) {
-      onValueChange(colorToString(nextColor, formatState));
+      // The format selector changes editing controls; persisted values remain HEX.
+      onValueChange(rgbToHex(nextColor));
     }
   }, [formatState, onValueChange]);
 
@@ -397,7 +399,7 @@ export function ColorPicker(props: ColorPickerProps) {
     setHsvState(nextHsv);
     setColorState(nextColor);
     if (onValueChange) {
-      onValueChange(colorToString(nextColor, formatState));
+      onValueChange(rgbToHex(nextColor));
     }
   }, [formatState, onValueChange]);
 
@@ -789,13 +791,13 @@ export function ColorPickerInput({ withoutAlpha = false, className = "" }: Color
       <div className={styles.inputGroupWrapper}>
         <input
           type="text"
-          maxLength={7}
+          maxLength={9}
           className={`${styles.formatInput} ${withoutAlpha ? styles.inputIsolated : styles.inputFirst} ${className}`.trim()}
           value={rgbToHex(color)}
           disabled={disabled}
           onChange={(e) => {
             const parsed = parseColorString(e.target.value);
-            if (parsed) setColor({ ...parsed, a: color.a });
+            if (parsed) setColor({ ...parsed, a: e.target.value.trim().length === 9 ? parsed.a : color.a });
           }}
         />
         {!withoutAlpha && (
