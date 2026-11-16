@@ -26,15 +26,30 @@ export type SuccessResponse<T> = {
   data: T;
 };
 
+export type PermissionKey =
+  | 'landing_page'
+  | 'artigos'
+  | 'leads'
+  | 'clientes'
+  | 'agenda'
+  | 'pagamentos'
+  | 'processos'
+  | 'tarefas'
+  | 'notificacoes'
+  | 'logs_api'
+  | 'feriados'
+  | 'financeiro';
+
 export type SessionClaims = {
   sub: string;
   role: 'ADMIN' | 'USER';
   exp: number;
-  can_view_payments?: boolean;
+  permissions?: string[];
 };
 
-export function canViewPayments(claims: SessionClaims | null): boolean {
-  return claims?.role === 'ADMIN' || claims?.can_view_payments === true;
+export function hasPermission(claims: SessionClaims | null, key: PermissionKey): boolean {
+  if (!claims) return false;
+  return claims.role === 'ADMIN' || (claims.permissions ?? []).includes(key);
 }
 
 export class ApiError extends Error {

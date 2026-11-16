@@ -206,6 +206,27 @@
   background: #fafafa;
 }
 
+.permissoesFieldset {
+  border: 1.5px solid #e0e0e0; border-radius: 8px;
+  padding: 12px 14px 14px; margin: 0 0 16px;
+}
+.permissoesFieldset legend { padding: 0 6px; margin-bottom: 0; }
+.permissoesActions { display: flex; gap: 16px; margin-bottom: 10px; }
+.permissoesHint { font-size: .78rem; color: var(--gray); margin-bottom: 10px; }
+.btnLink {
+  background: none; border: none; padding: 0;
+  color: var(--navy); font-family: var(--font-body);
+  font-size: .8rem; font-weight: 600; text-decoration: underline; cursor: pointer;
+}
+.permissoesGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px;
+}
+.permissaoItem {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .85rem; color: var(--text); cursor: pointer;
+}
+.permissaoItem:has(input:disabled) { cursor: default; }
+
 .infoBox {
   display: flex; gap: 10px; align-items: flex-start;
   background: #e8eaf6; border-radius: 8px;

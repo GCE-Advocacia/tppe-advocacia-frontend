@@ -40,7 +40,7 @@ function deferred() {
   return { promise, resolve };
 }
 
-async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 1280, height: 1000 } } = {}) {
+async function setup(t, { role = 'ADMIN', permissions = [], logo = oldLogo, viewport = { width: 1280, height: 1000 } } = {}) {
   const context = await browser.newContext({ viewport });
   context.setDefaultTimeout(10_000);
   context.setDefaultNavigationTimeout(30_000);
@@ -48,7 +48,7 @@ async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 12
   const errors = [];
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   t.after(() => assert.deepEqual(errors, [], 'The application should not throw browser errors'));
-  const token = role ? `test.${Buffer.from(JSON.stringify({ sub: '1', role, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test` : null;
+  const token = role ? `test.${Buffer.from(JSON.stringify({ sub: '1', role, permissions, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test` : null;
   if (token) {
     await context.addInitScript(({ value, origin }) => {
       if (location.origin === origin) localStorage.setItem('advocacia_access_token', value);
@@ -612,14 +612,25 @@ test('logo changes preserve the existing color settings and landing color behavi
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), colors.color);
 });
 
-test('denies unauthenticated and non-admin access without redirect loops', async t => {
+test('denies unauthenticated users and users without landing_page permission without redirect loops', async t => {
   for (const role of [null, 'USER']) {
     const { page, state } = await setup(t, { role });
     await page.goto(`${baseURL}/sistema/personalizacao`);
-    await page.waitForURL(`${baseURL}${role ? '/sistema/clientes' : '/login'}`);
+    await page.waitForURL(`${baseURL}${role ? '/sistema/sem-acesso' : '/login'}`);
     assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
+    await page.goto(`${baseURL}/sistema/landing-page`);
+    await page.waitForURL(`${baseURL}${role ? '/sistema/sem-acesso' : '/login'}`);
     assert.equal(state.uploads.length, 0);
   }
+});
+
+test('landing_page permission opens canonical personalizacao and its sidebar entry', async t => {
+  const { page } = await setup(t, { role: 'USER', permissions: ['landing_page'] });
+  await page.goto(`${baseURL}/sistema/landing-page`);
+  await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=identidade`);
+  await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).waitFor();
+  assert.equal(await page.locator('aside nav a[href="/sistema/personalizacao"]').count(), 1);
+  assert.equal(await page.locator('aside nav a').count(), 1);
 });
 
 test('unavailable logo and favicon assets fall back to the defaults', async t => {
