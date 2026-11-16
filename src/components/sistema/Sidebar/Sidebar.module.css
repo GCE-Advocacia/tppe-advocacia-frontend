@@ -93,6 +93,22 @@
 
 .icon { flex-shrink: 0; }
 
+.iconWrap { position: relative; display: inline-flex; flex-shrink: 0; }
+.alertDot {
+  position: absolute; top: -2px; right: -3px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--crimson-light); box-shadow: 0 0 0 2px var(--navy);
+}
+.alertBadge {
+  display: inline-block; margin-left: 8px; min-width: 20px; padding: 1px 6px;
+  border-radius: 10px; background: var(--crimson-light); color: var(--white);
+  font-size: .72rem; font-weight: 700; text-align: center; vertical-align: middle;
+}
+.srOnly {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
 .label {
   opacity: 1;
   transition: opacity 0.2s;

@@ -13,6 +13,9 @@ export type Payment = {
   payment_date: string;
   amount: string | number | null;
   description: string | null;
+  recurrence_id?: string | null;
+  installment?: number | null;
+  installments?: number | null;
   created_by: number;
   created_at: string;
   updated_at: string;
@@ -24,6 +27,9 @@ export type PaymentWrite = {
   amount: number | null;
   description: string | null;
 };
+
+/** Cadastro aceita a recorrência: total de meses contando o primeiro. */
+export type PaymentCreate = PaymentWrite & { recurrence_months?: number };
 
 export type PaymentUpdate = Partial<PaymentWrite>;
 
@@ -69,7 +75,7 @@ export async function listPayments(params: {
   return apiRequest<Payment[]>(`/payments${suffix}`);
 }
 
-export async function createPayment(payload: PaymentWrite): Promise<Payment> {
+export async function createPayment(payload: PaymentCreate): Promise<Payment> {
   return apiRequest<Payment>('/payments', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -87,8 +93,24 @@ export async function deletePayment(paymentId: number): Promise<void> {
   await apiRequest(`/payments/${paymentId}`, { method: 'DELETE' });
 }
 
-export type ReminderKind = 'D_MINUS_1' | 'D_ZERO';
-export type ReminderStatus = 'SENT' | 'FAILED' | 'NO_EMAIL';
+export type ReminderKind = 'D_MINUS_5' | 'D_MINUS_1' | 'D_ZERO';
+export type ReminderStatus = 'QUEUED' | 'SENT' | 'FAILED' | 'NO_EMAIL';
+
+export const REMINDER_KIND_LABEL: Record<ReminderKind, string> = {
+  D_MINUS_5: 'Lembrete antecipado (5 dias antes)',
+  D_MINUS_1: 'Lembrete da véspera',
+  D_ZERO: 'Lembrete do dia do vencimento',
+};
+
+/** Mesmo dia N meses depois; dia 31 vira o último dia do mês (igual ao backend). */
+export function addMonthsYMD(ymd: string, months: number): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  const index = (m - 1) + months;
+  const year = y + Math.floor(index / 12);
+  const month = index % 12;
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(Math.min(d, lastDay)).padStart(2, '0')}`;
+}
 
 export type PaymentReminder = {
   id: number;
@@ -101,6 +123,7 @@ export type PaymentReminder = {
   email: string | null;
   status: ReminderStatus;
   error_message: string | null;
+  email_outbox_id?: string | null;
   sent_at: string;
 };
 

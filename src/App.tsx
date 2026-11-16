@@ -22,6 +22,7 @@ function ScrollToHash() {
 // Auth
 import Login from './pages/auth/Login';
 import ResetPassword from './pages/auth/ResetPassword';
+import Convite from './pages/auth/Convite';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import PermissionRoute from './components/auth/PermissionRoute';
@@ -55,6 +56,9 @@ import Processos from './pages/sistema/Processos/Processos';
 import Tarefas from './pages/sistema/Tarefas';
 import Artigos_ from './pages/sistema/Artigos_/Artigos';
 import LogsAPI from './pages/sistema/LogsAPI/LogsAPI';
+import EmailLogs from './pages/sistema/EmailLogs/EmailLogs';
+import ModelosEmail from './pages/sistema/ModelosEmail/ModelosEmail';
+import ConfiguracoesEmail from './pages/sistema/ConfiguracoesEmail/ConfiguracoesEmail';
 import Feriados from './pages/sistema/Feriados/Feriados';
 import Financeiro from './pages/sistema/Financeiro/Financeiro';
 import SemAcesso from './pages/sistema/SemAcesso/SemAcesso';
@@ -71,6 +75,8 @@ const PAGINAS: Record<AbaPath, ComponentType> = {
   tarefas: Tarefas,
   notificacoes: Notificacoes,
   'logs-api': LogsAPI,
+  emails: EmailLogs,
+  'configuracoes-email': ConfiguracoesEmail,
   feriados: Feriados,
   financeiro: Financeiro,
 };
@@ -123,6 +129,7 @@ export default function App() {
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/convite/:token" element={<Convite />} />
 
         {/* Sistema */}
         <Route element={<ProtectedRoute />}>
@@ -139,6 +146,9 @@ export default function App() {
                 </Route>
               );
             })}
+            <Route element={<AdminRoute />}>
+              <Route path="modelos-email" element={<ModelosEmail />} />
+            </Route>
             <Route path="landing-page" element={<Navigate to="/sistema/personalizacao" replace />} />
             <Route path={SEM_ACESSO_PATH} element={<SemAcesso />} />
           </Route>
