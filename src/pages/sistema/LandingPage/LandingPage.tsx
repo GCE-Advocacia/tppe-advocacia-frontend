@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Palette, Globe, Loader2, X, Check } from 'lucide-react';
 import IdentidadeVisualTab from './tabs/IdentidadeVisualTab';
 import LandingPageConteudoTab from './tabs/LandingPageConteudoTab';
+import SaveThemeModal from './components/SaveThemeModal';
 import { usePersonalizacaoForm } from './hooks/usePersonalizacaoForm';
 import { usePersonalizacaoThemes } from './hooks/usePersonalizacaoThemes';
 import styles from './LandingPage.module.css';
@@ -131,7 +132,7 @@ export default function LandingPageConfig() {
             type="button"
             className={styles.btnDiscard}
             onClick={handleDiscard}
-            disabled={form.saving || !form.isDirty}
+            disabled={form.saving || (!form.isDirty && !form.saveError)}
           >
             <X size={15} /> Descartar
           </button>
@@ -222,6 +223,24 @@ export default function LandingPageConfig() {
           </div>
         </div>
       )}
+
+      {/* ── Modal Global: Salvar/Fork de Tema Personalizado (funciona em qualquer aba) ── */}
+      <SaveThemeModal
+        isOpen={themes.showSaveCurrentModal}
+        onClose={themes.closeSaveModal}
+        isForkingPredefined={themes.isForkingPredefined}
+        baseThemeName={themes.baseTheme?.name}
+        colors={form.data}
+        initialThemeName={themes.newThemeName}
+        initialThemeDesc={themes.newThemeDesc}
+        saving={themes.savingNewTheme}
+        limitReached={themes.themeQuota?.is_limit_reached ?? themes.themes.filter(t => !t.is_predefined).length >= 6}
+        maxCustom={themes.themeQuota?.max_custom ?? 6}
+        error={themes.saveNewError}
+        onConfirm={(name, desc) =>
+          themes.handleSaveCurrentAsTheme(name, desc, form.branding.save, form.applyConfig)
+        }
+      />
     </div>
   );
 }

@@ -114,7 +114,19 @@
 .previewStageTablet { width: min(100%, 768px); }
 .previewStageMobile { box-sizing: border-box; flex: 0 0 401px; width: 401px; max-width: none; padding: 12px; border: 1px solid #20242d; border-radius: 34px; background: #171a20; box-shadow: 0 12px 32px rgba(15,23,42,.25), inset 0 0 0 2px #454952; }
 .previewShell:has(.previewStageMobile) { overflow-x: auto; padding: 2px 1px 14px; }
-.previewStageMobile .previewFrame { height: 640px; min-height: 0; border: 0; border-radius: 24px; scroll-behavior: smooth; scrollbar-width: thin; }
+.previewStageMobile .previewFrame {
+  height: 640px;
+  min-height: 0;
+  border: 0;
+  border-radius: 24px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.previewStageMobile .previewFrame::-webkit-scrollbar {
+  display: none;
+}
+.previewStageTablet .previewLanding,
 .previewStageMobile .previewLanding { box-sizing: border-box; min-width: 0; width: 100%; }
 .previewLanding {
   position: relative;
@@ -125,22 +137,42 @@
   color: #1A1A2E;
   font-family: var(--font-body);
 }
+.previewLanding h1,
+.previewLanding h2,
+.previewLanding h3,
+.previewLanding p,
+.previewLanding a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .previewLanding a { text-decoration: none; }
 .pvNav {
   position: sticky;
   top: 0;
   z-index: 10;
   height: 110px;
-  padding: 0 80px;
+  padding: 0 clamp(24px, 4cqw, 80px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--pv-bg-primary);
 }
-.pvNav > a:first-child { display: flex; width: 228px; height: 100px; align-items: center; justify-content: center; }
+.pvNav > a:first-child { display: flex; width: 228px; height: 100px; align-items: center; justify-content: center; flex-shrink: 0; }
 .pvNav > a:first-child img { width: auto; height: auto; max-height: 90px; }
-.pvNav > div { display: flex; align-items: center; gap: 25px; }
-.pvNav > div a { color: var(--pv-link-primary); font-size: .85rem; }
+.pvNav > div { display: flex; align-items: center; gap: clamp(14px, 1.8cqw, 32px); flex-shrink: 1; }
+.pvNav > div a {
+  color: var(--pv-link-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(0.78rem, 1.05cqw, 16px);
+  font-weight: 400;
+  line-height: 22.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  flex-shrink: 0;
+  transition: color .2s;
+}
 .pvNav > div a:hover { color: #fff; }
 .pvButton {
   display: inline-flex;
@@ -156,13 +188,33 @@
   cursor: pointer;
 }
 .pvButton:hover { background: var(--pv-button-hover); transform: translateY(-1px); }
+
+.pvNav > .pvButton {
+  display: flex;
+  width: 200px;
+  height: 51px;
+  padding: 12px 20px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  aspect-ratio: 200 / 51;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
 .pvHero { min-height: 100vh; padding: 180px 0 120px; display: flex; align-items: center; background: var(--pv-bg-primary); color: var(--pv-text-primary); }
 .pvHeroContent { width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 80px; display: flex; align-items: center; gap: 20px; }
-.pvHeroCopy { display: flex; flex: 1; flex-direction: column; align-items: flex-start; }
+.pvHeroCopy { display: flex; flex: 1; min-width: 0; max-width: 100%; flex-direction: column; align-items: flex-start; }
 .pvKicker { color: var(--pv-text-primary); opacity: .8; font-size: .72rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 16px; }
 .pvHero h1 { max-width: 600px; margin-bottom: 20px; color: var(--pv-title-primary); font-family: 'Montserrat', sans-serif; font-size: clamp(2.4rem, 4.4vw, 4rem); font-weight: 800; line-height: 1.1; }
 .pvHeroCopy > p:not(.pvKicker) { max-width: 640px; margin-bottom: 40px; color: var(--pv-text-primary); font-size: 1.1rem; line-height: 1.65; }
-.pvActions { display: flex; flex-wrap: wrap; gap: 16px; }
+.pvActions { display: flex; flex-wrap: wrap; gap: 16px; max-width: 100%; }
 .pvOutline { display: inline-flex; padding: 13px 24px; align-items: center; border: 1.5px solid rgba(255,255,255,.45); border-radius: var(--pv-button-radius, 6px); color: var(--pv-title-primary); font-size: .9rem; font-weight: 600; }
 .pvOutline:hover { border-color: #fff; background: rgba(255,255,255,.06); }
 .pvHeroDivider { flex: 0 0 8px; height: 600px; background: #661C16; }
@@ -206,19 +258,82 @@
 .pvForm input, .pvForm textarea { display: block; width: 100%; margin-top: 8px; padding: 12px 14px; border: 1.5px solid #E5E3DF; border-radius: 4px; background: #fff; font: .95rem var(--font-body); }
 .pvForm textarea { height: 100px; resize: none; }
 .pvForm > p { color: var(--pv-text-secondary); font-size: .78rem; }
-.pvFooter { padding: 40px 80px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; background: var(--pv-bg-primary); color: var(--pv-text-primary); }
-.pvFooter > div:first-child img { max-width: 180px; max-height: 70px; margin-bottom: 20px; }
-.pvFooter p { font-size: .75rem; opacity: .7; }
-.pvFooter nav, .pvFooter > div:last-child { display: flex; flex-wrap: wrap; gap: 20px; }
-.pvFooter a { color: var(--pv-link-primary); font-size: .85rem; }
+.pvFooter {
+  background: var(--pv-bg-primary);
+  color: var(--pv-text-primary);
+  padding: 40px 0;
+}
+.pvFooterInner {
+  padding: 0 clamp(24px, 4cqw, 80px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.pvFooterLogo {
+  display: flex;
+  align-items: center;
+}
+.pvFooterLogo img {
+  height: 70px;
+  width: auto;
+  max-width: 228px;
+}
+.pvFooterLinks {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  flex-wrap: wrap;
+}
+.pvFooterLinks a,
+.pvFooterSocial a {
+  color: var(--pv-link-primary);
+  font-size: .85rem;
+  transition: color .2s;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.pvFooterLinks a:hover,
+.pvFooterSocial a:hover {
+  color: #fff;
+}
+.pvFooterSocial {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.pvFooterBottom {
+  margin: 20px 0 0;
+  padding: 20px clamp(24px, 4cqw, 80px) 0;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  font-size: .75rem;
+  color: var(--pv-text-primary);
+  opacity: .7;
+}
+.pvFooterBottom::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: clamp(24px, 4cqw, 80px);
+  right: clamp(24px, 4cqw, 80px);
+  height: 1px;
+  background: rgba(255, 255, 255, .1);
+}
 
 @container (max-width: 900px) {
   .pvNav { height: 72px; padding: 0 24px; }
   .pvNav > a:first-child { width: 150px; height: auto; }
   .pvNav > div, .pvNav > .pvButton { display: none; }
-  .pvHero { min-height: unset; padding: 112px 0 60px; }
-  .pvHeroContent { padding: 0 24px; flex-direction: column; align-items: flex-start; gap: 32px; }
-  .pvHero h1 { font-size: 2.5rem; }
+  .pvHero { min-height: unset; padding: 80px 0 60px; }
+  .pvHeroContent { padding: 0 24px; flex-direction: column; align-items: stretch; gap: 28px; }
+  .pvHeroCopy { width: 100%; min-width: 0; }
+  .pvHero h1 { max-width: 100%; font-size: clamp(1.65rem, 6cqw, 2.3rem); line-height: 1.18; }
+  .pvHeroCopy > p:not(.pvKicker) { max-width: 100%; font-size: 0.98rem; margin-bottom: 28px; }
+  .pvActions { width: 100%; }
   .pvHeroDivider { display: none; }
   .pvHeroImage { display: none; }
   .pvSplit, .pvContactGrid { padding: 0 24px; grid-template-columns: 1fr; gap: 40px; }
@@ -228,7 +343,10 @@
   .pvAboutSplit { padding: 0 24px; flex-direction: column; gap: 40px; }
   .pvAboutImageWrap { width: 100%; height: 400px; flex-basis: auto; }
   .pvAboutDivider { width: 100%; height: 8px; }
-  .pvFooter { padding: 40px 24px; }
+  .pvFooterInner { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .pvFooterLinks { flex-wrap: wrap; gap: 12px 20px; }
+  .pvFooterSocial { flex-wrap: wrap; gap: 12px 16px; }
+  .pvFooterBottom { flex-direction: column; gap: 8px; }
 }
 
 /* ── Fields ── */

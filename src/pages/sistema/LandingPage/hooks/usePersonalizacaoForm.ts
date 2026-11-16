@@ -93,6 +93,7 @@ export function usePersonalizacaoForm() {
   }, [pendingNavigationPath, navigate]);
 
   const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
+    setSaveError(null);
     setData(d => ({ ...d, [key]: value }));
   }, []);
 
@@ -115,6 +116,7 @@ export function usePersonalizacaoForm() {
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
     if (
       formDirty &&
+      themesCtrl.isColorsDirty &&
       (!themesCtrl.baseTheme || themesCtrl.baseTheme.is_predefined || data.themeId === null) &&
       themesCtrl.isBaseThemeModified
     ) {
@@ -132,7 +134,7 @@ export function usePersonalizacaoForm() {
     try {
       await branding.save();
       if (formDirty) {
-        if (themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
+        if (themesCtrl.isColorsDirty && themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
           await updateTheme(themesCtrl.baseTheme.id, {
             name: themesCtrl.baseTheme.name,
             description: themesCtrl.baseTheme.description,
@@ -171,9 +173,12 @@ export function usePersonalizacaoForm() {
       }
       setConfirmThemeUpdate(false);
     } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.'
-      );
+      const msg = err instanceof Error ? err.message : '';
+      if (/networkerror|failed to fetch/i.test(msg)) {
+        setSaveError('Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.');
+      } else {
+        setSaveError(msg || 'Erro ao salvar. Verifique sua conexão e tente novamente.');
+      }
     } finally {
       setSaving(false);
     }
