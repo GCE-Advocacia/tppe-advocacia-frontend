@@ -115,6 +115,7 @@ export function usePersonalizacaoForm() {
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
     if (
       formDirty &&
+      themesCtrl.isColorsDirty &&
       (!themesCtrl.baseTheme || themesCtrl.baseTheme.is_predefined || data.themeId === null) &&
       themesCtrl.isBaseThemeModified
     ) {
@@ -132,7 +133,7 @@ export function usePersonalizacaoForm() {
     try {
       await branding.save();
       if (formDirty) {
-        if (themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
+        if (themesCtrl.isColorsDirty && themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
           await updateTheme(themesCtrl.baseTheme.id, {
             name: themesCtrl.baseTheme.name,
             description: themesCtrl.baseTheme.description,
