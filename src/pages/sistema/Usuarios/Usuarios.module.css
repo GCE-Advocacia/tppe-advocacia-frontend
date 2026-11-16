@@ -53,7 +53,8 @@
 }
 
 .table th {
-  padding: 14px 20px;
+  white-space: nowrap;
+  padding: 14px 14px;
   text-align: left;
   font-size: .72rem; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
@@ -67,7 +68,8 @@
 .table tbody tr:last-child { border-bottom: none; }
 .table tbody tr:hover { background: #fafafa; }
 
-.table td { padding: 16px 20px; vertical-align: top; }
+.table td { padding: 16px 14px; vertical-align: top; }
+.table td:last-child { white-space: nowrap; }
 
 .userName { font-weight: 700; color: var(--navy); font-size: .95rem; margin-bottom: 4px; }
 .userSub  { font-size: .8rem; color: var(--gray); line-height: 1.5; }
@@ -83,10 +85,13 @@
   width: fit-content;
 }
 
-.date    { font-size: .9rem; color: var(--text); font-weight: 500; }
+.inviteCell { display: flex; flex-direction: column; gap: 4px; }
+.inviteSent { font-size: .72rem; color: var(--gray); white-space: nowrap; }
+
+.date    { font-size: .9rem; color: var(--text); font-weight: 500; white-space: nowrap; }
 .dateSub { font-size: .78rem; color: var(--gray); margin-top: 2px; }
 
-.acoes { display: flex; gap: 12px; align-items: center; }
+.acoes { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
 
 .iconBtn {
   background: none; border: none; cursor: pointer;

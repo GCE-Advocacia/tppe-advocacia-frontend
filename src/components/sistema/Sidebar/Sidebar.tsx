@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   User,
@@ -7,6 +7,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { getSessionClaims } from '../../../services/api';
+import { getEmailHealth } from '../../../services/emailLogs';
 import { logout } from '../../../services/auth';
 import { ABAS, canAccessAba } from '../../../config/abas';
 import BrandLogo from '../../BrandLogo/BrandLogo';
@@ -19,6 +20,22 @@ export default function Sidebar() {
   const claims = getSessionClaims();
   const role = claims?.role === 'ADMIN' ? 'Administrador' : 'Usuário';
   const abasVisiveis = ABAS.filter(aba => canAccessAba(claims, aba));
+  const isAdmin = claims?.role === 'ADMIN';
+  // Alertas do envio de e-mail aparecem no menu mesmo com o SMTP fora.
+  const [emailAlerts, setEmailAlerts] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let active = true;
+    const load = () => {
+      getEmailHealth()
+        .then(h => { if (active) setEmailAlerts(h.alerts.length); })
+        .catch(() => {});
+    };
+    load();
+    const timer = window.setInterval(load, 120000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [isAdmin]);
 
   function handleLogout() {
     logout();
@@ -69,8 +86,21 @@ export default function Sidebar() {
               }
               onClick={() => setMobileOpen(false)}
             >
-              <Icon size={20} strokeWidth={1.6} className={styles.icon} />
-              <span className={styles.label}>{label}</span>
+              <span className={styles.iconWrap}>
+                <Icon size={20} strokeWidth={1.6} className={styles.icon} />
+                {path === 'emails' && emailAlerts > 0 && (
+                  <span className={styles.alertDot} aria-hidden="true" />
+                )}
+              </span>
+              <span className={styles.label}>
+                {label}
+                {path === 'emails' && emailAlerts > 0 && (
+                  <span className={styles.alertBadge}>
+                    {emailAlerts}
+                    <span className={styles.srOnly}> alerta(s) de envio</span>
+                  </span>
+                )}
+              </span>
             </NavLink>
           ))}
         </nav>
