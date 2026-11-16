@@ -132,7 +132,7 @@ export default function LandingPageConfig() {
             type="button"
             className={styles.btnDiscard}
             onClick={handleDiscard}
-            disabled={form.saving || !form.isDirty}
+            disabled={form.saving || (!form.isDirty && !form.saveError)}
           >
             <X size={15} /> Descartar
           </button>

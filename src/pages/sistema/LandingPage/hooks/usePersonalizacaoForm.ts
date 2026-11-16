@@ -93,6 +93,7 @@ export function usePersonalizacaoForm() {
   }, [pendingNavigationPath, navigate]);
 
   const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
+    setSaveError(null);
     setData(d => ({ ...d, [key]: value }));
   }, []);
 
