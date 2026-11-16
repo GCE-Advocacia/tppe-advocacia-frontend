@@ -46,6 +46,12 @@
   border-color: #fecaca;
 }
 
+.quotaWarning {
+  margin: 0 0 12px;
+  color: #b91c1c;
+  font-size: 0.84rem;
+}
+
 .btnNewTheme {
   display: inline-flex;
   align-items: center;

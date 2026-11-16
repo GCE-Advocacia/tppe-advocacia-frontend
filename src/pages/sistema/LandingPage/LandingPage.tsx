@@ -154,6 +154,30 @@ export default function LandingPageConfig() {
         </div>
       </div>
 
+      {form.confirmThemeUpdate && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox} role="dialog" aria-modal="true" aria-labelledby="update-theme-title">
+            <div className={styles.modalHeader}>
+              <h3 id="update-theme-title" className={styles.modalTitle}>Salvar alterações no tema</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>Atualize o tema “{themes.baseTheme?.name}” ou preserve o original salvando uma cópia.</p>
+              {form.saveError && <p role="alert" className={styles.modalError}>{form.saveError}</p>}
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnCancel} disabled={form.saving} onClick={() => form.setConfirmThemeUpdate(false)}>Cancelar</button>
+              <button type="button" className={styles.btnCancel} disabled={form.saving} onClick={() => {
+                form.setConfirmThemeUpdate(false);
+                themes.openCopyModal();
+              }}>Salvar como uma cópia separada</button>
+              <button type="button" className={styles.btnConfirm} disabled={form.saving} onClick={() => form.save(themes, true)}>
+                {form.saving ? 'Salvando...' : 'Atualizar tema'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Modal: Alterações não salvas ao sair da página ── */}
       {form.pendingNavigationPath && (
         <div

@@ -24,6 +24,7 @@ export function usePersonalizacaoForm() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmThemeUpdate, setConfirmThemeUpdate] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
@@ -107,7 +108,7 @@ export function usePersonalizacaoForm() {
     }
   }, [saved, branding]);
 
-  const save = useCallback(async (themesCtrl: PersonalizacaoThemesController) => {
+  const save = useCallback(async (themesCtrl: PersonalizacaoThemesController, confirmed = false) => {
     if (saving || !isDirty || (branding.dirty && !branding.ready)) return;
     setSaveError(null);
 
@@ -117,18 +118,12 @@ export function usePersonalizacaoForm() {
       (!themesCtrl.baseTheme || themesCtrl.baseTheme.is_predefined || data.themeId === null) &&
       themesCtrl.isBaseThemeModified
     ) {
-      const maxCustom = themesCtrl.themeQuota?.max_custom ?? 6;
-      const customCount = themesCtrl.themeQuota
-        ? themesCtrl.themeQuota.custom_count
-        : themesCtrl.themes.filter(t => !t.is_predefined).length;
-
-      if (customCount >= maxCustom) {
-        setSaveError(
-          `Limite máximo de ${maxCustom} temas personalizados atingido. Para salvar essas alterações, exclua um tema existente na biblioteca.`
-        );
-        return;
-      }
       themesCtrl.openForkModal();
+      return;
+    }
+
+    if (formDirty && themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified && !confirmed) {
+      setConfirmThemeUpdate(true);
       return;
     }
 
@@ -174,6 +169,7 @@ export function usePersonalizacaoForm() {
         }
         await themesCtrl.fetchThemes();
       }
+      setConfirmThemeUpdate(false);
     } catch (err) {
       setSaveError(
         err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.'
@@ -191,6 +187,8 @@ export function usePersonalizacaoForm() {
     loading,
     loadError,
     saving,
+    confirmThemeUpdate,
+    setConfirmThemeUpdate,
     saveError,
     setSaveError,
     branding,

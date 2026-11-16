@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { X, Check, Loader2 } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
@@ -14,6 +14,8 @@ export interface SaveThemeModalProps {
   saving: boolean;
   error: string | null;
   onConfirm: (name: string, desc: string) => void;
+  limitReached?: boolean;
+  maxCustom?: number;
 }
 
 export default function SaveThemeModal({
@@ -27,7 +29,10 @@ export default function SaveThemeModal({
   saving,
   error,
   onConfirm,
+  limitReached = false,
+  maxCustom = 6,
 }: SaveThemeModalProps) {
+  const titleId = useId();
   const [themeName, setThemeName] = useState(initialThemeName);
   const [themeDesc, setThemeDesc] = useState(initialThemeDesc);
 
@@ -41,13 +46,13 @@ export default function SaveThemeModal({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+    <div className={styles.modalOverlay} onClick={() => { if (!saving) onClose(); }}>
+      <div className={styles.modalBox} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>
+          <h3 id={titleId} className={styles.modalTitle}>
             {isForkingPredefined ? 'Novo Tema Personalizado' : 'Salvar Tema na Biblioteca'}
           </h3>
-          <button type="button" className={styles.modalClose} onClick={onClose}>
+          <button type="button" className={styles.modalClose} onClick={onClose} disabled={saving} aria-label="Fechar">
             <X size={18} />
           </button>
         </div>
@@ -106,7 +111,8 @@ export default function SaveThemeModal({
             />
           </div>
 
-          {error && <p className={styles.modalError}>{error}</p>}
+          {limitReached && <p className={styles.modalError} role="alert">Limite máximo de {maxCustom} temas personalizados atingido. Exclua um tema na biblioteca para liberar espaço.</p>}
+          {error && <p className={styles.modalError} role="alert">{error}</p>}
         </div>
 
         <div className={styles.modalActions}>
@@ -122,7 +128,7 @@ export default function SaveThemeModal({
             type="button"
             className={styles.btnConfirm}
             onClick={() => onConfirm(themeName, themeDesc)}
-            disabled={saving || !themeName.trim()}
+            disabled={saving || limitReached || !themeName.trim()}
           >
             {saving ? (
               <>
