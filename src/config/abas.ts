@@ -11,12 +11,14 @@ import {
   Bell,
   Activity,
   CalendarX2,
+  Mail,
+  AtSign,
   type LucideIcon,
 } from 'lucide-react';
 import { hasPermission, type PermissionKey, type SessionClaims } from '../services/api';
 
 export type Aba = {
-  /** Permissão exigida; `null` = exclusiva do ADMIN (Usuários). */
+  /** Permissão exigida; `null` = exclusiva do ADMIN. */
   key: PermissionKey | null;
   label: string;
   /** Segmento da rota dentro de /sistema. */
@@ -37,8 +39,10 @@ export const ABAS = [
   { key: 'tarefas',      label: 'Tarefas',      path: 'tarefas',      icon: LayoutList },
   { key: 'notificacoes', label: 'Notificações', path: 'notificacoes', icon: Bell },
   { key: 'logs_api',     label: 'Logs DataJud', path: 'logs-api',     icon: Activity },
+  { key: null,           label: 'E-mails',      path: 'emails',       icon: Mail },
   { key: 'feriados',     label: 'Feriados',     path: 'feriados',     icon: CalendarX2 },
   { key: 'financeiro',   label: 'Financeiro',   path: 'financeiro',   icon: Wallet },
+  { key: null,           label: 'E-mail do escritório', path: 'configuracoes-email', icon: AtSign },
 ] as const satisfies readonly Aba[];
 
 export type AbaPath = (typeof ABAS)[number]['path'];
