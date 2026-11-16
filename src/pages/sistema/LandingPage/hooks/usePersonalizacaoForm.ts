@@ -172,9 +172,12 @@ export function usePersonalizacaoForm() {
       }
       setConfirmThemeUpdate(false);
     } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.'
-      );
+      const msg = err instanceof Error ? err.message : '';
+      if (/networkerror|failed to fetch/i.test(msg)) {
+        setSaveError('Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.');
+      } else {
+        setSaveError(msg || 'Erro ao salvar. Verifique sua conexão e tente novamente.');
+      }
     } finally {
       setSaving(false);
     }

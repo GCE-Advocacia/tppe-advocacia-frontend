@@ -61,11 +61,14 @@ function translatePydanticMsg(msg: string, ctx: Record<string, unknown> | undefi
   if (msg === 'Field required') return 'Campo obrigatório.';
   if (/valid email/i.test(msg)) return 'E-mail inválido.';
   if (/valid integer/i.test(msg)) return 'Valor inválido.';
+  if (/^URL |valid URL|relative URL|url_parsing|URL scheme/i.test(msg)) {
+    return 'URL inválida. Insira um link completo iniciando com https:// ou http://';
+  }
   return msg;
 }
 
 function parseMessage(message: unknown): string {
-  if (typeof message === 'string') return message;
+  if (typeof message === 'string') return translatePydanticMsg(message, undefined);
   if (message && typeof message === 'object' && 'msg' in message) {
     const m = message as Record<string, unknown>;
     const ctx = m.ctx && typeof m.ctx === 'object' ? (m.ctx as Record<string, unknown>) : undefined;
@@ -129,10 +132,25 @@ export async function apiRequest<T>(
     requestHeaders.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...requestOptions,
-    headers: requestHeaders,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...requestOptions,
+      headers: requestHeaders,
+    });
+  } catch (networkErr) {
+    if (
+      networkErr instanceof TypeError ||
+      (networkErr instanceof Error && /networkerror|failed to fetch/i.test(networkErr.message))
+    ) {
+      throw new ApiError(
+        'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.',
+        0,
+        'NETWORK_ERROR',
+      );
+    }
+    throw networkErr;
+  }
 
   if (response.status === 204) return undefined as T;
 
@@ -156,9 +174,24 @@ export async function apiRequest<T>(
 
 export async function apiDownload(path: string): Promise<Blob> {
   const token = getAccessToken();
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  } catch (networkErr) {
+    if (
+      networkErr instanceof TypeError ||
+      (networkErr instanceof Error && /networkerror|failed to fetch/i.test(networkErr.message))
+    ) {
+      throw new ApiError(
+        'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.',
+        0,
+        'NETWORK_ERROR',
+      );
+    }
+    throw networkErr;
+  }
 
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ErrorBody;
