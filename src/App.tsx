@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, type ComponentType } from 'react';
 
 function ScrollToHash() {
   const { hash } = useLocation();
@@ -25,8 +25,9 @@ import ResetPassword from './pages/auth/ResetPassword';
 import Convite from './pages/auth/Convite';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
-import PaymentsViewRoute from './components/auth/PaymentsViewRoute';
+import PermissionRoute from './components/auth/PermissionRoute';
 import { getSessionClaims } from './services/api';
+import { ABAS, SEM_ACESSO_PATH, defaultSistemaPath, type AbaPath } from './config/abas';
 
 // Landing page components
 import Navbar from './components/Navbar/Navbar';
@@ -60,6 +61,25 @@ import ModelosEmail from './pages/sistema/ModelosEmail/ModelosEmail';
 import ConfiguracoesEmail from './pages/sistema/ConfiguracoesEmail/ConfiguracoesEmail';
 import Feriados from './pages/sistema/Feriados/Feriados';
 import Financeiro from './pages/sistema/Financeiro/Financeiro';
+import SemAcesso from './pages/sistema/SemAcesso/SemAcesso';
+
+const PAGINAS: Record<AbaPath, ComponentType> = {
+  usuarios: Usuarios,
+  personalizacao: LandingPageConfig,
+  artigos: Artigos_,
+  leads: Leads,
+  clientes: Clientes,
+  agenda: Agenda,
+  pagamentos: Pagamentos,
+  processos: Processos,
+  tarefas: Tarefas,
+  notificacoes: Notificacoes,
+  'logs-api': LogsAPI,
+  emails: EmailLogs,
+  'configuracoes-email': ConfiguracoesEmail,
+  feriados: Feriados,
+  financeiro: Financeiro,
+};
 
 function LandingPage() {
   return (
@@ -79,21 +99,6 @@ function LandingPage() {
   );
 }
 
-function SystemThemeModeListener() {
-  const { search } = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(search);
-    const mode = params.get('themeMode');
-    if (mode === 'immersive' || mode === 'highlights') {
-      try {
-        localStorage.setItem('advocacia_system_theme_mode', mode);
-      } catch {}
-      document.documentElement.dataset.systemThemeMode = mode;
-    }
-  }, [search]);
-  return null;
-}
-
 function GoogleCalendarRedirect() {
   const { search } = useLocation();
   const params = new URLSearchParams(search);
@@ -104,10 +109,9 @@ function GoogleCalendarRedirect() {
   return null;
 }
 
-// Leads é restrito a ADMIN; funcionários iriam para /sistema em loop.
+// Primeira aba liberada; sem nenhuma, a página "sem acesso" (que não redireciona, então não há loop).
 function SistemaIndexRedirect() {
-  const isAdmin = getSessionClaims()?.role === 'ADMIN';
-  return <Navigate to={isAdmin ? 'leads' : 'clientes'} replace />;
+  return <Navigate to={defaultSistemaPath(getSessionClaims())} replace />;
 }
 
 export default function App() {
@@ -117,7 +121,6 @@ export default function App() {
         <OfficeButtonRadius />
         <BrowserRouter>
           <ScrollToHash />
-          <SystemThemeModeListener />
           <Routes>
         {/* Landing page pública */}
         <Route path="/" element={<><GoogleCalendarRedirect /><LandingPage /></>} />
@@ -132,35 +135,22 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/sistema" element={<SistemaLayout />}>
             <Route index element={<SistemaIndexRedirect />} />
+            {ABAS.map(aba => {
+              const Pagina = PAGINAS[aba.path];
+              return (
+                <Route
+                  key={aba.path}
+                  element={aba.key === null ? <AdminRoute /> : <PermissionRoute permission={aba.key} />}
+                >
+                  <Route path={aba.path} element={<Pagina />} />
+                </Route>
+              );
+            })}
             <Route element={<AdminRoute />}>
-              <Route path="usuarios" element={<Usuarios />} />
-              <Route path="personalizacao" element={<LandingPageConfig />} />
-              <Route path="landing-page" element={<Navigate to="/sistema/personalizacao" replace />} />
-            </Route>
-            <Route path="artigos" element={<Artigos_ />} />
-            <Route element={<AdminRoute />}>
-              <Route path="leads" element={<Leads />} />
-            </Route>
-            <Route path="clientes" element={<Clientes />} />
-            <Route path="agenda" element={<Agenda />} />
-            <Route element={<PaymentsViewRoute />}>
-              <Route path="pagamentos" element={<Pagamentos />} />
-            </Route>
-            <Route path="processos" element={<Processos />} />
-            <Route path="tarefas" element={<Tarefas />} />
-            <Route path="notificacoes" element={<Notificacoes />} />
-            <Route element={<AdminRoute />}>
-              <Route path="logs-api" element={<LogsAPI />} />
-              <Route path="emails" element={<EmailLogs />} />
               <Route path="modelos-email" element={<ModelosEmail />} />
-              <Route path="configuracoes-email" element={<ConfiguracoesEmail />} />
             </Route>
-            <Route element={<AdminRoute />}>
-              <Route path="feriados" element={<Feriados />} />
-            </Route>
-            <Route element={<AdminRoute />}>
-              <Route path="financeiro" element={<Financeiro />} />
-            </Route>
+            <Route path="landing-page" element={<Navigate to="/sistema/personalizacao" replace />} />
+            <Route path={SEM_ACESSO_PATH} element={<SemAcesso />} />
           </Route>
         </Route>
       </Routes>

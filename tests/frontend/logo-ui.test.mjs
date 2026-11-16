@@ -40,7 +40,7 @@ function deferred() {
   return { promise, resolve };
 }
 
-async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 1280, height: 1000 } } = {}) {
+async function setup(t, { role = 'ADMIN', permissions = [], logo = oldLogo, viewport = { width: 1280, height: 1000 } } = {}) {
   const context = await browser.newContext({ viewport });
   context.setDefaultTimeout(10_000);
   context.setDefaultNavigationTimeout(30_000);
@@ -48,7 +48,7 @@ async function setup(t, { role = 'ADMIN', logo = oldLogo, viewport = { width: 12
   const errors = [];
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   t.after(() => assert.deepEqual(errors, [], 'The application should not throw browser errors'));
-  const token = role ? `test.${Buffer.from(JSON.stringify({ sub: '1', role, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test` : null;
+  const token = role ? `test.${Buffer.from(JSON.stringify({ sub: '1', role, permissions, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test` : null;
   if (token) {
     await context.addInitScript(({ value, origin }) => {
       if (location.origin === origin) localStorage.setItem('advocacia_access_token', value);
@@ -612,14 +612,25 @@ test('logo changes preserve the existing color settings and landing color behavi
   assert.equal(await page.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), colors.color);
 });
 
-test('denies unauthenticated and non-admin access without redirect loops', async t => {
+test('denies unauthenticated users and users without landing_page permission without redirect loops', async t => {
   for (const role of [null, 'USER']) {
     const { page, state } = await setup(t, { role });
     await page.goto(`${baseURL}/sistema/personalizacao`);
-    await page.waitForURL(`${baseURL}${role ? '/sistema/clientes' : '/login'}`);
+    await page.waitForURL(`${baseURL}${role ? '/sistema/sem-acesso' : '/login'}`);
     assert.equal(await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).count(), 0);
+    await page.goto(`${baseURL}/sistema/landing-page`);
+    await page.waitForURL(`${baseURL}${role ? '/sistema/sem-acesso' : '/login'}`);
     assert.equal(state.uploads.length, 0);
   }
+});
+
+test('landing_page permission opens canonical personalizacao and its sidebar entry', async t => {
+  const { page } = await setup(t, { role: 'USER', permissions: ['landing_page'] });
+  await page.goto(`${baseURL}/sistema/landing-page`);
+  await page.waitForURL(`${baseURL}/sistema/personalizacao?tab=identidade`);
+  await page.getByRole('heading', { name: 'Logos e ícone do navegador' }).waitFor();
+  assert.equal(await page.locator('aside nav a[href="/sistema/personalizacao"]').count(), 1);
+  assert.equal(await page.locator('aside nav a').count(), 1);
 });
 
 test('unavailable logo and favicon assets fall back to the defaults', async t => {
@@ -797,7 +808,7 @@ test('US14: Financeiro maintains accounting colors and Google Calendar preserves
   }
 });
 
-test('US14: zero-FOUC reload applies tokens from cache immediately and respects systemThemeMode switch', async t => {
+test('US14: zero-FOUC reload applies tokens from cache immediately', async t => {
   const { page, context } = await setup(t);
 
   await context.addInitScript(() => {
@@ -805,23 +816,16 @@ test('US14: zero-FOUC reload applies tokens from cache immediately and respects 
       '--brand-primary': '#1b5e20',
       '--brand-accent': '#e91e63',
     }));
-    localStorage.setItem('advocacia_system_theme_mode', 'immersive');
   });
 
   await page.goto(`${baseURL}/login`);
   const tokens = await page.evaluate(() => ({
     brandPrimary: document.documentElement.style.getPropertyValue('--brand-primary'),
     brandAccent: document.documentElement.style.getPropertyValue('--brand-accent'),
-    themeMode: document.documentElement.dataset.systemThemeMode,
   }));
 
   assert.equal(tokens.brandPrimary, '#1b5e20');
   assert.equal(tokens.brandAccent, '#e91e63');
-  assert.equal(tokens.themeMode, 'immersive');
-
-  await page.goto(`${baseURL}/sistema/clientes?themeMode=highlights`);
-  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'highlights');
-  assert.equal(await page.evaluate(() => localStorage.getItem('advocacia_system_theme_mode')), 'highlights');
 });
 
 test('US14: draft color changes remain isolated and do not leak to system sidebar before saving', async t => {
@@ -848,7 +852,7 @@ test('US14: draft color changes remain isolated and do not leak to system sideba
   assert.equal(await clientesPage.evaluate(() => document.documentElement.style.getPropertyValue('--brand-primary')), '#1a237e');
 });
 
-test('US14: in immersive mode, cards reflect Background 3 (--bg-sobre) and layout reflects Background 2 (--bg-secondary)', async t => {
+test('US14: Background 2 and Background 3 apply to landing page tokens while system surfaces remain neutral clean white', async t => {
   const { page, state } = await setup(t);
   state.config = {
     ...state.config,
@@ -856,14 +860,25 @@ test('US14: in immersive mode, cards reflect Background 3 (--bg-sobre) and layou
     color_bg_sobre: '#f2ece1',     // Background 3
   };
 
-  await page.goto(`${baseURL}/sistema/clientes?themeMode=immersive`);
-  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'immersive');
+  await page.goto(`${baseURL}/sistema/clientes`);
+  await page.waitForFunction(() => document.documentElement.style.getPropertyValue('--bg-secondary') === '#fbf7ee');
 
+  // Verify landing tokens are updated
+  const bgSecondary = await page.evaluate(() => document.documentElement.style.getPropertyValue('--bg-secondary'));
+  const bgSobre = await page.evaluate(() => document.documentElement.style.getPropertyValue('--bg-sobre'));
+  assert.equal(bgSecondary, '#fbf7ee');
+  assert.equal(bgSobre, '#f2ece1');
+
+  // Verify system layout and cards remain neutral clean white (#ffffff)
   const metricCard = page.locator('div[class*="metric"]').first();
   await metricCard.waitFor();
-
   const cardBg = await metricCard.evaluate(el => getComputedStyle(el).backgroundColor);
-  assert.equal(cardBg, 'rgb(242, 236, 225)'); // #f2ece1 in rgb
+  assert.equal(cardBg, 'rgb(255, 255, 255)', 'System cards must remain neutral white');
+
+  const updateBtn = page.getByRole('button', { name: 'Atualizar' });
+  await updateBtn.waitFor();
+  const updateBtnBg = await updateBtn.evaluate(el => getComputedStyle(el).backgroundColor);
+  assert.equal(updateBtnBg, 'rgb(255, 255, 255)', 'Secondary controls must remain neutral white');
 });
 
 test('US14: independent system button colors apply to system buttons while landing buttons maintain their own palette', async t => {
@@ -924,42 +939,6 @@ test('US14: personalizacao section allows toggling system button colors and reve
   assert.equal(await page.getByText('FUNDO DOS BOTÕES (SISTEMA)').isVisible(), true);
   assert.equal(await page.getByText('HOVER DOS BOTÕES (SISTEMA)').isVisible(), true);
   assert.equal(await page.getByText('TEXTO DOS BOTÕES (SISTEMA)').isVisible(), true);
-});
-
-test('US14: secondary controls ("Atualizar", search, pagination) remain neutral white in immersive mode', async t => {
-  const { page, state } = await setup(t);
-  state.config = {
-    ...state.config,
-    color_bg_secondary: '#e8dcc4', // Background 2
-    color_bg_sobre: '#d4c5a9',     // Background 3
-  };
-
-  await page.goto(`${baseURL}/sistema/clientes?themeMode=immersive`);
-  await page.waitForFunction(() => document.documentElement.dataset.systemThemeMode === 'immersive');
-
-  // Verify card surface reflects Background 3 (#d4c5a9 -> rgb(212, 197, 169))
-  const metricCard = page.locator('div[class*="metric"]').first();
-  await metricCard.waitFor();
-  const cardBg = await metricCard.evaluate(el => getComputedStyle(el).backgroundColor);
-  assert.equal(cardBg, 'rgb(212, 197, 169)');
-
-  // Verify secondary "Atualizar" button is neutral white
-  const updateBtn = page.getByRole('button', { name: 'Atualizar' });
-  await updateBtn.waitFor();
-  const updateBtnBg = await updateBtn.evaluate(el => getComputedStyle(el).backgroundColor);
-  assert.equal(updateBtnBg, 'rgb(255, 255, 255)', 'The "Atualizar" button must remain white and independent of surface colors');
-
-  // Verify search form is neutral white
-  const searchForm = page.locator('form[class*="searchForm"]');
-  await searchForm.waitFor();
-  const searchBg = await searchForm.evaluate(el => getComputedStyle(el).backgroundColor);
-  assert.equal(searchBg, 'rgb(255, 255, 255)', 'The search bar must remain white and independent of surface colors');
-
-  // Verify pagination button is neutral white
-  const prevPageBtn = page.getByRole('button', { name: 'Página anterior' });
-  await prevPageBtn.waitFor();
-  const prevBtnBg = await prevPageBtn.evaluate(el => getComputedStyle(el).backgroundColor);
-  assert.equal(prevBtnBg, 'rgb(255, 255, 255)', 'Pagination button must remain white');
 });
 
 test('US14: predefined themes apply their system button pre-sets and switching back restores them', async t => {

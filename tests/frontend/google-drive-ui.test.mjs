@@ -37,7 +37,7 @@ async function setup(t, { role = 'ADMIN', drive = { connected: false, email: nul
   context.setDefaultTimeout(10_000);
   context.setDefaultNavigationTimeout(30_000);
   t.after(() => context.close());
-  const token = `test.${Buffer.from(JSON.stringify({ sub: '1', role, exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test`;
+  const token = `test.${Buffer.from(JSON.stringify({ sub: '1', role, permissions: role === 'USER' ? ['processos'] : [], exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.test`;
   await context.addInitScript(({ token, origin }) => {
     if (location.origin === origin) localStorage.setItem('advocacia_access_token', token);
   }, { token, origin: baseURL });

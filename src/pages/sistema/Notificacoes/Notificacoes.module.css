@@ -27,8 +27,8 @@
 }
 
 .configIcon {
-  background: #e8eaf6;
-  color: var(--navy);
+  background: var(--brand-primary);
+  color: var(--brand-primary-text);
   width: 32px; height: 32px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
@@ -198,7 +198,7 @@
   transition: background .15s;
 }
 .pageNum:hover { background: #f5f5f5; }
-.pageActive { background: var(--brand-accent) !important; color: var(--brand-accent-text) !important; border-color: var(--brand-accent) !important; }
+.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
 
 .toggleDisabled { opacity: .45; cursor: not-allowed; }
 

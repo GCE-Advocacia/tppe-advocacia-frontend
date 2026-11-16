@@ -1,4 +1,4 @@
-import { apiRequest, PaginatedResponse, SuccessResponse } from './api';
+import { apiRequest, PaginatedResponse, SuccessResponse, type PermissionKey } from './api';
 
 export type UserRole = 'ADMIN' | 'USER';
 
@@ -18,7 +18,7 @@ export interface ApiUser {
   role: UserRole;
   status: UserStatus;
   is_active: boolean;
-  can_view_payments: boolean;
+  permissions: string[];
   created_at: string;
   updated_at: string;
   /** Último convite enviado; null se o usuário nunca foi convidado. */
@@ -59,16 +59,16 @@ export function listUsers(params?: { role?: UserRole; is_active?: boolean; page?
   return apiRequest<PaginatedResponse<ApiUser>>(`/users${qs ? `?${qs}` : ''}`);
 }
 
-export function createUser(name: string, email: string) {
+export function createUser(name: string, email: string, permissions: PermissionKey[] = []) {
   return apiRequest<SuccessResponse<ApiUser>>('/users', {
     method: 'POST',
-    body: JSON.stringify({ name, email }),
+    body: JSON.stringify({ name, email, permissions }),
   });
 }
 
 export function updateUser(
   id: number,
-  patch: Partial<Pick<ApiUser, 'name' | 'email' | 'role' | 'is_active' | 'can_view_payments'>>,
+  patch: Partial<Pick<ApiUser, 'name' | 'email' | 'role' | 'is_active'>> & { permissions?: PermissionKey[] },
 ) {
   return apiRequest<SuccessResponse<ApiUser>>(`/users/${id}`, {
     method: 'PATCH',

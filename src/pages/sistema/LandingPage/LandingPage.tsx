@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Palette, Globe, Loader2, X, Check } from 'lucide-react';
 import IdentidadeVisualTab from './tabs/IdentidadeVisualTab';
 import LandingPageConteudoTab from './tabs/LandingPageConteudoTab';
+import SaveThemeModal from './components/SaveThemeModal';
 import { usePersonalizacaoForm } from './hooks/usePersonalizacaoForm';
 import { usePersonalizacaoThemes } from './hooks/usePersonalizacaoThemes';
 import styles from './LandingPage.module.css';
@@ -62,6 +63,23 @@ export default function LandingPageConfig() {
           Gerencie a identidade visual da sua marca e o conteúdo da landing page pública do seu escritório.
         </p>
       </header>
+
+      {form.pendingNavigation && (
+        <div
+          className={styles.unsavedOverlay}
+          onMouseDown={event => { if (event.target === event.currentTarget) form.continueEditing(); }}
+        >
+          <section className={styles.unsavedDialog} role="dialog" aria-modal="true" aria-labelledby="unsaved-modal-title">
+            <button type="button" className={styles.unsavedClose} aria-label="Fechar" onClick={form.continueEditing}><X size={18} /></button>
+            <h2 id="unsaved-modal-title">Alterações não salvas</h2>
+            <p>Você tem alterações pendentes. Deseja continuar editando ou sair e descartá-las?</p>
+            <div className={styles.unsavedActions}>
+              <button type="button" onClick={form.continueEditing}>Continuar editando</button>
+              <button type="button" onClick={form.discardAndNavigate}>Sair e descartar</button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* ── Abas de Navegação ── */}
       <nav className={styles.tabsBar} role="tablist" aria-label="Abas de Personalização">
@@ -131,7 +149,7 @@ export default function LandingPageConfig() {
             type="button"
             className={styles.btnDiscard}
             onClick={handleDiscard}
-            disabled={form.saving || !form.isDirty}
+            disabled={form.saving || (!form.isDirty && !form.saveError)}
           >
             <X size={15} /> Descartar
           </button>
@@ -153,6 +171,93 @@ export default function LandingPageConfig() {
           </button>
         </div>
       </div>
+
+      {form.confirmThemeUpdate && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox} role="dialog" aria-modal="true" aria-labelledby="update-theme-title">
+            <div className={styles.modalHeader}>
+              <h3 id="update-theme-title" className={styles.modalTitle}>Salvar alterações no tema</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>Atualize o tema “{themes.baseTheme?.name}” ou preserve o original salvando uma cópia.</p>
+              {form.saveError && <p role="alert" className={styles.modalError}>{form.saveError}</p>}
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.btnCancel} disabled={form.saving} onClick={() => form.setConfirmThemeUpdate(false)}>Cancelar</button>
+              <button type="button" className={styles.btnCancel} disabled={form.saving} onClick={() => {
+                form.setConfirmThemeUpdate(false);
+                themes.openCopyModal();
+              }}>Salvar como uma cópia separada</button>
+              <button type="button" className={styles.btnConfirm} disabled={form.saving} onClick={() => form.save(themes, true)}>
+                {form.saving ? 'Salvando...' : 'Atualizar tema'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Alterações não salvas ao sair da página ── */}
+      {form.pendingNavigationPath && (
+        <div
+          className={styles.modalOverlay}
+          onMouseDown={e => {
+            if (e.target === e.currentTarget) form.cancelNavigation();
+          }}
+        >
+          <div className={styles.modalBox} onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="unsaved-modal-title">
+            <div className={styles.modalHeader}>
+              <h3 id="unsaved-modal-title" className={styles.modalTitle}>Alterações não salvas</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={form.cancelNavigation}
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '0.9rem', color: '#334155', margin: 0, lineHeight: 1.55 }}>
+                Existem alterações não salvas na personalização. Se você sair agora, as alterações pendentes serão descartadas.
+              </p>
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnCancel}
+                onClick={form.cancelNavigation}
+              >
+                Continuar editando
+              </button>
+              <button
+                type="button"
+                className={styles.btnConfirm}
+                onClick={form.confirmNavigation}
+              >
+                Sair e descartar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Global: Salvar/Fork de Tema Personalizado (funciona em qualquer aba) ── */}
+      <SaveThemeModal
+        isOpen={themes.showSaveCurrentModal}
+        onClose={themes.closeSaveModal}
+        isForkingPredefined={themes.isForkingPredefined}
+        baseThemeName={themes.baseTheme?.name}
+        colors={form.data}
+        initialThemeName={themes.newThemeName}
+        initialThemeDesc={themes.newThemeDesc}
+        saving={themes.savingNewTheme}
+        limitReached={themes.themeQuota?.is_limit_reached ?? themes.themes.filter(t => !t.is_predefined).length >= 6}
+        maxCustom={themes.themeQuota?.max_custom ?? 6}
+        error={themes.saveNewError}
+        onConfirm={(name, desc) =>
+          themes.handleSaveCurrentAsTheme(name, desc, form.branding.save, form.applyConfig)
+        }
+      />
     </div>
   );
 }

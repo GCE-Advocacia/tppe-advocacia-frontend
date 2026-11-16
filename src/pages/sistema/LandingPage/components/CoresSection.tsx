@@ -5,7 +5,6 @@ import type { OfficeConfigAPI } from '../../../../services/officeConfigService';
 import SectionCard from './SectionCard';
 import Field from './Field';
 import LandingPreview from './LandingPreview';
-import SaveThemeModal from './SaveThemeModal';
 import ColorPicker from '../../../../components/sistema/shared/ColorPicker';
 import ThemeGallery from '../../../../components/sistema/shared/ThemeGallery';
 import styles from '../LandingPage.module.css';
@@ -21,8 +20,6 @@ export interface CoresSectionProps {
 export default function CoresSection({
   data,
   themes,
-  brandingSave,
-  applyConfig,
   onQuotaExceeded,
 }: CoresSectionProps) {
   const {
@@ -30,10 +27,7 @@ export default function CoresSection({
     isColorsDirty, discardColorChanges,
     handleSelectFromLibrary, fetchThemes,
     showThemeGalleryModal, setShowThemeGalleryModal,
-    showSaveCurrentModal, isForkingPredefined,
-    newThemeName, newThemeDesc,
-    savingNewTheme, saveNewError, openCopyModal, closeSaveModal,
-    handleSaveCurrentAsTheme, themeQuota,
+    openCopyModal, themeQuota,
   } = themes;
 
   return (
@@ -319,19 +313,6 @@ export default function CoresSection({
         currentLandingColors={data}
         activeThemeId={data.themeId ?? matchedTheme?.id ?? baseTheme?.id ?? null}
         quota={themeQuota}
-      />
-
-      <SaveThemeModal
-        isOpen={showSaveCurrentModal}
-        onClose={closeSaveModal}
-        isForkingPredefined={isForkingPredefined}
-        baseThemeName={baseTheme?.name}
-        colors={data}
-        initialThemeName={newThemeName}
-        initialThemeDesc={newThemeDesc}
-        saving={savingNewTheme}
-        error={saveNewError}
-        onConfirm={(name, desc) => handleSaveCurrentAsTheme(name, desc, brandingSave, applyConfig)}
       />
     </>
   );

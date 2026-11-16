@@ -3,7 +3,9 @@ import { Plus, Eye, Pencil, UserX, UserCheck, ArrowLeft, ChevronLeft, ChevronRig
 import Modal from '../../../components/sistema/Modal/Modal';
 import { listUsers, createUser, updateUser, listAuditLogs, resendInvite, cancelInvite } from '../../../services/users';
 import type { ApiUser, AuditLog, InviteStatus, UserRole } from '../../../services/users';
-import { ApiError } from '../../../services/api';
+import { listPermissions } from '../../../services/permissions';
+import type { Permission } from '../../../services/permissions';
+import { ApiError, type PermissionKey } from '../../../services/api';
 import styles from './Usuarios.module.css';
 
 type View = 'lista' | 'registros';
@@ -49,6 +51,11 @@ function isInvited(u: ApiUser) {
   return u.status === 'INVITED';
 }
 
+function resumoAcessos(u: ApiUser, total: number) {
+  if (u.role === 'ADMIN') return 'Todas';
+  return total > 0 ? `${u.permissions.length} de ${total}` : String(u.permissions.length);
+}
+
 export default function Usuarios() {
   const [view, setView] = useState<View>('lista');
 
@@ -73,7 +80,9 @@ export default function Usuarios() {
   const [formEmail, setFormEmail] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('USER');
   const [formIsActive, setFormIsActive] = useState(true);
-  const [formCanViewPayments, setFormCanViewPayments] = useState(false);
+  const [formPermissions, setFormPermissions] = useState<PermissionKey[]>([]);
+  const [permissoes, setPermissoes] = useState<Permission[]>([]);
+  const [errorPermissoes, setErrorPermissoes] = useState('');
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -119,6 +128,12 @@ export default function Usuarios() {
   useEffect(() => { void fetchUsuarios(pageUsuarios); }, [fetchUsuarios, pageUsuarios]);
 
   useEffect(() => {
+    listPermissions()
+      .then(setPermissoes)
+      .catch(() => setErrorPermissoes('Não foi possível carregar as permissões.'));
+  }, []);
+
+  useEffect(() => {
     if (view === 'registros') void fetchLogs(
       pageLogs,
       filterAction || undefined,
@@ -128,7 +143,7 @@ export default function Usuarios() {
   }, [fetchLogs, pageLogs, view, filterAction, filterDateFrom, filterDateTo]);
 
   function openNovo() {
-    setFormNome(''); setFormEmail(''); setFormRole('USER'); setFormCanViewPayments(false); setFormError('');
+    setFormNome(''); setFormEmail(''); setFormRole('USER'); setFormPermissions([]); setFormError('');
     setModalType('novo');
   }
 
@@ -137,7 +152,7 @@ export default function Usuarios() {
   function openEditar(u: ApiUser) {
     setSelectedUser(u);
     setFormNome(u.name); setFormEmail(u.email);
-    setFormRole(u.role); setFormIsActive(u.is_active); setFormCanViewPayments(u.can_view_payments); setFormError('');
+    setFormRole(u.role); setFormIsActive(u.is_active); setFormPermissions(u.permissions as PermissionKey[]); setFormError('');
     setModalType('editar');
   }
 
@@ -156,11 +171,10 @@ export default function Usuarios() {
     setSubmitting(true);
     setFormError('');
     try {
-      const created = await createUser(formNome.trim(), formEmail.trim());
-      // POST /api/v1/users sempre cria como USER sem acesso a vencimentos; papel e permissão requerem PATCH subsequente
-      const precisaPatch = formRole === 'ADMIN' || formCanViewPayments;
-      const final = precisaPatch
-        ? (await updateUser(created.data.id, { role: formRole, can_view_payments: formCanViewPayments })).data
+      const created = await createUser(formNome.trim(), formEmail.trim(), formPermissions);
+      // POST /api/v1/users sempre cria como USER; o papel ADMIN requer PATCH subsequente
+      const final = formRole === 'ADMIN'
+        ? (await updateUser(created.data.id, { role: 'ADMIN' })).data
         : created.data;
       setUsuarios(prev => [final, ...prev]);
       setTotalUsuarios(prev => prev + 1);
@@ -190,7 +204,7 @@ export default function Usuarios() {
         email: formEmail.trim(),
         role: formRole,
         is_active: formIsActive,
-        can_view_payments: formCanViewPayments,
+        permissions: formPermissions,
       });
       setUsuarios(prev => prev.map(u => u.id === selectedUser.id ? res.data : u));
       closeModal();
@@ -300,7 +314,7 @@ export default function Usuarios() {
                     <th>E-mail</th>
                     <th>Papel</th>
                     <th>Status</th>
-                    <th>Vencimentos</th>
+                    <th>Acessos</th>
                     <th>Criado em</th>
                     <th>Ações</th>
                   </tr>
@@ -352,11 +366,11 @@ export default function Usuarios() {
                       <td>
                         <span
                           className={styles.cargoBadge}
-                          style={u.role === 'ADMIN' || u.can_view_payments
+                          style={u.role === 'ADMIN' || u.permissions.length > 0
                             ? { background: '#e8f5e9', color: '#2e7d32' }
                             : { background: '#f5f5f5', color: '#757575' }}
                         >
-                          {u.role === 'ADMIN' || u.can_view_payments ? 'Sim' : 'Não'}
+                          {resumoAcessos(u, permissoes.length)}
                         </span>
                       </td>
                       <td><div className={styles.date}>{formatDate(u.created_at)}</div></td>
@@ -533,7 +547,8 @@ export default function Usuarios() {
             nome={formNome} setNome={setFormNome}
             email={formEmail} setEmail={setFormEmail}
             role={formRole} setRole={setFormRole}
-            canViewPayments={formCanViewPayments} setCanViewPayments={setFormCanViewPayments}
+            permissoes={permissoes} errorPermissoes={errorPermissoes}
+            selected={formPermissions} setSelected={setFormPermissions}
           />
           <div className={styles.infoBox}>
             <p>O usuário receberá um convite por e-mail com um link para definir a própria senha. O link vale por 48 horas e pode ser reenviado.</p>
@@ -576,11 +591,12 @@ export default function Usuarios() {
             </div>
           </div>
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Pode visualizar vencimentos</label>
-            <div className={styles.fieldReadonly}>
+            <label className={styles.fieldLabel}>Permissões de acesso</label>
+            <div className={styles.fieldReadonly} data-testid="usuario-acessos">
               {selectedUser.role === 'ADMIN'
-                ? 'Sim (administradores sempre visualizam)'
-                : selectedUser.can_view_payments ? 'Sim' : 'Não'}
+                ? 'Todas as áreas (administrador)'
+                : permissoes.filter(p => selectedUser.permissions.includes(p.key)).map(p => p.name).join(', ')
+                  || 'Nenhuma área liberada'}
             </div>
           </div>
         </Modal>
@@ -593,7 +609,8 @@ export default function Usuarios() {
             nome={formNome} setNome={setFormNome}
             email={formEmail} setEmail={setFormEmail}
             role={formRole} setRole={setFormRole}
-            canViewPayments={formCanViewPayments} setCanViewPayments={setFormCanViewPayments}
+            permissoes={permissoes} errorPermissoes={errorPermissoes}
+            selected={formPermissions} setSelected={setFormPermissions}
           />
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>Status</label>
@@ -692,11 +709,12 @@ interface UserFormFieldsProps {
   nome: string; setNome: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   role: UserRole; setRole: (v: UserRole) => void;
-  canViewPayments: boolean; setCanViewPayments: (v: boolean) => void;
+  permissoes: Permission[]; errorPermissoes: string;
+  selected: PermissionKey[]; setSelected: (v: PermissionKey[]) => void;
 }
 
 function UserFormFields({
-  nome, setNome, email, setEmail, role, setRole, canViewPayments, setCanViewPayments,
+  nome, setNome, email, setEmail, role, setRole, permissoes, errorPermissoes, selected, setSelected,
 }: UserFormFieldsProps) {
   const isAdminRole = role === 'ADMIN';
   return (
@@ -729,24 +747,40 @@ function UserFormFields({
           </select>
         </div>
       </div>
-      <div className={styles.fieldGroup}>
-        <label
-          className={styles.fieldLabel}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: isAdminRole ? 'default' : 'pointer' }}
-        >
-          <input
-            id="usuario-pode-ver-vencimentos"
-            type="checkbox"
-            checked={isAdminRole || canViewPayments}
-            disabled={isAdminRole}
-            onChange={e => setCanViewPayments(e.target.checked)}
-          />
-          Pode visualizar vencimentos
-        </label>
-        {isAdminRole && (
-          <span style={{ fontSize: '.78rem', color: 'var(--gray)' }}>Administradores sempre visualizam</span>
+      <fieldset className={styles.permissoesFieldset} data-testid="usuario-permissoes">
+        <legend className={styles.fieldLabel}>Permissões de acesso</legend>
+        {isAdminRole ? (
+          <p className={styles.permissoesHint}>Administradores têm acesso a todas as áreas</p>
+        ) : (
+          <div className={styles.permissoesActions}>
+            <button type="button" className={styles.btnLink} onClick={() => setSelected(permissoes.map(p => p.key))}>
+              Marcar todas
+            </button>
+            <button type="button" className={styles.btnLink} onClick={() => setSelected([])}>
+              Desmarcar todas
+            </button>
+          </div>
         )}
-      </div>
+        {errorPermissoes && <p className={styles.errorMsg}>{errorPermissoes}</p>}
+        <div className={styles.permissoesGrid}>
+          {permissoes.map(p => (
+            <label key={p.key} className={styles.permissaoItem} title={p.description}>
+              <input
+                id={`permissao-${p.key}`}
+                type="checkbox"
+                checked={isAdminRole || selected.includes(p.key)}
+                disabled={isAdminRole}
+                onChange={e => setSelected(
+                  permissoes
+                    .filter(item => (item.key === p.key ? e.target.checked : selected.includes(item.key)))
+                    .map(item => item.key),
+                )}
+              />
+              {p.name}
+            </label>
+          ))}
+        </div>
+      </fieldset>
     </>
   );
 }

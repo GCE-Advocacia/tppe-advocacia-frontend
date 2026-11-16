@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ImageIcon, Loader2 } from 'lucide-react';
-import { uploadMedia } from '../../../../services/officeConfigService';
+import { uploadMedia, validateMediaFile, MEDIA_ACCEPT } from '../../../../services/officeConfigService';
 import ImagePositionModal from '../../../../components/sistema/shared/ImagePositionModal';
 import styles from '../LandingPage.module.css';
 
@@ -31,8 +31,13 @@ export default function ImageUpload({
   const [showModal, setShowModal] = useState(false);
 
   async function handleFile(file: File) {
-    setUploading(true);
     setError(null);
+    const validationError = validateMediaFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setUploading(true);
     try {
       const url = await uploadMedia(file);
       onChange(url);
@@ -47,6 +52,7 @@ export default function ImageUpload({
     <>
       <div
         className={styles.imgBox}
+        style={value ? { padding: '20px 16px' } : undefined}
         onDragOver={e => e.preventDefault()}
         onDrop={e => {
           e.preventDefault();
@@ -56,7 +62,18 @@ export default function ImageUpload({
       >
         {value ? (
           <>
-            <div className={styles.imgWithPos}>
+            <div
+              className={styles.imgWithPos}
+              style={{
+                aspectRatio: String(aspectRatio),
+                width: 'auto',
+                maxWidth: '100%',
+                height: '280px',
+                margin: '0 auto 12px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #e2e8f0',
+              }}
+            >
               <img
                 src={value}
                 alt="preview"
@@ -108,10 +125,11 @@ export default function ImageUpload({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={MEDIA_ACCEPT}
           style={{ display: 'none' }}
           onChange={e => {
             const f = e.target.files?.[0];
+            e.target.value = '';
             if (f) handleFile(f);
           }}
         />

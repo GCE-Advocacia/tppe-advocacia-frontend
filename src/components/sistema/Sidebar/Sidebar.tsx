@@ -1,48 +1,17 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  UserCog,
-  Palette,
-  FileText,
-  UserPlus,
-  UsersRound,
-  CalendarDays,
-  Wallet,
-  Briefcase,
-  LayoutList,
-  Bell,
-  Activity,
-  CalendarX2,
-  Mail,
-  AtSign,
   User,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
 } from 'lucide-react';
-import { canViewPayments, getSessionClaims } from '../../../services/api';
+import { getSessionClaims } from '../../../services/api';
 import { getEmailHealth } from '../../../services/emailLogs';
 import { logout } from '../../../services/auth';
+import { ABAS, canAccessAba } from '../../../config/abas';
 import BrandLogo from '../../BrandLogo/BrandLogo';
 import styles from './Sidebar.module.css';
-
-const NAV_ITEMS = [
-  { label: 'Usuários',      href: '/sistema/usuarios',      icon: UserCog,      adminOnly: true  },
-  { label: 'Personalização', href: '/sistema/personalizacao', icon: Palette,     adminOnly: true  },
-  { label: 'Artigos',       href: '/sistema/artigos',        icon: FileText,     adminOnly: false },
-  { label: 'Leads',         href: '/sistema/leads',          icon: UserPlus,     adminOnly: false },
-  { label: 'Clientes',      href: '/sistema/clientes',       icon: UsersRound,   adminOnly: false },
-  { label: 'Agenda',        href: '/sistema/agenda',         icon: CalendarDays, adminOnly: false },
-  { label: 'Pagamentos',    href: '/sistema/pagamentos',     icon: Wallet,       adminOnly: false, visible: canViewPayments },
-  { label: 'Processos',     href: '/sistema/processos',      icon: Briefcase,    adminOnly: false },
-  { label: 'Tarefas',       href: '/sistema/tarefas',        icon: LayoutList,   adminOnly: false },
-  { label: 'Notificações',  href: '/sistema/notificacoes',   icon: Bell,         adminOnly: false },
-  { label: 'Logs DataJud',  href: '/sistema/logs-api',       icon: Activity,     adminOnly: true  },
-  { label: 'E-mails',       href: '/sistema/emails',         icon: Mail,         adminOnly: true  },
-  { label: 'Feriados',      href: '/sistema/feriados',        icon: CalendarX2,   adminOnly: true  },
-  { label: 'Financeiro',    href: '/sistema/financeiro',      icon: Wallet,       adminOnly: true  },
-  { label: 'E-mail do escritório', href: '/sistema/configuracoes-email', icon: AtSign, adminOnly: true },
-];
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -50,6 +19,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const claims = getSessionClaims();
   const role = claims?.role === 'ADMIN' ? 'Administrador' : 'Usuário';
+  const abasVisiveis = ABAS.filter(aba => canAccessAba(claims, aba));
   const isAdmin = claims?.role === 'ADMIN';
   // Alertas do envio de e-mail aparecem no menu mesmo com o SMTP fora.
   const [emailAlerts, setEmailAlerts] = useState(0);
@@ -107,10 +77,10 @@ export default function Sidebar() {
 
         {/* Nav links */}
         <nav className={styles.nav}>
-          {NAV_ITEMS.filter(item => (item.visible ? item.visible(claims) : !item.adminOnly || isAdmin)).map(({ label, href, icon: Icon }) => (
+          {abasVisiveis.map(({ label, path, icon: Icon }) => (
             <NavLink
-              key={href}
-              to={href}
+              key={path}
+              to={`/sistema/${path}`}
               className={({ isActive }) =>
                 `${styles.navItem} ${isActive ? styles.active : ''}`
               }
@@ -118,13 +88,13 @@ export default function Sidebar() {
             >
               <span className={styles.iconWrap}>
                 <Icon size={20} strokeWidth={1.6} className={styles.icon} />
-                {href === '/sistema/emails' && emailAlerts > 0 && (
+                {path === 'emails' && emailAlerts > 0 && (
                   <span className={styles.alertDot} aria-hidden="true" />
                 )}
               </span>
               <span className={styles.label}>
                 {label}
-                {href === '/sistema/emails' && emailAlerts > 0 && (
+                {path === 'emails' && emailAlerts > 0 && (
                   <span className={styles.alertBadge}>
                     {emailAlerts}
                     <span className={styles.srOnly}> alerta(s) de envio</span>
