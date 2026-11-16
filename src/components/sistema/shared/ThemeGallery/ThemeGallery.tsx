@@ -172,7 +172,7 @@ export default function ThemeGallery({
 
   const customCount = quota ? quota.custom_count : themes.filter(t => !t.is_predefined).length;
   const maxCustom = quota?.max_custom ?? 6;
-  const maxTotal = quota?.max_total ?? 10;
+  const maxTotal = quota?.max_total ?? 9;
   const isLimitReached = quota
     ? quota.is_limit_reached
     : customCount >= maxCustom || themes.length >= maxTotal;
@@ -191,7 +191,7 @@ export default function ThemeGallery({
   function openDuplicateModal(baseTheme: LandingPageTheme) {
     if (isLimitReached) return;
     setFormData({
-      name: `Cópia de ${baseTheme.name}`,
+      name: `${baseTheme.name} (Cópia)`,
       description: baseTheme.description || '',
       color: baseTheme.color,
       color_bg_primary: baseTheme.color_bg_primary,
@@ -393,6 +393,12 @@ export default function ThemeGallery({
             Criar Novo Tema
           </button>
         </div>
+
+        {isLimitReached && (
+          <p role="status" className={styles.quotaWarning}>
+            Limite de {maxCustom} temas personalizados atingido. Exclua um tema para criar ou duplicar outro.
+          </p>
+        )}
 
         {/* Área rolável com a grade de temas */}
         <div className={styles.modalScrollArea}>

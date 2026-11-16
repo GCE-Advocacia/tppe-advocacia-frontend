@@ -47,13 +47,14 @@ export default function BrandLogo({ className = '', background = 'dark', scope =
 
   let surface: LogoBackground;
   if (background === 'auto-surface') {
-    const isImmersive = typeof document !== 'undefined' && document.documentElement.dataset.systemThemeMode === 'immersive';
-    const surfaceColor = isImmersive ? (config?.color_bg_secondary || '#f0f4f8') : '#f0f4f8';
-    surface = landingBackground(surfaceColor);
+    surface = landingBackground('#f0f4f8');
   } else if (background === 'auto') {
+    const cachedSurfaceColor = typeof document !== 'undefined'
+      ? document.documentElement.style.getPropertyValue(scope === 'system' ? '--brand-primary' : '--bg-primary').trim()
+      : '';
     const surfaceColor = scope === 'system'
-      ? (config?.color || config?.color_bg_primary || '#232C43')
-      : (config?.color_bg_primary || config?.color || '#232C43');
+      ? (config?.color || config?.color_bg_primary || cachedSurfaceColor || '#232C43')
+      : (config?.color_bg_primary || config?.color || cachedSurfaceColor || '#232C43');
     surface = landingBackground(surfaceColor);
   } else {
     surface = background;

@@ -13,6 +13,7 @@ interface Props {
 
 export default function ImagePositionModal({ src, position, aspectRatio, label, onConfirm, onCancel }: Props) {
   const [pos, setPos] = useState(position);
+  const [imgDim, setImgDim] = useState<{ width: number; height: number } | null>(null);
   const drag = useRef<{ startX: number; startY: number; posX: number; posY: number } | null>(null);
 
   const FRAME_MAX_H = 390;
@@ -20,14 +21,31 @@ export default function ImagePositionModal({ src, position, aspectRatio, label, 
   const frameW = Math.min(FRAME_MAX_H * aspectRatio, FRAME_MAX_W);
   const frameH = frameW / aspectRatio;
 
+  // Calcula o overflow real da imagem para travamento de eixo estático e sensibilidade de arrasto 1:1
+  const overflowRef = useRef({ x: frameW, y: frameH });
+  if (imgDim && imgDim.width > 0 && imgDim.height > 0) {
+    const scale = Math.max(frameW / imgDim.width, frameH / imgDim.height);
+    const dispW = imgDim.width * scale;
+    const dispH = imgDim.height * scale;
+    overflowRef.current = {
+      x: Math.max(0, dispW - frameW),
+      y: Math.max(0, dispH - frameH),
+    };
+  }
+
   const handlers = useRef({
     move: (e: MouseEvent) => {
       if (!drag.current) return;
-      const dx = ((e.clientX - drag.current.startX) / frameW) * -100;
-      const dy = ((e.clientY - drag.current.startY) / frameH) * -100;
+      const { x: overflowX, y: overflowY } = overflowRef.current;
+      const mouseDx = e.clientX - drag.current.startX;
+      const mouseDy = e.clientY - drag.current.startY;
+
+      const deltaX = overflowX > 2 ? (-mouseDx / overflowX) * 100 : 0;
+      const deltaY = overflowY > 2 ? (-mouseDy / overflowY) * 100 : 0;
+
       setPos({
-        x: Math.min(100, Math.max(0, drag.current.posX + dx)),
-        y: Math.min(100, Math.max(0, drag.current.posY + dy)),
+        x: Math.min(100, Math.max(0, Math.round(drag.current.posX + deltaX))),
+        y: Math.min(100, Math.max(0, Math.round(drag.current.posY + deltaY))),
       });
     },
     up: () => {
@@ -44,7 +62,7 @@ export default function ImagePositionModal({ src, position, aspectRatio, label, 
   }
 
   return (
-    <div className={styles.overlay} onMouseDown={onCancel}>
+    <div className={styles.overlay} data-testid="image-position-modal" onMouseDown={onCancel}>
       <div className={styles.box} onMouseDown={e => e.stopPropagation()}>
         <div className={styles.header}>
           <span className={styles.title}>Reposicionar imagem</span>
@@ -56,12 +74,19 @@ export default function ImagePositionModal({ src, position, aspectRatio, label, 
         <div className={styles.frameWrap}>
           <div
             className={styles.frame}
+            data-testid="image-position-frame"
             style={{ width: frameW, height: frameH }}
             onMouseDown={handleMouseDown}
           >
             <img
               src={src} alt="" className={styles.img} draggable={false}
               style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
+              onLoad={e => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  setImgDim({ width: img.naturalWidth, height: img.naturalHeight });
+                }
+              }}
             />
             <div className={styles.dragHint}>↕ ↔</div>
           </div>

@@ -60,6 +60,9 @@
   line-height: 1.8;
   margin-bottom: 16px;
   font-size: .97rem;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .linkSaiba {

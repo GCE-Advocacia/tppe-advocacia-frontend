@@ -11,7 +11,7 @@ export default function Sobre() {
   const oab         = config?.lawyer_oab         ?? 'OAB/SP 123.456';
   const description = config?.lawyer_description ?? 'Advogado especializado em Direito Empresarial, com mais de 15 anos de experiência em assessoria jurídica estratégica para empresas de médio e grande porte.';
   const imgUrl      = config?.lawyer_image_url   ?? 'vitor.png';
-  const imgPos      = config?.lawyer_image_position ? config.lawyer_image_position.split(',').map(v => `${v}%`).join(' ') : '50% 50%';
+  const imgPos      = config?.lawyer_image_position ? config.lawyer_image_position.split(',').map(v => `${v.trim()}%`).join(' ') : '50% 50%';
   const linkedinUrl = config?.linkedin_url       ?? '#';
 
   return (

@@ -221,7 +221,7 @@ export default function Financeiro() {
         <div className={styles.summaryCard}>
           <div className={styles.summaryTop}>
             <div className={styles.summaryIcon} style={{ background: '#e8eaf6' }}>
-              <Wallet size={20} color="var(--brand-primary, #232C43)" />
+              <Wallet size={20} color="#232C43" />
             </div>
           </div>
           <p className={styles.summaryLabel}>Saldo</p>

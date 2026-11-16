@@ -26,15 +26,30 @@ export type SuccessResponse<T> = {
   data: T;
 };
 
+export type PermissionKey =
+  | 'landing_page'
+  | 'artigos'
+  | 'leads'
+  | 'clientes'
+  | 'agenda'
+  | 'pagamentos'
+  | 'processos'
+  | 'tarefas'
+  | 'notificacoes'
+  | 'logs_api'
+  | 'feriados'
+  | 'financeiro';
+
 export type SessionClaims = {
   sub: string;
   role: 'ADMIN' | 'USER';
   exp: number;
-  can_view_payments?: boolean;
+  permissions?: string[];
 };
 
-export function canViewPayments(claims: SessionClaims | null): boolean {
-  return claims?.role === 'ADMIN' || claims?.can_view_payments === true;
+export function hasPermission(claims: SessionClaims | null, key: PermissionKey): boolean {
+  if (!claims) return false;
+  return claims.role === 'ADMIN' || (claims.permissions ?? []).includes(key);
 }
 
 export class ApiError extends Error {
@@ -50,22 +65,26 @@ export class ApiError extends Error {
 }
 
 function translatePydanticMsg(msg: string, ctx: Record<string, unknown> | undefined): string {
-  if (/String should have at most/.test(msg)) {
-    const max = ctx?.max_length ?? msg.match(/\d+/)?.[0] ?? '?';
+  const clean = msg.replace(/^Value error,\s*/i, '');
+  if (/String should have at most/.test(clean)) {
+    const max = ctx?.max_length ?? clean.match(/\d+/)?.[0] ?? '?';
     return `Máximo de ${max} caracteres permitido.`;
   }
-  if (/String should have at least/.test(msg)) {
-    const min = ctx?.min_length ?? msg.match(/\d+/)?.[0] ?? '?';
+  if (/String should have at least/.test(clean)) {
+    const min = ctx?.min_length ?? clean.match(/\d+/)?.[0] ?? '?';
     return `Mínimo de ${min} caracteres requerido.`;
   }
-  if (msg === 'Field required') return 'Campo obrigatório.';
-  if (/valid email/i.test(msg)) return 'E-mail inválido.';
-  if (/valid integer/i.test(msg)) return 'Valor inválido.';
-  return msg;
+  if (clean === 'Field required') return 'Campo obrigatório.';
+  if (/valid email/i.test(clean)) return 'E-mail inválido.';
+  if (/valid integer/i.test(clean)) return 'Valor inválido.';
+  if (/^URL |valid URL|relative URL|url_parsing|URL scheme/i.test(clean)) {
+    return 'URL inválida. Insira um link completo iniciando com https:// ou http://';
+  }
+  return clean;
 }
 
 function parseMessage(message: unknown): string {
-  if (typeof message === 'string') return message;
+  if (typeof message === 'string') return translatePydanticMsg(message, undefined);
   if (message && typeof message === 'object' && 'msg' in message) {
     const m = message as Record<string, unknown>;
     const ctx = m.ctx && typeof m.ctx === 'object' ? (m.ctx as Record<string, unknown>) : undefined;
@@ -129,10 +148,25 @@ export async function apiRequest<T>(
     requestHeaders.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...requestOptions,
-    headers: requestHeaders,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...requestOptions,
+      headers: requestHeaders,
+    });
+  } catch (networkErr) {
+    if (
+      networkErr instanceof TypeError ||
+      (networkErr instanceof Error && /networkerror|failed to fetch/i.test(networkErr.message))
+    ) {
+      throw new ApiError(
+        'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.',
+        0,
+        'NETWORK_ERROR',
+      );
+    }
+    throw networkErr;
+  }
 
   if (response.status === 204) return undefined as T;
 
@@ -156,9 +190,24 @@ export async function apiRequest<T>(
 
 export async function apiDownload(path: string): Promise<Blob> {
   const token = getAccessToken();
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  } catch (networkErr) {
+    if (
+      networkErr instanceof TypeError ||
+      (networkErr instanceof Error && /networkerror|failed to fetch/i.test(networkErr.message))
+    ) {
+      throw new ApiError(
+        'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.',
+        0,
+        'NETWORK_ERROR',
+      );
+    }
+    throw networkErr;
+  }
 
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ErrorBody;
