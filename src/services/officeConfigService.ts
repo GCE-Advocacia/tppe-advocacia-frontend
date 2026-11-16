@@ -1,6 +1,7 @@
 import { apiRequest, getAccessToken, clearAccessToken, ApiError } from './api';
 import type { SuccessResponse } from './api';
 import type { LandingPageData, LandingPageTheme, ThemeCreatePayload, ThemeUpdatePayload } from '../pages/sistema/LandingPage/types';
+import { mockLandingPage } from '../pages/sistema/LandingPage/mockData';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -93,19 +94,23 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     advogadoImagem: api.lawyer_image_url ?? '',
     advogadoImagemPos: parsePos(api.lawyer_image_position),
     diferenciais: [1, 2, 3].map(i => {
-      const existing = (api.differentials ?? [])[i - 1];
+      const existing = (api.differentials && api.differentials.length > 0)
+        ? api.differentials[i - 1]
+        : (mockLandingPage.diferenciais[i - 1] as unknown as { title: string; description: string });
       return {
         id: i,
-        titulo: existing?.title ?? '',
-        descricao: existing?.description ?? '',
+        titulo: existing ? ('title' in existing ? existing.title : (existing as any).titulo) : '',
+        descricao: existing ? ('description' in existing ? existing.description : (existing as any).descricao) : '',
       };
     }),
     areas: [1, 2, 3, 4, 5, 6].map(i => {
-      const existing = (api.areas_of_practice ?? [])[i - 1];
+      const existing = (api.areas_of_practice && api.areas_of_practice.length > 0)
+        ? api.areas_of_practice[i - 1]
+        : (mockLandingPage.areas[i - 1] as unknown as { title: string; description: string });
       return {
         id: i,
-        titulo: existing?.title ?? '',
-        descricao: existing?.description ?? '',
+        titulo: existing ? ('title' in existing ? existing.title : (existing as any).titulo) : '',
+        descricao: existing ? ('description' in existing ? existing.description : (existing as any).descricao) : '',
       };
     }),
     color: api.color ?? '#232C43',
@@ -154,10 +159,10 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     lawyer_image_position: `${Math.round(ui.advogadoImagemPos.x)},${Math.round(ui.advogadoImagemPos.y)}`,
     differentials: ui.diferenciais
       .filter(d => d.titulo.trim() !== '' || d.descricao.trim() !== '')
-      .map(d => ({ title: d.titulo.trim() || 'Diferencial', description: d.descricao })),
+      .map(d => ({ title: d.titulo.trim(), description: d.descricao })),
     areas_of_practice: ui.areas
       .filter(a => a.titulo.trim() !== '' || a.descricao.trim() !== '')
-      .map(a => ({ title: a.titulo.trim() || 'Área de Atuação', description: a.descricao })),
+      .map(a => ({ title: a.titulo.trim(), description: a.descricao })),
     color: ui.color || null,
     button_radius: ui.buttonRadius,
     color_bg_primary: ui.colorBgPrimary || null,

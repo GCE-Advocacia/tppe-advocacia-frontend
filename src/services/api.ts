@@ -50,21 +50,22 @@ export class ApiError extends Error {
 }
 
 function translatePydanticMsg(msg: string, ctx: Record<string, unknown> | undefined): string {
-  if (/String should have at most/.test(msg)) {
-    const max = ctx?.max_length ?? msg.match(/\d+/)?.[0] ?? '?';
+  const clean = msg.replace(/^Value error,\s*/i, '');
+  if (/String should have at most/.test(clean)) {
+    const max = ctx?.max_length ?? clean.match(/\d+/)?.[0] ?? '?';
     return `Máximo de ${max} caracteres permitido.`;
   }
-  if (/String should have at least/.test(msg)) {
-    const min = ctx?.min_length ?? msg.match(/\d+/)?.[0] ?? '?';
+  if (/String should have at least/.test(clean)) {
+    const min = ctx?.min_length ?? clean.match(/\d+/)?.[0] ?? '?';
     return `Mínimo de ${min} caracteres requerido.`;
   }
-  if (msg === 'Field required') return 'Campo obrigatório.';
-  if (/valid email/i.test(msg)) return 'E-mail inválido.';
-  if (/valid integer/i.test(msg)) return 'Valor inválido.';
-  if (/^URL |valid URL|relative URL|url_parsing|URL scheme/i.test(msg)) {
+  if (clean === 'Field required') return 'Campo obrigatório.';
+  if (/valid email/i.test(clean)) return 'E-mail inválido.';
+  if (/valid integer/i.test(clean)) return 'Valor inválido.';
+  if (/^URL |valid URL|relative URL|url_parsing|URL scheme/i.test(clean)) {
     return 'URL inválida. Insira um link completo iniciando com https:// ou http://';
   }
-  return msg;
+  return clean;
 }
 
 function parseMessage(message: unknown): string {
