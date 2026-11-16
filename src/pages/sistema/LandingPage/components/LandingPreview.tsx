@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { memo, useState, type CSSProperties } from 'react';
 import { Monitor, Smartphone, Tablet } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
@@ -7,7 +7,7 @@ export interface LandingPreviewProps {
   data: LandingPageData;
 }
 
-export default function LandingPreview({ data }: LandingPreviewProps) {
+const LandingPreview = memo(function LandingPreview({ data }: LandingPreviewProps) {
   const [viewport, setViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const previewVars = {
     '--pv-button-radius': data.buttonRadius ?? '6px',
@@ -74,10 +74,29 @@ export default function LandingPreview({ data }: LandingPreviewProps) {
           <section id="pv-artigos" className={styles.pvDarkSection}><p className={styles.pvKicker}>Publicações</p><h2>Artigos e Notícias</h2><div className={styles.pvArticleGrid}>{['Assessoria jurídica estratégica para empresas', 'Segurança jurídica e crescimento sustentável', 'O que considerar em contratos empresariais'].map(title => <article key={title}><p>Publicação recente</p><h3>{title}</h3><a href="#pv-artigos">Leia mais →</a></article>)}</div></section>
           <section id="pv-contato" className={styles.pvLightSection}><div className={styles.pvContactGrid}><div><h2>Entre em Contato</h2><p>ENDEREÇO</p><p>{data.endereco || 'Av. Paulista, 1.500 - 10º andar\nBela Vista, São Paulo - SP\nCEP 01310-100'}</p><p>E-MAIL</p><p>{data.email || 'contato@vitorfranca.adv.br'}</p><p>TELEFONE</p><p>{data.telefone || '(11) 3456-7890'}</p><a className={styles.pvButton} href={data.whatsapp || '#pv-contato'}>Falar no WhatsApp</a></div><div className={styles.pvForm}><label>Nome<input readOnly placeholder="Seu nome" /></label><label>E-mail<input readOnly placeholder="seu@email.com" /></label><label>Telefone<input readOnly placeholder="(11) 99999-9999" /></label><label>Mensagem<textarea readOnly placeholder="Como podemos ajudar?" /></label><p>Li e concordo com o Termo de Consentimento.</p><button className={styles.pvButton} type="button">Enviar Mensagem</button></div></div></section>
         </main>
-        <footer className={styles.pvFooter}><div><img src="/logo.png" alt="Vitor França" /><p>© 2026 Vitor França. Todos os direitos reservados.</p></div><nav>{['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>)}</nav><div>{data.linkedin && <a href={data.linkedin}>LinkedIn</a>}{data.instagram && <a href={data.instagram}>Instagram</a>}</div></footer>
+        <footer className={styles.pvFooter}>
+          <div className={styles.pvFooterInner}>
+            <a href="#pv-hero" className={styles.pvFooterLogo}><img src="/logo.png" alt="Vitor França" /></a>
+            <nav className={styles.pvFooterLinks}>
+              {['Escritório', 'Diferenciais', 'Áreas', 'Sobre', 'Artigos', 'Contato'].map((item, i) => (
+                <a key={item} href={`#pv-${['escritorio', 'diferenciais', 'areas', 'sobre', 'artigos', 'contato'][i]}`}>{item}</a>
+              ))}
+            </nav>
+            <div className={styles.pvFooterSocial}>
+              <a href={data.linkedin || '#'} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a href={data.instagram || '#'} target="_blank" rel="noopener noreferrer">Instagram</a>
+            </div>
+          </div>
+          <div className={styles.pvFooterBottom}>
+            <span>{data.advogadoOab || 'OAB/SP 123.456'}</span>
+            <span>© 2026 Vitor França. Todos os direitos reservados.</span>
+          </div>
+        </footer>
       </div>
       </div>
       </div>
     </section>
   );
-}
+});
+
+export default LandingPreview;

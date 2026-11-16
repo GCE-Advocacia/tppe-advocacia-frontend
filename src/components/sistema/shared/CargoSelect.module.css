@@ -12,7 +12,7 @@
   background: var(--white);
   transition: border-color .2s;
 }
-.box:hover { border-color: var(--navy); }
+.box:hover { border-color: var(--brand-primary); }
 .readOnly { cursor: default; background: #fafafa; }
 .readOnly:hover { border-color: #e0e0e0; }
 
@@ -22,14 +22,14 @@
 
 .tag {
   display: inline-flex; align-items: center; gap: 4px;
-  background: #e8eaf6; color: var(--navy);
+  background: #e8eaf6; color: var(--brand-primary);
   font-size: .78rem; font-weight: 600;
   padding: 3px 8px; border-radius: 20px;
 }
 
 .removeTag {
   background: none; border: none; cursor: pointer;
-  color: var(--navy); display: flex; align-items: center;
+  color: var(--brand-primary); display: flex; align-items: center;
   padding: 0;
 }
 
@@ -58,4 +58,4 @@
   color: var(--text);
 }
 .option:hover { background: #f5f5f5; }
-.option.selected { background: #e8eaf6; font-weight: 600; color: var(--navy); }
+.option.selected { background: #e8eaf6; font-weight: 600; color: var(--brand-primary); }

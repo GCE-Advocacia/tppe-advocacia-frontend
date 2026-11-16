@@ -8,19 +8,19 @@
 
 .pageTitle {
   font-family: var(--font-display);
-  font-size: 2rem; font-weight: 700; color: var(--navy);
+  font-size: 2rem; font-weight: 700; color: var(--brand-title);
 }
 
 .headerActions { display: flex; gap: 12px; align-items: center; }
 
 .btnPrimary {
   display: flex; align-items: center; gap: 8px;
-  background: var(--navy); color: var(--white);
+  background: var(--brand-accent); color: var(--brand-accent-text);
   border: none; padding: 10px 20px; border-radius: var(--btn-radius, 6px);
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnPrimary:hover { background: var(--navy-mid); }
+.btnPrimary:hover { background: var(--brand-accent-hover); }
 
 .btnSecondary {
   background: var(--white); color: var(--navy);
@@ -40,7 +40,7 @@
 
 /* Table */
 .tableWrap {
-  background: var(--white);
+  background: var(--sys-surface);
   border-radius: 12px;
   overflow-x: auto;
   box-shadow: 0 1px 4px rgba(0,0,0,.06);
@@ -94,7 +94,7 @@
   padding: 4px; border-radius: 4px; transition: color .2s;
 }
 .iconBtn:hover { color: var(--navy); }
-.iconBtn.danger:hover { color: var(--crimson); }
+.iconBtn.danger:hover { color: var(--color-danger); }
 
 /* Filters */
 .filterBar {
@@ -134,7 +134,7 @@
 .logDay  { display: block; font-weight: 700; color: var(--navy); font-size: .9rem; }
 .logHour { display: block; color: var(--gray); font-size: .82rem; margin-top: 2px; }
 
-.logDivider { width: 3px; height: 48px; background: var(--crimson); border-radius: 2px; flex-shrink: 0; }
+.logDivider { width: 3px; height: 48px; background: var(--brand-accent); border-radius: 2px; flex-shrink: 0; }
 
 .logContent { flex: 1; }
 .logDesc    { font-weight: 600; color: var(--navy); font-size: .9rem; margin-bottom: 4px; }
@@ -206,6 +206,27 @@
   background: #fafafa;
 }
 
+.permissoesFieldset {
+  border: 1.5px solid #e0e0e0; border-radius: 8px;
+  padding: 12px 14px 14px; margin: 0 0 16px;
+}
+.permissoesFieldset legend { padding: 0 6px; margin-bottom: 0; }
+.permissoesActions { display: flex; gap: 16px; margin-bottom: 10px; }
+.permissoesHint { font-size: .78rem; color: var(--gray); margin-bottom: 10px; }
+.btnLink {
+  background: none; border: none; padding: 0;
+  color: var(--navy); font-family: var(--font-body);
+  font-size: .8rem; font-weight: 600; text-decoration: underline; cursor: pointer;
+}
+.permissoesGrid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 16px;
+}
+.permissaoItem {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .85rem; color: var(--text); cursor: pointer;
+}
+.permissaoItem:has(input:disabled) { cursor: default; }
+
 .infoBox {
   display: flex; gap: 10px; align-items: flex-start;
   background: #e8eaf6; border-radius: 8px;
@@ -229,12 +250,12 @@
 .btnCancel:hover { color: var(--text); }
 
 .btnDanger {
-  background: var(--crimson); color: var(--white);
+  background: var(--color-danger); color: var(--white);
   border: none; padding: 10px 24px; border-radius: 8px;
   font-size: .9rem; font-weight: 600; cursor: pointer;
   font-family: var(--font-body); transition: background .2s;
 }
-.btnDanger:hover { background: var(--crimson-light); }
+.btnDanger:hover { background: var(--color-danger-hover); }
 
 .deleteText {
   color: var(--gray); line-height: 1.7; font-size: .95rem;
@@ -264,6 +285,6 @@
 
 .errorMsg {
   padding: 10px 14px; margin: 8px 0;
-  background: #fce4ec; color: var(--crimson);
+  background: var(--color-danger-bg); color: var(--color-danger);
   border-radius: 8px; font-size: .85rem;
 }

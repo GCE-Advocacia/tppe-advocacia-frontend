@@ -1,6 +1,7 @@
 import { apiRequest, getAccessToken, clearAccessToken, ApiError } from './api';
 import type { SuccessResponse } from './api';
 import type { LandingPageData, LandingPageTheme, ThemeCreatePayload, ThemeUpdatePayload } from '../pages/sistema/LandingPage/types';
+import { mockLandingPage } from '../pages/sistema/LandingPage/mockData';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1';
 
@@ -58,11 +59,15 @@ export interface OfficeConfigAPI {
   color_link_primary: string | null;
   color_link_secondary: string | null;
   theme_id?: number | null;
+  system_uses_landing_buttons?: boolean;
+  color_buttons_system?: string | null;
+  color_buttons_system_hover?: string | null;
+  color_buttons_system_text?: string | null;
 }
 
 function parsePos(s: string | null): { x: number; y: number } {
   if (!s) return { x: 50, y: 50 };
-  const [x, y] = s.split(',').map(Number);
+  const [x, y] = s.split(',').map(v => Number(v.trim()));
   return (isNaN(x) || isNaN(y)) ? { x: 50, y: 50 } : { x, y };
 }
 
@@ -88,16 +93,26 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     advogadoConteudo: api.lawyer_description ?? '',
     advogadoImagem: api.lawyer_image_url ?? '',
     advogadoImagemPos: parsePos(api.lawyer_image_position),
-    diferenciais: (api.differentials ?? []).map((d, i) => ({
-      id: i + 1,
-      titulo: d.title,
-      descricao: d.description,
-    })),
-    areas: (api.areas_of_practice ?? []).map((a, i) => ({
-      id: i + 1,
-      titulo: a.title,
-      descricao: a.description,
-    })),
+    diferenciais: [1, 2, 3].map(i => {
+      const existing = (api.differentials && api.differentials.length > 0)
+        ? api.differentials[i - 1]
+        : (mockLandingPage.diferenciais[i - 1] as unknown as { title: string; description: string });
+      return {
+        id: i,
+        titulo: existing ? ('title' in existing ? existing.title : (existing as any).titulo) : '',
+        descricao: existing ? ('description' in existing ? existing.description : (existing as any).descricao) : '',
+      };
+    }),
+    areas: [1, 2, 3, 4, 5, 6].map(i => {
+      const existing = (api.areas_of_practice && api.areas_of_practice.length > 0)
+        ? api.areas_of_practice[i - 1]
+        : (mockLandingPage.areas[i - 1] as unknown as { title: string; description: string });
+      return {
+        id: i,
+        titulo: existing ? ('title' in existing ? existing.title : (existing as any).titulo) : '',
+        descricao: existing ? ('description' in existing ? existing.description : (existing as any).descricao) : '',
+      };
+    }),
     color: api.color ?? '#232C43',
     buttonRadius: api.button_radius ?? '6px',
     colorBgPrimary: api.color_bg_primary ?? '#232C43',
@@ -113,6 +128,10 @@ function apiToUI(api: OfficeConfigAPI): LandingPageData {
     colorLinkPrimary: api.color_link_primary ?? '#FFFFFF',
     colorLinkSecondary: api.color_link_secondary ?? '#661C16',
     themeId: api.theme_id ?? null,
+    systemUsesLandingButtons: api.system_uses_landing_buttons ?? true,
+    colorButtonsSystem: api.color_buttons_system ?? null,
+    colorButtonsSystemHover: api.color_buttons_system_hover ?? null,
+    colorButtonsSystemText: api.color_buttons_system_text ?? null,
   };
 }
 
@@ -138,8 +157,12 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     lawyer_description: ui.advogadoConteudo || null,
     lawyer_image_url: ui.advogadoImagem || null,
     lawyer_image_position: `${Math.round(ui.advogadoImagemPos.x)},${Math.round(ui.advogadoImagemPos.y)}`,
-    differentials: ui.diferenciais.map(d => ({ title: d.titulo, description: d.descricao })),
-    areas_of_practice: ui.areas.map(a => ({ title: a.titulo, description: a.descricao })),
+    differentials: ui.diferenciais
+      .filter(d => d.titulo.trim() !== '' || d.descricao.trim() !== '')
+      .map(d => ({ title: d.titulo.trim(), description: d.descricao })),
+    areas_of_practice: ui.areas
+      .filter(a => a.titulo.trim() !== '' || a.descricao.trim() !== '')
+      .map(a => ({ title: a.titulo.trim(), description: a.descricao })),
     color: ui.color || null,
     button_radius: ui.buttonRadius,
     color_bg_primary: ui.colorBgPrimary || null,
@@ -155,6 +178,10 @@ function uiToApi(ui: LandingPageData): Omit<OfficeConfigAPI, 'id' | 'cnpj' | 'of
     color_link_primary: ui.colorLinkPrimary || null,
     color_link_secondary: ui.colorLinkSecondary || null,
     theme_id: ui.themeId ?? null,
+    system_uses_landing_buttons: ui.systemUsesLandingButtons ?? true,
+    color_buttons_system: ui.colorButtonsSystem || null,
+    color_buttons_system_hover: ui.colorButtonsSystemHover || null,
+    color_buttons_system_text: ui.colorButtonsSystemText || null,
   };
 }
 
@@ -245,6 +272,20 @@ const UPLOAD_ERROR_MESSAGES: Record<string, string> = {
 export const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 export const LOGO_ACCEPT = '.png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml';
 
+export const MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+export const MEDIA_ACCEPT = '.png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp';
+
+export function validateMediaFile(file: File): string | null {
+  if (file.size === 0) return 'O arquivo está vazio. Selecione uma imagem.';
+  if (file.size > MEDIA_MAX_BYTES) return 'A imagem deve ter no máximo 5MB.';
+  const supportedMime = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
+  const supportedExtension = /\.(png|jpe?g|webp)$/i.test(file.name);
+  if (!supportedMime && !(supportedExtension && (!file.type || file.type === 'application/octet-stream'))) {
+    return 'Formato inválido. Use PNG, JPG ou WEBP.';
+  }
+  return null;
+}
+
 /** Early feedback only; the server also decodes and validates the actual image. */
 export function validateLogoFile(file: File): string | null {
   if (file.size === 0) return 'O arquivo está vazio. Selecione uma imagem.';
@@ -263,7 +304,7 @@ const LOGO_ERROR_MESSAGES: Record<string, string> = {
   INVALID_LOGO_IMAGE: 'Imagem inválida. Use uma imagem estática, visível e sem danos.',
   LOGO_DIMENSIONS_TOO_LARGE: 'A imagem tem resolução muito alta. Use até 20 milhões de pixels.',
   VALIDATION_ERROR: 'Selecione uma logo em PNG, JPG, WebP ou SVG.',
-  FORBIDDEN: 'Apenas administradores podem alterar a logo.',
+  FORBIDDEN: 'Você não tem permissão para acessar esta área.',
   LOGO_NOT_CONFIGURED: 'Selecione uma logo antes de defini-la como padrão.',
 };
 

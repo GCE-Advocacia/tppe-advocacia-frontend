@@ -10,7 +10,6 @@ import {
   updateOfficeConfig,
 } from '../../../../services/officeConfigService';
 import {
-  DEFAULT_COLORS,
   type LandingPageData,
   type LandingPageTheme,
 } from '../types';
@@ -60,7 +59,7 @@ export function usePersonalizacaoThemes({
   }, [fetchThemes]);
 
   const isColorMatching = useCallback((t: LandingPageTheme, currentColors: LandingPageData) => {
-    return (
+    const landingMatches = (
       t.color_bg_primary.toLowerCase() === (currentColors.colorBgPrimary || '').toLowerCase() &&
       t.color_bg_secondary.toLowerCase() === (currentColors.colorBgSecondary || '').toLowerCase() &&
       t.color_bg_sobre.toLowerCase() === (currentColors.colorBgSobre || '').toLowerCase() &&
@@ -74,6 +73,27 @@ export function usePersonalizacaoThemes({
       t.color_link_primary.toLowerCase() === (currentColors.colorLinkPrimary || '').toLowerCase() &&
       t.color_link_secondary.toLowerCase() === (currentColors.colorLinkSecondary || '').toLowerCase()
     );
+    if (!landingMatches) return false;
+
+    const themeUsesLanding = t.system_uses_landing_buttons ?? true;
+    const currentUsesLanding = currentColors.systemUsesLandingButtons ?? true;
+    if (themeUsesLanding !== currentUsesLanding) return false;
+
+    if (!themeUsesLanding) {
+      const tSysBg = (t.color_buttons_system || t.color_buttons || '').toLowerCase();
+      const tSysHover = (t.color_buttons_system_hover || t.color_buttons_hover || '').toLowerCase();
+      const tSysText = (t.color_buttons_system_text || t.color_buttons_text || '').toLowerCase();
+
+      const cSysBg = (currentColors.colorButtonsSystem || currentColors.colorButtons || '').toLowerCase();
+      const cSysHover = (currentColors.colorButtonsSystemHover || currentColors.colorButtonsHover || '').toLowerCase();
+      const cSysText = (currentColors.colorButtonsSystemText || currentColors.colorButtonsText || '').toLowerCase();
+
+      if (tSysBg !== cSysBg || tSysHover !== cSysHover || tSysText !== cSysText) {
+        return false;
+      }
+    }
+
+    return true;
   }, []);
 
   // Tema de referência original (baseTheme): o último tema deliberadamente selecionado ou associado
@@ -134,12 +154,69 @@ export function usePersonalizacaoThemes({
     });
   }, [baseTheme, isColorMatching, setData]);
 
-  const restoreDefaultColors = useCallback(() => {
+  const updateSystemButtons = useCallback((changes: Partial<Pick<LandingPageData, 'systemUsesLandingButtons' | 'colorButtonsSystem' | 'colorButtonsSystemHover' | 'colorButtonsSystemText'>>) => {
+    setData(d => {
+      const next: LandingPageData = { ...d, ...changes };
+      if (baseTheme && !baseTheme.is_predefined) {
+        next.themeId = baseTheme.id;
+      } else if (baseTheme && isColorMatching(baseTheme, next)) {
+        next.themeId = baseTheme.id;
+      } else {
+        next.themeId = null;
+      }
+      return next;
+    });
+  }, [baseTheme, isColorMatching, setData]);
+
+  const isColorsDirty = useMemo(() => {
+    return (
+      (data.colorBgPrimary || '').toLowerCase() !== (saved.colorBgPrimary || '').toLowerCase() ||
+      (data.colorBgSecondary || '').toLowerCase() !== (saved.colorBgSecondary || '').toLowerCase() ||
+      (data.colorBgSobre || '').toLowerCase() !== (saved.colorBgSobre || '').toLowerCase() ||
+      (data.colorButtons || '').toLowerCase() !== (saved.colorButtons || '').toLowerCase() ||
+      (data.colorButtonsHover || '').toLowerCase() !== (saved.colorButtonsHover || '').toLowerCase() ||
+      (data.colorButtonsText || '').toLowerCase() !== (saved.colorButtonsText || '').toLowerCase() ||
+      (data.colorTitlePrimary || '').toLowerCase() !== (saved.colorTitlePrimary || '').toLowerCase() ||
+      (data.colorTitleSecondary || '').toLowerCase() !== (saved.colorTitleSecondary || '').toLowerCase() ||
+      (data.colorTextPrimary || '').toLowerCase() !== (saved.colorTextPrimary || '').toLowerCase() ||
+      (data.colorTextSecondary || '').toLowerCase() !== (saved.colorTextSecondary || '').toLowerCase() ||
+      (data.colorLinkPrimary || '').toLowerCase() !== (saved.colorLinkPrimary || '').toLowerCase() ||
+      (data.colorLinkSecondary || '').toLowerCase() !== (saved.colorLinkSecondary || '').toLowerCase() ||
+      (data.systemUsesLandingButtons ?? true) !== (saved.systemUsesLandingButtons ?? true) ||
+      (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
+      (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
+      (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase() ||
+      data.themeId !== saved.themeId
+    );
+  }, [data, saved]);
+
+  const discardColorChanges = useCallback(() => {
     setData(d => ({
       ...d,
-      ...DEFAULT_COLORS,
+      themeId: saved.themeId,
+      color: saved.color,
+      colorBgPrimary: saved.colorBgPrimary,
+      colorBgSecondary: saved.colorBgSecondary,
+      colorBgSobre: saved.colorBgSobre,
+      colorButtons: saved.colorButtons,
+      colorButtonsHover: saved.colorButtonsHover,
+      colorButtonsText: saved.colorButtonsText,
+      systemUsesLandingButtons: saved.systemUsesLandingButtons,
+      colorButtonsSystem: saved.colorButtonsSystem,
+      colorButtonsSystemHover: saved.colorButtonsSystemHover,
+      colorButtonsSystemText: saved.colorButtonsSystemText,
+      colorTitlePrimary: saved.colorTitlePrimary,
+      colorTitleSecondary: saved.colorTitleSecondary,
+      colorTextPrimary: saved.colorTextPrimary,
+      colorTextSecondary: saved.colorTextSecondary,
+      colorLinkPrimary: saved.colorLinkPrimary,
+      colorLinkSecondary: saved.colorLinkSecondary,
     }));
-  }, [setData]);
+    setSelectedThemeId(saved.themeId ?? null);
+    if (saved.themeId) {
+      setBaseThemeId(saved.themeId);
+    }
+  }, [saved, setData]);
 
   const matchedTheme = useMemo(() => {
     const activeId = data.themeId ?? selectedThemeId;
@@ -165,6 +242,7 @@ export function usePersonalizacaoThemes({
   const handleThemeSelected = useCallback((theme: LandingPageTheme) => {
     setBaseThemeId(theme.id);
     setSelectedThemeId(theme.id);
+    const usesLanding = theme.system_uses_landing_buttons ?? true;
     setData(d => ({
       ...d,
       themeId: theme.id,
@@ -175,6 +253,10 @@ export function usePersonalizacaoThemes({
       colorButtons: theme.color_buttons,
       colorButtonsHover: theme.color_buttons_hover,
       colorButtonsText: theme.color_buttons_text,
+      systemUsesLandingButtons: usesLanding,
+      colorButtonsSystem: theme.color_buttons_system ?? (usesLanding ? null : theme.color_buttons),
+      colorButtonsSystemHover: theme.color_buttons_system_hover ?? (usesLanding ? null : theme.color_buttons_hover),
+      colorButtonsSystemText: theme.color_buttons_system_text ?? (usesLanding ? null : theme.color_buttons_text),
       colorTitlePrimary: theme.color_title_primary,
       colorTitleSecondary: theme.color_title_secondary,
       colorTextPrimary: theme.color_text_primary,
@@ -211,10 +293,12 @@ export function usePersonalizacaoThemes({
   }, []);
 
   const handleSaveCurrentAsTheme = useCallback(async (
+    name: string,
+    desc: string,
     brandingSave: () => Promise<void>,
     applyConfigCallback?: (cfg: OfficeConfigAPI) => void
   ) => {
-    if (!newThemeName.trim()) {
+    if (!name.trim()) {
       setSaveNewError('Informe um nome para o tema.');
       return;
     }
@@ -223,8 +307,8 @@ export function usePersonalizacaoThemes({
     try {
       await brandingSave();
       const created = await createTheme({
-        name: newThemeName.trim(),
-        description: newThemeDesc.trim() || null,
+        name: name.trim(),
+        description: desc.trim() || null,
         color: data.color || '#232C43',
         color_bg_primary: data.colorBgPrimary || '#232C43',
         color_bg_secondary: data.colorBgSecondary || '#F5F3EF',
@@ -232,6 +316,10 @@ export function usePersonalizacaoThemes({
         color_buttons: data.colorButtons || '#661C16',
         color_buttons_hover: data.colorButtonsHover || '#A52020',
         color_buttons_text: data.colorButtonsText || '#FFFFFF',
+        system_uses_landing_buttons: data.systemUsesLandingButtons ?? true,
+        color_buttons_system: data.colorButtonsSystem || null,
+        color_buttons_system_hover: data.colorButtonsSystemHover || null,
+        color_buttons_system_text: data.colorButtonsSystemText || null,
         color_title_primary: data.colorTitlePrimary || '#FFFFFF',
         color_title_secondary: data.colorTitleSecondary || '#232C43',
         color_text_primary: data.colorTextPrimary || '#FFFFFF',
@@ -257,7 +345,7 @@ export function usePersonalizacaoThemes({
     } finally {
       setSavingNewTheme(false);
     }
-  }, [newThemeName, newThemeDesc, data, defaultApplyConfig, fetchThemes, setData, setSaved]);
+  }, [data, defaultApplyConfig, fetchThemes, setData, setSaved]);
 
   return {
     themes,
@@ -270,9 +358,11 @@ export function usePersonalizacaoThemes({
     baseTheme,
     matchedTheme,
     isBaseThemeModified,
+    isColorsDirty,
+    discardColorChanges,
     isColorMatching,
     updateColor,
-    restoreDefaultColors,
+    updateSystemButtons,
     handleThemeSelected,
     handleSelectFromLibrary,
     // Modais

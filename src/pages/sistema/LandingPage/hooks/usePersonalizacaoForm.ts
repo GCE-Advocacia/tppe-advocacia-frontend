@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,13 +20,15 @@ import type { PersonalizacaoThemesController } from './usePersonalizacaoThemes';
 export function usePersonalizacaoForm() {
   const navigate = useNavigate();
   const { applyConfig } = useBrandingActions();
+
   const [saved, setSaved] = useState<LandingPageData>(EMPTY_DATA);
   const [data, setData] = useState<LandingPageData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmThemeUpdate, setConfirmThemeUpdate] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
   const branding = useBrandingDraft();
   const formDirty = !deepEqual(data, saved);
@@ -52,34 +55,89 @@ export function usePersonalizacaoForm() {
   // Guarda de rota 1: alerta ao fechar a janela / dar F5 com rascunhos não salvos
   useEffect(() => {
     if (!isDirty) return;
+
     const warnBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = '';
     };
+
     window.addEventListener('beforeunload', warnBeforeUnload);
     return () => window.removeEventListener('beforeunload', warnBeforeUnload);
   }, [isDirty]);
 
-  // Guarda de rota 2: alerta ao clicar em links internos com rascunhos não salvos
+  // Guarda de rota 2: modal ao clicar em links internos com rascunhos não salvos
   useEffect(() => {
-    if (!isDirty) return;
-    const guardInternalNavigation = (event: MouseEvent) => {
+    if (!isDirty) {
+      setPendingNavigationPath(null);
+      return;
+    }
+
+    const confirmInternalNavigation = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const link = target?.closest('a[href]') as HTMLAnchorElement | null;
-      if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      if (
+        !link ||
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) return;
+
       const destination = new URL(link.href, window.location.href);
-      if (destination.origin !== window.location.origin || destination.pathname === window.location.pathname) return;
+
+      if (
+        destination.origin !== window.location.origin ||
+        destination.pathname === window.location.pathname
+      ) return;
+
       event.preventDefault();
       event.stopImmediatePropagation();
-      setPendingNavigation(destination.pathname + destination.search + destination.hash);
+
+      setPendingNavigationPath(
+        `${destination.pathname}${destination.search}${destination.hash}`
+      );
     };
-    document.addEventListener('click', guardInternalNavigation, true);
-    return () => document.removeEventListener('click', guardInternalNavigation, true);
+
+    document.addEventListener('click', confirmInternalNavigation, true);
+
+    return () => {
+      document.removeEventListener('click', confirmInternalNavigation, true);
+    };
   }, [isDirty]);
 
-  const continueEditing = useCallback(() => setPendingNavigation(null), []);
+  // Continuar editando e cancelar navegação
+  const continueEditing = useCallback(() => {
+    setPendingNavigationPath(null);
+  }, []);
 
-  const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
+  const cancelNavigation = useCallback(() => {
+    setPendingNavigationPath(null);
+  }, []);
+
+  // Descarta as alterações e navega para o destino solicitado
+  const discardAndNavigate = useCallback(() => {
+    if (!pendingNavigationPath) return;
+
+    const destination = pendingNavigationPath;
+
+    discard();
+    setPendingNavigationPath(null);
+    navigate(destination);
+  }, [pendingNavigationPath, navigate]);
+
+  // Confirma a navegação
+  const confirmNavigation = useCallback(() => {
+    discardAndNavigate();
+  }, [discardAndNavigate]);
+
+  const set = useCallback(<K extends keyof LandingPageData>(
+    key: K,
+    value: LandingPageData[K]
+  ) => {
+    setSaveError(null);
     setData(d => ({ ...d, [key]: value }));
   }, []);
 
@@ -87,52 +145,59 @@ export function usePersonalizacaoForm() {
     setData(saved);
     branding.discard();
     setSaveError(null);
+
     if (themesCtrl) {
       themesCtrl.setSelectedThemeId(saved.themeId ?? null);
+
       if (saved.themeId) {
         themesCtrl.setBaseThemeId(saved.themeId);
       }
     }
   }, [saved, branding]);
 
-  const discardAndNavigate = useCallback(() => {
-    if (!pendingNavigation) return;
-    discard();
-    const destination = pendingNavigation;
-    setPendingNavigation(null);
-    navigate(destination);
-  }, [pendingNavigation, discard, navigate]);
-
-  const save = useCallback(async (themesCtrl: PersonalizacaoThemesController) => {
+  const save = useCallback(async (
+    themesCtrl: PersonalizacaoThemesController,
+    confirmed = false
+  ) => {
     if (saving || !isDirty || (branding.dirty && !branding.ready)) return;
+
     setSaveError(null);
 
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
     if (
+      formDirty &&
+      themesCtrl.isColorsDirty &&
       (!themesCtrl.baseTheme || themesCtrl.baseTheme.is_predefined || data.themeId === null) &&
       themesCtrl.isBaseThemeModified
     ) {
-      const maxCustom = themesCtrl.themeQuota?.max_custom ?? 6;
-      const customCount = themesCtrl.themeQuota
-        ? themesCtrl.themeQuota.custom_count
-        : themesCtrl.themes.filter(t => !t.is_predefined).length;
-
-      if (customCount >= maxCustom) {
-        setSaveError(
-          `Limite máximo de ${maxCustom} temas personalizados atingido. Para salvar essas alterações, exclua um tema existente na biblioteca.`
-        );
-        return;
-      }
       themesCtrl.openForkModal();
+      return;
+    }
+
+    if (
+      formDirty &&
+      themesCtrl.baseTheme &&
+      !themesCtrl.baseTheme.is_predefined &&
+      themesCtrl.isBaseThemeModified &&
+      !confirmed
+    ) {
+      setConfirmThemeUpdate(true);
       return;
     }
 
     // CENÁRIO 1: Tema personalizado em edição OU alteração apenas de outros campos
     setSaving(true);
+
     try {
       await branding.save();
+
       if (formDirty) {
-        if (themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
+        if (
+          themesCtrl.isColorsDirty &&
+          themesCtrl.baseTheme &&
+          !themesCtrl.baseTheme.is_predefined &&
+          themesCtrl.isBaseThemeModified
+        ) {
           await updateTheme(themesCtrl.baseTheme.id, {
             name: themesCtrl.baseTheme.name,
             description: themesCtrl.baseTheme.description,
@@ -143,6 +208,10 @@ export function usePersonalizacaoForm() {
             color_buttons: data.colorButtons || '#661C16',
             color_buttons_hover: data.colorButtonsHover || '#A52020',
             color_buttons_text: data.colorButtonsText || '#FFFFFF',
+            system_uses_landing_buttons: data.systemUsesLandingButtons ?? true,
+            color_buttons_system: data.colorButtonsSystem || null,
+            color_buttons_system_hover: data.colorButtonsSystemHover || null,
+            color_buttons_system_text: data.colorButtonsSystemText || null,
             color_title_primary: data.colorTitlePrimary || '#FFFFFF',
             color_title_secondary: data.colorTitleSecondary || '#232C43',
             color_text_primary: data.colorTextPrimary || '#FFFFFF',
@@ -154,21 +223,37 @@ export function usePersonalizacaoForm() {
 
         const payloadData: LandingPageData = {
           ...data,
-          themeId: themesCtrl.baseTheme ? themesCtrl.baseTheme.id : data.themeId,
+          themeId: themesCtrl.baseTheme
+            ? themesCtrl.baseTheme.id
+            : data.themeId,
         };
+
         const updated = await updateOfficeConfig(payloadData, applyConfig);
+
         setSaved(updated);
         setData(updated);
+
         if (updated.themeId) {
           themesCtrl.setSelectedThemeId(updated.themeId);
           themesCtrl.setBaseThemeId(updated.themeId);
         }
+
         await themesCtrl.fetchThemes();
       }
+
+      setConfirmThemeUpdate(false);
     } catch (err) {
-      setSaveError(
-        err instanceof Error ? err.message : 'Erro ao salvar. Verifique sua conexão e tente novamente.'
-      );
+      const msg = err instanceof Error ? err.message : '';
+
+      if (/networkerror|failed to fetch/i.test(msg)) {
+        setSaveError(
+          'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.'
+        );
+      } else {
+        setSaveError(
+          msg || 'Erro ao salvar. Verifique sua conexão e tente novamente.'
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -182,14 +267,22 @@ export function usePersonalizacaoForm() {
     loading,
     loadError,
     saving,
+    confirmThemeUpdate,
+    setConfirmThemeUpdate,
     saveError,
     setSaveError,
     branding,
     formDirty,
     isDirty,
-    pendingNavigation,
+
+    // Navegação
+    pendingNavigationPath,
+    pendingNavigation: pendingNavigationPath,
     continueEditing,
+    cancelNavigation,
     discardAndNavigate,
+    confirmNavigation,
+
     applyConfig,
     set,
     discard,

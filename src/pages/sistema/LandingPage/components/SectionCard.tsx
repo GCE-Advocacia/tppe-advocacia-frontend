@@ -9,7 +9,7 @@ export interface SectionCardProps {
 
 export default function SectionCard({ icon, title, children }: SectionCardProps) {
   return (
-    <div className={styles.card}>
+    <div className={styles.card} data-section={title}>
       <div className={styles.cardHeader}>
         <span className={styles.cardIcon}>{icon}</span>
         <h2 className={styles.cardTitle}>{title}</h2>

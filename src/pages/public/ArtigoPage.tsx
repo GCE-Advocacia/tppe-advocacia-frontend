@@ -89,7 +89,7 @@ export default function ArtigoPage() {
       <div className={styles.shell} style={{ margin: 0 }}>
         <ArticleHeader />
         <article className={styles.article}>
-          <p style={{ maxWidth: 800, margin: '48px auto', padding: '0 24px', color: 'var(--crimson, #c0392b)' }}>
+          <p style={{ maxWidth: 800, margin: '48px auto', padding: '0 24px', color: 'var(--color-danger, #c62828)' }}>
             {erro ?? 'Artigo não encontrado.'}
           </p>
         </article>
