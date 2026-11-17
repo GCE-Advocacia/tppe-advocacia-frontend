@@ -23,7 +23,7 @@
   font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--brand-title);
   margin: 0 0 4px;
 }
 
@@ -66,7 +66,7 @@
   text-align: left;
   cursor: pointer;
   font-family: var(--font-body);
-  color: var(--navy);
+  color: var(--brand-title);
   transition: background .15s;
 }
 .listItem:hover { background: #f5f5f5; }
@@ -113,7 +113,7 @@
 .segmented {
   display: inline-flex;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 8px);
   overflow: hidden;
 }
 
@@ -124,7 +124,7 @@
   padding: 7px 14px;
   border: none;
   background: var(--white);
-  color: var(--navy);
+  color: var(--brand-title);
   font-size: .82rem;
   font-weight: 600;
   font-family: var(--font-body);
@@ -135,8 +135,8 @@
 
 .segmented .segmentActive,
 .segmented .segmentActive:hover {
-  background: var(--navy);
-  color: var(--white);
+  background: var(--brand-accent);
+  color: var(--brand-accent-text);
 }
 
 .refreshButton {
@@ -144,10 +144,10 @@
   align-items: center;
   margin-left: auto;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: var(--btn-radius, 8px);
   border: 1px solid #e0e0e0;
   background: var(--white);
-  color: var(--navy);
+  color: var(--brand-title);
   cursor: pointer;
 }
 .refreshButton:hover:not(:disabled) { background: #f5f5f5; }
@@ -163,7 +163,7 @@
   padding: 12px 20px;
   border-bottom: 1px solid #f0f0f0;
   font-size: .88rem;
-  color: var(--navy);
+  color: var(--brand-title);
   flex-wrap: wrap;
 }
 
