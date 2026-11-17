@@ -181,7 +181,7 @@
   color: var(--gray); transition: background .2s;
 }
 .pageNum:hover { background: #f5f5f5; }
-.pageActive { background: var(--navy) !important; color: var(--white) !important; border-color: var(--navy) !important; }
+.pageActive { background: var(--brand-accent) !important; color: var(--brand-accent-text, #ffffff) !important; border-color: var(--brand-accent) !important; }
 
 /* Modal form */
 .fieldGroup { margin-bottom: 16px; }

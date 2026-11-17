@@ -97,7 +97,7 @@
 .alertDot {
   position: absolute; top: -2px; right: -3px;
   width: 9px; height: 9px; border-radius: 50%;
-  background: var(--crimson-light); box-shadow: 0 0 0 2px var(--navy);
+  background: var(--crimson-light); box-shadow: 0 0 0 2px var(--brand-primary);
 }
 .alertBadge {
   display: inline-block; margin-left: 8px; min-width: 20px; padding: 1px 6px;
