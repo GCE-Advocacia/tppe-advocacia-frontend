@@ -118,7 +118,7 @@
   font-size: .85rem;
 }
 .msgOk { background: #e9f6ee; color: #1f7a3a; }
-.msgError { background: #fbeaea; color: var(--crimson-light); }
+.msgError { background: var(--color-danger-bg, #fbeaea); color: var(--color-danger); }
 .msgWarn {
   display: flex; align-items: flex-start; gap: 8px;
   margin: 0; padding: 10px 12px; border-radius: 8px;
@@ -152,11 +152,12 @@
 .secondary { background: var(--white); color: var(--brand-title); border-color: #d9dce6; }
 .secondary:hover:not(:disabled) { background: #f5f5f5; }
 
-.danger { background: var(--crimson); color: var(--white); }
-.danger:hover { background: var(--crimson-light); }
+.danger { background: var(--color-danger); color: var(--white); }
+.danger:hover:not(:disabled) { background: var(--color-danger-hover); }
 
 .primary:disabled,
-.secondary:disabled { opacity: .5; cursor: not-allowed; }
+.secondary:disabled,
+.danger:disabled { opacity: .5; cursor: not-allowed; }
 
 .primary, .secondary, .danger, .ghost, .linkAction { min-height: 44px; justify-content: center; }
 .primary:focus-visible, .secondary:focus-visible, .danger:focus-visible,

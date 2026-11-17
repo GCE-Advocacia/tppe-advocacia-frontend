@@ -49,11 +49,11 @@
 .overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.45); display: flex; justify-content: flex-end; }
 .drawer { width: min(440px, 100%); height: 100%; background: var(--sys-surface); box-shadow: -12px 0 40px rgba(0,0,0,.16); overflow-y: auto; }
 .drawerHeader { min-height: 90px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 22px 24px; border-bottom: 1px solid #eceef2; }
-.drawerHeader h2 { color: var(--navy); font-size: 1.15rem; }
+.drawerHeader h2 { color: var(--brand-title); font-size: 1.15rem; }
 .drawerHeader button { border: none; background: transparent; color: var(--gray); cursor: pointer; }
 .drawerBody { padding: 22px 24px; }
 .contactLinks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-.contactLinks a { display: flex; align-items: center; gap: 8px; color: var(--navy); font-size: .8rem; font-weight: 600; }
+.contactLinks a { display: flex; align-items: center; gap: 8px; color: var(--brand-link); font-size: .8rem; font-weight: 600; }
 .messageBox { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border-radius: 7px; background: #f6f7f9; color: var(--gray); font-size: .8rem; line-height: 1.55; margin-bottom: 22px; }
 .messageBox svg { color: var(--brand-link); flex-shrink: 0; }
 .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }

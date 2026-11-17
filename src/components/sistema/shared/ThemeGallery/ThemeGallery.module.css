@@ -115,8 +115,8 @@
 }
 
 .cardSelected {
-  border-color: var(--navy, #232C43);
-  box-shadow: 0 0 0 3px rgba(35, 44, 67, 0.16), 0 4px 14px rgba(35, 44, 67, 0.12);
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-accent) 25%, transparent), 0 4px 14px rgba(0, 0, 0, 0.08);
   background: #f8fafc;
 }
 
@@ -224,8 +224,8 @@
   gap: 5px;
   font-size: 0.76rem;
   font-weight: 700;
-  color: var(--navy, #232C43);
-  background: #e2e8f0;
+  color: var(--brand-accent);
+  background: color-mix(in srgb, var(--brand-accent) 12%, transparent);
   padding: 3px 8px;
   border-radius: 4px;
 }

@@ -9,8 +9,8 @@
 .cancelButton { border: 1px solid #cbd0d9; background: white; color: var(--text); }
 .resetButton { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd0d9; border-radius: var(--btn-radius, 6px); padding: 9px 14px; background: white; color: var(--navy); font: 600 .82rem var(--font-body); cursor: pointer; }
 .options { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid #e3e6ec; border-radius: 8px; background: #fafbfc; }
-.checkboxLabel { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 600; color: var(--navy); cursor: pointer; }
-.checkboxLabel input { flex-shrink: 0; width: 17px; height: 17px; accent-color: var(--navy); }
+.checkboxLabel { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 600; color: var(--brand-title); cursor: pointer; }
+.checkboxLabel input { flex-shrink: 0; width: 17px; height: 17px; accent-color: var(--brand-accent); }
 .settings button:disabled { opacity: .6; cursor: not-allowed; }
 .settings button:focus-visible { outline: 3px solid #628ab6; outline-offset: 3px; }
 .filename { font-size: .83rem; color: var(--text); overflow-wrap: anywhere; }
@@ -25,7 +25,7 @@
 @media (max-width: 700px) { .layout { grid-template-columns: 1fr; gap: 24px; } }
 .settings { display: flex; flex-direction: column; gap: 20px; }
 .asset { border: 1px solid #e3e6ec; border-radius: 10px; padding: 20px; min-width: 0; }
-.assetTitle { margin: 0 0 18px; color: var(--navy); font-size: .98rem; }
+.assetTitle { margin: 0 0 18px; color: var(--brand-title); font-size: .98rem; }
 .systemGroup { display: flex; flex-direction: column; gap: 20px; }
 .systemGroup[hidden] { display: none; }
 .faviconPreview { width: 32px; height: 32px; object-fit: contain; }
