@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle, CheckCircle2, ChevronDown, ExternalLink, Eye, Inbox, Loader2,
   Mail, PlugZap, Save, Send, ShieldCheck, XCircle,
@@ -8,8 +8,10 @@ import Modal from '../../../components/sistema/Modal/Modal';
 import { ApiError } from '../../../services/api';
 import { previewEmailTemplate } from '../../../services/emailTemplates';
 import {
+  disconnectGmail,
   getEmailOverview,
   getEmailStatus,
+  getGmailAuthUrl,
   listEmailPresets,
   saveEmailAccount,
   saveEmailIdentity,
@@ -20,6 +22,7 @@ import {
   type EmailHealthState,
   type EmailOverview,
   type EmailStatus,
+  type GmailConnectResult,
   type PresetId,
   type ProviderPreset,
 } from '../../../services/emailSettings';
@@ -53,6 +56,26 @@ function errorMessage(err: unknown, fallback: string): string {
     return err.message;
   }
   return fallback;
+}
+
+const GMAIL_RESULT: Record<GmailConnectResult, { kind: 'ok' | 'error'; text: string }> = {
+  connected: {
+    kind: 'ok',
+    text: 'Pronto. Os e-mails do escritório agora saem pelo Gmail conectado. Se ele falhar, o e-mail do sistema assume sozinho.',
+  },
+  permission: {
+    kind: 'error',
+    text: 'O Google não liberou o envio de e-mails. Conecte de novo e deixe marcada a permissão de enviar e-mails em seu nome.',
+  },
+  cancelled: { kind: 'error', text: 'A conexão com o Google foi cancelada. Nada foi alterado.' },
+  error: {
+    kind: 'error',
+    text: 'Não foi possível conectar o Gmail. Tente de novo; se continuar, fale com o suporte.',
+  },
+};
+
+function isGmailResult(value: string | null): value is GmailConnectResult {
+  return value !== null && value in GMAIL_RESULT;
 }
 
 function domainOf(address: string): string {
@@ -581,11 +604,13 @@ interface AdvancedProps {
 function AdvancedOptions({ overview, status, presets, onChanged, onDirtyChange }: AdvancedProps) {
   const own = overview.own_account;
   const ownActive = Boolean(own?.is_active);
+  const isGmail = ownActive && own?.provider === 'gmail';
   const ownError = Boolean(ownActive && (status?.own_account_error || own?.last_test_ok === false));
   const [open, setOpen] = useState(ownError);
   const [wizard, setWizard] = useState(false);
   const [confirmSystem, setConfirmSystem] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Conta própria com erro: abre sozinho para o admin ver o problema.
@@ -593,12 +618,35 @@ function AdvancedOptions({ overview, status, presets, onChanged, onDirtyChange }
 
   const ownEmail = own?.from_email || own?.username || '';
   const summary = ownActive ? `Enviando por ${ownEmail}` : 'Enviando pelo e-mail do sistema';
-  const presetName = presets.find(p => p.id === own?.preset)?.name;
+  const presetName = isGmail ? 'Gmail conectado pelo Google' : presets.find(p => p.id === own?.preset)?.name;
+
+  async function connectGmail() {
+    setConnecting(true);
+    setError(null);
+    try {
+      window.location.assign(await getGmailAuthUrl());
+    } catch (err) {
+      setError(errorMessage(err, 'Não foi possível abrir a conexão com o Google.'));
+      setConnecting(false);
+    }
+  }
 
   async function useSystem() {
     if (!own) return;
     setBusy(true);
     setError(null);
+    if (isGmail) {
+      try {
+        await disconnectGmail();
+        setConfirmSystem(false);
+        onChanged('Pronto. O Gmail foi desconectado e os e-mails voltaram a sair pelo e-mail do sistema.');
+      } catch (err) {
+        setError(errorMessage(err, 'Não foi possível desconectar agora.'));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     try {
       await saveEmailAccount(
         own.id,
@@ -668,11 +716,17 @@ function AdvancedOptions({ overview, status, presets, onChanged, onDirtyChange }
             {error && <p className={styles.msgError} role="alert">{error}</p>}
             <footer className={styles.actions}>
               <button type="button" className={styles.secondary} onClick={() => setConfirmSystem(true)}>
-                Voltar a usar o e-mail do sistema
+                {isGmail ? 'Desconectar o Gmail' : 'Voltar a usar o e-mail do sistema'}
               </button>
-              <button type="button" className={styles.primary} onClick={() => setWizard(true)}>
-                Trocar conta
-              </button>
+              {isGmail ? (
+                <button type="button" className={styles.primary} onClick={() => void connectGmail()} disabled={connecting}>
+                  {connecting && <Loader2 size={16} className={styles.spin} />} Trocar conta Google
+                </button>
+              ) : (
+                <button type="button" className={styles.primary} onClick={() => setWizard(true)}>
+                  Trocar conta
+                </button>
+              )}
             </footer>
           </>
         ) : (
@@ -684,21 +738,44 @@ function AdvancedOptions({ overview, status, presets, onChanged, onDirtyChange }
                 <p className={styles.cardHint}>
                   Já funciona sem configurar nada. Se preferir que os e-mails saiam pelo endereço do escritório, conecte o seu e-mail.
                 </p>
+                {overview.gmail_available && (
+                  <p className={styles.cardHint}>
+                    Se o e-mail do escritório é Gmail ou Google Workspace, use "Conectar com Google": não precisa de senha de app.
+                  </p>
+                )}
               </div>
             </div>
+            {error && <p className={styles.msgError} role="alert">{error}</p>}
             <footer className={styles.actions}>
-              <button type="button" className={styles.primary} onClick={() => setWizard(true)} disabled={!own}>
-                Usar meu próprio e-mail
+              <button
+                type="button"
+                className={overview.gmail_available ? styles.secondary : styles.primary}
+                onClick={() => setWizard(true)}
+                disabled={!own}
+              >
+                {overview.gmail_available ? 'Usar outro provedor' : 'Usar meu próprio e-mail'}
               </button>
+              {overview.gmail_available && (
+                <button type="button" className={styles.primary} onClick={() => void connectGmail()} disabled={connecting}>
+                  {connecting ? <Loader2 size={16} className={styles.spin} /> : <Mail size={16} />}
+                  Conectar com Google
+                </button>
+              )}
             </footer>
           </>
         )}
       </div>
 
       {confirmSystem && (
-        <Modal title="Voltar ao e-mail do sistema?" onClose={() => setConfirmSystem(false)} width={440}>
+        <Modal
+          title={isGmail ? 'Desconectar o Gmail?' : 'Voltar ao e-mail do sistema?'}
+          onClose={() => setConfirmSystem(false)}
+          width={440}
+        >
           <p className={styles.modalText}>
-            Os próximos e-mails vão sair pelo e-mail do sistema. A sua conta continua salva e pode ser reativada depois.
+            {isGmail
+              ? 'Os próximos e-mails vão sair pelo e-mail do sistema e o acesso do sistema à conta Google será removido. Para voltar a usar o Gmail, conecte de novo.'
+              : 'Os próximos e-mails vão sair pelo e-mail do sistema. A sua conta continua salva e pode ser reativada depois.'}
           </p>
           <div className={styles.modalActions}>
             <button type="button" className={styles.secondary} onClick={() => setConfirmSystem(false)}>Cancelar</button>
@@ -715,6 +792,7 @@ function AdvancedOptions({ overview, status, presets, onChanged, onDirtyChange }
 // ── Página ─────────────────────────────────────────────────
 export default function ConfiguracoesEmail() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState<EmailOverview | null>(null);
   const [status, setStatus] = useState<EmailStatus | null>(null);
   const [presets, setPresets] = useState<ProviderPreset[]>([]);
@@ -739,6 +817,17 @@ export default function ConfiguracoesEmail() {
   }, []);
 
   useEffect(() => { void loadAll(); }, [loadAll]);
+
+  // Retorno do consentimento do Google: ?gmail=connected|permission|cancelled|error
+  useEffect(() => {
+    const result = searchParams.get('gmail');
+    if (!isGmailResult(result)) return;
+    const { kind, text } = GMAIL_RESULT[result];
+    if (kind === 'ok') setNotice(text);
+    else setError(text);
+    searchParams.delete('gmail');
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const setIdentityDirty = useCallback((value: boolean) => {
     setDirty(d => (d.identity === value ? d : { ...d, identity: value }));
