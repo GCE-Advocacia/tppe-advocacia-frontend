@@ -99,6 +99,28 @@ function formatInputDocument(value: string, kind: ClientKind): string {
     .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
 }
 
+function checkDigit(base: string, weights: number[]): string {
+  const total = base
+    .split('')
+    .reduce((sum, digit, index) => sum + Number(digit) * weights[index], 0);
+  const rest = total % 11;
+  return rest < 2 ? '0' : String(11 - rest);
+}
+
+function isValidCpf(cpf: string): boolean {
+  if (new Set(cpf).size === 1) return false;
+  const d1 = checkDigit(cpf.slice(0, 9), [10, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = checkDigit(cpf.slice(0, 9) + d1, [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return cpf.slice(-2) === d1 + d2;
+}
+
+function isValidCnpj(cnpj: string): boolean {
+  if (new Set(cnpj).size === 1) return false;
+  const d1 = checkDigit(cnpj.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = checkDigit(cnpj.slice(0, 12) + d1, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return cnpj.slice(-2) === d1 + d2;
+}
+
 function initials(name: string): string {
   return name
     .split(' ')
@@ -241,6 +263,11 @@ export default function Clientes() {
     const expectedLength = form.kind === 'person' ? 11 : 14;
     if (document.length !== expectedLength) {
       setFormError(`Informe um ${form.kind === 'person' ? 'CPF' : 'CNPJ'} completo.`);
+      return;
+    }
+    const isValidDocument = form.kind === 'person' ? isValidCpf(document) : isValidCnpj(document);
+    if (!isValidDocument) {
+      setFormError(`${form.kind === 'person' ? 'CPF' : 'CNPJ'} inválido.`);
       return;
     }
 
