@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { Eye, ArrowLeft, Play } from 'lucide-react';
 import type { Artigo, Status } from './types';
 import styles from './VisualizarArtigo.module.css';
@@ -100,7 +101,7 @@ export default function VisualizarArtigo({ artigo, onVoltar, onPublicar }: Props
           {artigo.conteudo ? (
             <div
               className={styles.content}
-              dangerouslySetInnerHTML={{ __html: artigo.conteudo }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(artigo.conteudo) }}
             />
           ) : (
             artigo.resumo ? (

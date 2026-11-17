@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { ArrowLeft } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 import type { SuccessResponse } from '../../services/api';
@@ -150,7 +151,7 @@ export default function ArtigoPage() {
           {artigo.content ? (
             <div
               className={styles.content}
-              dangerouslySetInnerHTML={{ __html: artigo.content }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(artigo.content) }}
             />
           ) : artigo.summary ? (
             <p className={styles.resumoFallback}>{artigo.summary}</p>
