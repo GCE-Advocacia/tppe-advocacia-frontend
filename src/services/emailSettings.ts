@@ -5,13 +5,17 @@ export type ConnectionStep = 'connect' | 'ehlo' | 'tls' | 'auth';
 export type PresetId = 'gmail' | 'outlook' | 'hostinger' | 'locaweb' | 'other';
 export type EmailAccount = 'own' | 'system';
 export type EmailHealthState = 'ok' | 'degraded' | 'down';
+/** `gmail` = conta Google conectada, envia pela API do Gmail (sem SMTP). */
+export type EmailProviderKind = 'smtp' | 'gmail';
+/** Retorno do consentimento do Google em `?gmail=`. */
+export type GmailConnectResult = 'connected' | 'permission' | 'cancelled' | 'error';
 
 /** Conta própria do escritório. A senha nunca volta: só `has_secret`. */
 export interface EmailProfile {
   id: number;
   name: string;
   priority: number;
-  provider: string;
+  provider: EmailProviderKind;
   preset: PresetId | null;
   host: string | null;
   port: number | null;
@@ -54,6 +58,8 @@ export interface EmailOverview {
   own_account: EmailProfile | null;
   system_account_email: string | null;
   system_account_configured: boolean;
+  /** O servidor tem as credenciais do Google para "Conectar com Google". */
+  gmail_available: boolean;
 }
 
 export interface ProviderPreset {
@@ -155,4 +161,13 @@ export async function sendTestToMe(): Promise<TestSendMeResult> {
     { method: 'POST' },
   );
   return response.data;
+}
+
+export async function getGmailAuthUrl(): Promise<string> {
+  const response = await apiRequest<SuccessResponse<{ auth_url: string }>>('/email-settings/gmail/auth-url');
+  return response.data.auth_url;
+}
+
+export async function disconnectGmail(): Promise<void> {
+  await apiRequest<void>('/email-settings/gmail', { method: 'DELETE' });
 }
