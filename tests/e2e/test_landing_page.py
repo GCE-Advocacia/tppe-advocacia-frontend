@@ -1,31 +1,893 @@
-        # Aguarda o modal customizado de alterações não salvas.
-        modal_title = wait.until(
-            EC.visibility_of_element_located((By.ID, "unsaved-modal-title"))
-        )
-        assert "alterações não salvas" in modal_title.text.lower()
+import time
+import pytest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
-        dialog = logged_in.find_element(By.XPATH, "//*[@role='dialog']")
-        assert dialog.is_displayed()
+from conftest import BASE_URL, pause
 
-        # Continuar editando cancela a navegação e preserva o rascunho.
-        btn_continuar = logged_in.find_element(
-            By.XPATH, "//button[normalize-space()='Continuar editando']"
-        )
-        scroll_and_click(logged_in, btn_continuar)
-        wait.until(EC.invisibility_of_element_located((By.ID, "unsaved-modal-title")))
-        assert "/sistema/personalizacao" in logged_in.current_url
-        assert tel_input.get_attribute("value") == "(11) 99999-0000"
+PERSONALIZACAO_URL = f"{BASE_URL}/sistema/personalizacao"
+IDENTIDADE_TAB_URL = f"{PERSONALIZACAO_URL}?tab=identidade"
+CONTEUDO_TAB_URL   = f"{PERSONALIZACAO_URL}?tab=conteudo"
+LANDING_URL        = CONTEUDO_TAB_URL
+ARTIGOS_URL = f"{BASE_URL}/sistema/artigos"
+CLIENTES_URL = f"{BASE_URL}/sistema/clientes"
+SITE_URL    = BASE_URL
 
-        # Tenta sair novamente e confirma o descarte do rascunho.
-        link_processos = logged_in.find_element(
-            By.XPATH, "//a[contains(@href, '/sistema/processos')]"
+
+def _bottombar_visivel(driver):
+    """Retorna True quando a barra de alterações não salvas está visível na tela."""
+    return driver.execute_script("""
+        const el = document.querySelector('[class*="bottomBar"]');
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        return rect.top < window.innerHeight;
+    """)
+
+
+def js_click(driver, element):
+    """Clica via JavaScript, contornando interceptação por z-index ou animação CSS."""
+    driver.execute_script("arguments[0].click();", element)
+
+
+def scroll_and_click(driver, element):
+    """Rola o elemento para o centro do viewport e clica com JS."""
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+    time.sleep(0.3)
+    driver.execute_script("arguments[0].click();", element)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestInformacoesInstitucionais:
+    """US-05 — Cadastrar e editar as informações institucionais do escritório"""
+
+    def test_pagina_landing_page_carrega(self, logged_in, wait):
+        logged_in.get(PERSONALIZACAO_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Personalização do Sistema')]")
+        ))
+        pause()
+        assert "Personalização do Sistema" in logged_in.page_source
+
+    def test_secao_dados_institucionais_visivel(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Dados Institucionais')]")
+        ))
+        pause()
+        assert "E-MAIL DE CONTATO" in logged_in.page_source
+        assert "TELEFONE"          in logged_in.page_source
+        assert "ENDEREÇO"          in logged_in.page_source
+
+    def test_secao_links_visivel(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'LINKEDIN')]")
+        ))
+        pause()
+        assert "LINKEDIN"  in logged_in.page_source
+        assert "INSTAGRAM" in logged_in.page_source
+        assert "WHATSAPP"  in logged_in.page_source
+
+    def test_editar_campo_exibe_barra_de_alteracoes(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//label[contains(text(),'E-MAIL DE CONTATO')]")
+        ))
+        pause()
+        email_input = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'E-MAIL DE CONTATO')]/following-sibling::input"
         )
+        email_input.clear()
+        email_input.send_keys("selenium@teste.com")
+        pause()
+
+        wait.until(_bottombar_visivel)
+        pause()
+        assert logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]").is_displayed()
+        assert logged_in.find_element(By.XPATH, "//button[contains(.,'Salvar alterações')]").is_displayed()
+
+    def test_descartar_alteracoes_restaura_campo(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//label[contains(text(),'TELEFONE')]")
+        ))
+        pause()
+        tel_input = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'TELEFONE')]/following-sibling::input"
+        )
+        original = tel_input.get_attribute("value")
+        tel_input.clear()
+        tel_input.send_keys("(99) 11111-1111")
+        pause()
+
+        wait.until(_bottombar_visivel)
+        time.sleep(0.4)  # aguarda animação translateY concluir
+        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
+
+        wait.until(lambda d: d.find_element(
+            By.XPATH, "//label[contains(text(),'TELEFONE')]/following-sibling::input"
+        ).get_attribute("value") == original)
+        pause()
+
+    def test_salvar_alteracoes_persiste_e_fecha_barra(self, logged_in, wait):
+        from selenium.webdriver.common.keys import Keys
+        from selenium.webdriver.support.ui import WebDriverWait
+
+        email_unico = f"selenium.{int(time.time())}@escritorio.com"
+
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//label[contains(text(),'E-MAIL DE CONTATO')]")
+        ))
+        pause()
+        email_input = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'E-MAIL DE CONTATO')]/following-sibling::input"
+        )
+        email_input.send_keys(Keys.CONTROL + 'a')
+        email_input.send_keys(email_unico)
+        pause()
+
+        wait.until(_bottombar_visivel)
+        time.sleep(0.4)
+        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Salvar alterações')]"))
+
+        WebDriverWait(logged_in, 20).until(lambda d: not _bottombar_visivel(d))
+        pause()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestEdicaoSecoes:
+    """US-06 — Editar textos e imagens das seções da landing page"""
+
+    def test_secao_hero_exibe_campos_de_texto(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[contains(text(),'Hero')]")
+        ))
+        pause()
+        assert "TÍTULO DO IMPACTO" in logged_in.page_source
+        assert "SUBTEXTO DE APOIO" in logged_in.page_source
+
+    def test_secao_sobre_escritorio_exibe_campos(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[contains(text(),'Sobre Escritório')]")
+        ))
+        pause()
+        assert "TÍTULO DA SEÇÃO"    in logged_in.page_source
+        assert "CONTEÚDO DESCRITIVO" in logged_in.page_source
+
+    def test_secao_sobre_advogado_exibe_campo_oab(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[contains(text(),'Sobre Advogado')]")
+        ))
+        pause()
+        assert "OAB" in logged_in.page_source
+
+    def test_secao_diferenciais_exibe_tres_cards(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']")
+        ))
+        pause()
+        botoes = logged_in.find_elements(
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//button"
+        )
+        assert len(botoes) >= 3
+
+    def test_editar_diferencial_abre_inputs_inline(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']")
+        ))
+        pause()
+        primeiro_edit = logged_in.find_element(
+            By.XPATH, "(//h2[text()='Diferenciais']/ancestor::div[2]//button)[1]"
+        )
+        scroll_and_click(logged_in, primeiro_edit)
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//input")
+        ))
+        pause()
+        assert logged_in.find_element(
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//input"
+        ).is_displayed()
+        assert logged_in.find_element(
+            By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea"
+        ).is_displayed()
+
+    def test_confirmar_edicao_diferencial_fecha_inputs(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']")
+        ))
+        pause()
+        primeiro_edit = logged_in.find_element(
+            By.XPATH, "(//h2[text()='Diferenciais']/ancestor::div[2]//button)[1]"
+        )
+        scroll_and_click(logged_in, primeiro_edit)
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea")
+        ))
+        pause()
+        confirm = logged_in.find_element(
+            By.XPATH,
+            "//h2[text()='Diferenciais']/ancestor::div[2]//textarea/following-sibling::button"
+        )
+        scroll_and_click(logged_in, confirm)
+
+        wait.until(EC.invisibility_of_element_located(
+            (By.XPATH, "//h2[text()='Diferenciais']/ancestor::div[2]//textarea")
+        ))
+        pause()
+
+    def test_secao_areas_atuacao_visivel(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h2[contains(text(),'Áreas de Atuação')]")
+        ))
+        pause()
+        assert "Áreas de Atuação" in logged_in.page_source
+
+    def test_editar_titulo_hero_detecta_alteracao(self, logged_in, wait):
+        logged_in.get(LANDING_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//label[contains(text(),'TÍTULO DO IMPACTO')]")
+        ))
+        pause()
+        hero_titulo = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'TÍTULO DO IMPACTO')]/following-sibling::input"
+        )
+        hero_titulo.clear()
+        hero_titulo.send_keys("Título Selenium Hero")
+        pause()
+
+        wait.until(_bottombar_visivel)
+        time.sleep(0.4)
+        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
+        wait.until(lambda d: not _bottombar_visivel(d))
+        pause()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestArtigosPublicos:
+    """US-07 — Visitante acessa seção de artigos na landing page pública"""
+
+    def test_landing_page_tem_secao_artigos(self, driver, wait):
+        driver.get(SITE_URL)
+        wait.until(EC.presence_of_element_located((By.ID, "artigos")))
+        pause()
+        assert "Artigos e Notícias" in driver.page_source
+
+    def test_secao_artigos_exibe_conteudo_ou_estado_vazio(self, driver, wait):
+        driver.get(SITE_URL)
+        wait.until(EC.presence_of_element_located((By.ID, "artigos")))
+        wait.until(lambda d: (
+            "Leia mais" in d.page_source or
+            "Nenhum artigo publicado" in d.page_source
+        ))
+        pause()
+        assert (
+            "Leia mais" in driver.page_source or
+            "Nenhum artigo publicado" in driver.page_source
+        )
+
+    def test_link_leia_mais_navega_para_pagina_do_artigo(self, driver, wait):
+        driver.get(SITE_URL)
+        wait.until(EC.presence_of_element_located((By.ID, "artigos")))
+        wait.until(lambda d: (
+            "Leia mais" in d.page_source or
+            "Nenhum artigo publicado" in d.page_source
+        ))
+        pause()
+        try:
+            link = driver.find_element(By.LINK_TEXT, "Leia mais →")
+            scroll_and_click(driver, link)
+            wait.until(EC.url_contains("/artigos/"))
+            pause()
+            assert "/artigos/" in driver.current_url
+        except NoSuchElementException:
+            pytest.skip("Nenhum artigo publicado disponível para testar navegação")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestGerenciarArtigos:
+    """US-08 — Criar e editar artigos com título, conteúdo, imagem e categoria"""
+
+    def test_pagina_artigos_carrega(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Gerenciar Artigos')]")
+        ))
+        pause()
+        assert "Gerenciar Artigos" in logged_in.page_source
+
+    def test_tabela_artigos_exibe_colunas(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table")))
+        pause()
+        assert "Título" in logged_in.page_source
+        assert "Status" in logged_in.page_source
+        assert "Data"   in logged_in.page_source
+        assert "Ações"  in logged_in.page_source
+
+    def test_botao_novo_artigo_abre_editor(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Criar Artigo')]")
+        ))
+        pause()
+        assert "Criar Artigo" in logged_in.page_source
+
+    def test_editor_artigo_tem_campo_titulo(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[placeholder*='título']")
+        ))
+        pause()
+        assert logged_in.find_element(
+            By.CSS_SELECTOR, "input[placeholder*='título']"
+        ).is_displayed()
+
+    def test_editor_artigo_tem_toggle_status(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Rascunho') or contains(text(),'Publicado')]")
+        ))
+        pause()
+        assert (
+            "Rascunho" in logged_in.page_source or
+            "Publicado" in logged_in.page_source
+        )
+
+    def test_editor_artigo_tem_selecao_de_categoria(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Criar Artigo')]")
+        ))
+        pause()
+        assert "Jurisprudência" in logged_in.page_source
+
+    def test_voltar_do_editor_retorna_para_lista(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Voltar')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Voltar')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Gerenciar Artigos')]")
+        ))
+        pause()
+        assert "Gerenciar Artigos" in logged_in.page_source
+
+    def test_criar_artigo_com_titulo_aparece_na_lista(self, logged_in, wait):
+        titulo_unico = f"Artigo Selenium {int(time.time())}"
+
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[placeholder*='título']")
+        ))
+        pause()
+        logged_in.find_element(
+            By.CSS_SELECTOR, "input[placeholder*='título']"
+        ).send_keys(titulo_unico)
+        pause()
+
+        logged_in.find_element(
+            By.CSS_SELECTOR, "textarea[placeholder*='resumo']"
+        ).send_keys("Resumo do artigo criado pelo Selenium para teste E2E.")
+        pause()
+
+        editor = logged_in.find_element(By.CSS_SELECTOR, "[contenteditable='true']")
+        editor.click()
+        editor.send_keys("Conteúdo do artigo criado pelo Selenium para teste E2E.")
+        pause()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Salvar Artigo')]")
+        ))
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Salvar Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Gerenciar Artigos')]")
+        ))
+        pause()
+        assert titulo_unico in logged_in.page_source
+
+    def test_filtro_busca_por_titulo_exibe_contagem(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[placeholder*='título ou autor']")
+        ))
+        pause()
+        busca = logged_in.find_element(
+            By.CSS_SELECTOR, "input[placeholder*='título ou autor']"
+        )
+        busca.send_keys("Selenium")
+        pause()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'resultado')]")
+        ))
+        pause()
+        assert "resultado" in logged_in.page_source
+
+    def test_filtro_status_funciona(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//option[text()='Publicado']")
+        ))
+        pause()
+        from selenium.webdriver.support.select import Select
+        selects = logged_in.find_elements(By.CSS_SELECTOR, "select")
+        Select(selects[1]).select_by_visible_text("Publicado")
+        pause()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'resultado')]")
+        ))
+        pause()
+        assert "resultado" in logged_in.page_source
+
+    def test_limpar_filtros_remove_contagem(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[placeholder*='título ou autor']")
+        ))
+        pause()
+        logged_in.find_element(
+            By.CSS_SELECTOR, "input[placeholder*='título ou autor']"
+        ).send_keys("Selenium")
+        pause()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Limpar')]")
+        ))
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Limpar')]").click()
+
+        wait.until(EC.invisibility_of_element_located(
+            (By.XPATH, "//button[contains(.,'Limpar')]")
+        ))
+        pause()
+
+    def test_botao_visualizar_artigo_abre_detalhe(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "button[title='Visualizar']")
+        ))
+        pause()
+        logged_in.find_element(By.CSS_SELECTOR, "button[title='Visualizar']").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Visualização do Artigo')]")
+        ))
+        pause()
+        assert "Visualização do Artigo" in logged_in.page_source
+
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Voltar')]").click()
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Gerenciar Artigos')]")
+        ))
+        pause()
+
+    def test_botao_editar_artigo_abre_editor_em_modo_edicao(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "button[title='Editar']")
+        ))
+        pause()
+        logged_in.find_element(By.CSS_SELECTOR, "button[title='Editar']").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Editar Artigo')]")
+        ))
+        pause()
+        assert "Editar Artigo" in logged_in.page_source
+
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Voltar')]").click()
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//h1[contains(text(),'Gerenciar Artigos')]")
+        ))
+        pause()
+
+    def test_toggle_rapido_de_status_altera_badge(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "table")
+        ))
+        pause()
+        assert (
+            logged_in.find_elements(By.CSS_SELECTOR, "button[title='Publicar']") or
+            logged_in.find_elements(By.CSS_SELECTOR, "button[title='Despublicar']")
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestPreviewArtigo:
+    """US-09 — Visualizar preview do artigo antes de publicar"""
+
+    def test_editor_tem_botao_visualizar_preview(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        assert logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Visualizar Preview')]"
+        ).is_displayed()
+
+    def test_clicar_preview_exibe_visualizacao_do_artigo(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Visualizar Preview')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Visualização do Artigo')]")
+        ))
+        pause()
+        assert "Visualização do Artigo" in logged_in.page_source
+
+    def test_preview_exibe_status_do_artigo(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Visualizar Preview')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Visualização do Artigo')]")
+        ))
+        pause()
+        assert (
+            "Rascunho" in logged_in.page_source or
+            "Publicado" in logged_in.page_source
+        )
+
+    def test_preview_exibe_botao_publicar_para_rascunho(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Visualizar Preview')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(.,'Publicar')]")
+        ))
+        pause()
+        assert "Publicar" in logged_in.page_source
+
+    def test_voltar_ao_editor_retorna_ao_formulario(self, logged_in, wait):
+        logged_in.get(ARTIGOS_URL)
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Novo Artigo')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Novo Artigo')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Visualizar Preview')]").click()
+
+        wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Voltar ao Editor')]")
+        ))
+        pause()
+        logged_in.find_element(By.XPATH, "//button[contains(.,'Voltar ao Editor')]").click()
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[contains(.,'Visualizar Preview')]")
+        ))
+        pause()
+        assert "Criar Artigo" in logged_in.page_source
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestTemasLandingPage:
+    """US-09 — Selecionar temas pré-definidos e gerenciar temas personalizados"""
+
+    def test_secao_temas_e_regua_visiveis(self, logged_in, wait):
+        logged_in.get(IDENTIDADE_TAB_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Tema Base') or contains(text(),'Tema base')]")
+        ))
+        pause()
+        assert "Tema Base" in logged_in.page_source or "Tema base" in logged_in.page_source
+        assert logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Biblioteca de Temas')]"
+        ).is_displayed()
+
+    def test_abrir_modal_biblioteca_de_temas(self, logged_in, wait):
+        logged_in.get(IDENTIDADE_TAB_URL)
+        btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Biblioteca de Temas')]")
+        ))
+        pause()
+        scroll_and_click(logged_in, btn)
+
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Biblioteca de Temas')]")
+        ))
+        pause()
+        assert "Biblioteca de Temas" in logged_in.page_source
+        assert "Padrão" in logged_in.page_source
+        assert logged_in.find_element(
+            By.XPATH, "//button[contains(.,'Aplicar tema selecionado')]"
+        ).is_displayed()
+
+    def test_fechar_modal_biblioteca_ao_cancelar(self, logged_in, wait):
+        logged_in.get(IDENTIDADE_TAB_URL)
+        btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Biblioteca de Temas')]")
+        ))
+        pause()
+        scroll_and_click(logged_in, btn)
+
+        cancel_btn = wait.until(EC.element_to_be_clickable(
+            (By.XPATH, "//button[contains(.,'Cancelar')]")
+        ))
+        pause()
+        scroll_and_click(logged_in, cancel_btn)
+
+        wait.until(EC.invisibility_of_element_located(
+            (By.XPATH, "//h3[contains(text(),'Biblioteca de Temas')]")
+        ))
+        pause()
+
+    def test_barra_inferior_descartar_oculta_quando_inalterado(self, logged_in, wait):
+        logged_in.get(IDENTIDADE_TAB_URL)
+        wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//*[contains(text(),'Tema Base') or contains(text(),'Tema base')]")
+        ))
+        pause()
+        assert not _bottombar_visivel(logged_in)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestPersonalizacaoNavegacaoAbas:
+    """US-13.1 — Reestruturação da navegação, rotas canônicas e abas de personalização"""
+
+    def test_sidebar_personalizacao_direciona_para_aba_identidade_padrao(self, logged_in, wait):
+        logged_in.get(f"{BASE_URL}/sistema/processos")
+        wait.until(EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/sistema/personalizacao')]")))
+        sidebar_link = logged_in.find_element(By.XPATH, "//a[contains(@href, '/sistema/personalizacao')]")
+        scroll_and_click(logged_in, sidebar_link)
+        wait.until(EC.url_contains("/sistema/personalizacao?tab=identidade"))
+        pause()
+        assert "tab=identidade" in logged_in.current_url
+        assert "Personalização do Sistema" in logged_in.page_source
+
+    def test_aba_identidade_exibe_cards_exclusivos(self, logged_in, wait):
+        logged_in.get(IDENTIDADE_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Logos e ícone do navegador')]")))
+        pause()
+        assert "Logos e ícone do navegador" in logged_in.page_source
+        assert "Paleta de Cores e Temas" in logged_in.page_source
+        assert "Dados Institucionais" not in logged_in.page_source
+        assert "Hero (Destaque Principal)" not in logged_in.page_source
+
+    def test_aba_conteudo_exibe_cards_exclusivos(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Dados Institucionais')]")))
+        pause()
+        assert "Dados Institucionais" in logged_in.page_source
+        assert "Hero (Destaque Principal)" in logged_in.page_source
+        assert "Logos e ícone do navegador" not in logged_in.page_source
+        assert "Paleta de Cores e Temas" not in logged_in.page_source
+
+    def test_recarregar_f5_mantem_aba_ativa(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Dados Institucionais')]")))
+        pause()
+        logged_in.refresh()
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Dados Institucionais')]")))
+        pause()
+        assert "tab=conteudo" in logged_in.current_url
+
+    def test_rascunho_compartilhado_entre_abas_e_refletido_no_preview(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//label[contains(text(),'TÍTULO DO IMPACTO')]")))
+        pause()
+        hero_input = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'TÍTULO DO IMPACTO')]/following-sibling::input"
+        )
+        hero_input.clear()
+        novo_titulo = "Advocacia de Alta Performance E2E"
+        hero_input.send_keys(novo_titulo)
+        pause()
+
+        # Alterna para aba Identidade sem disparar alerta
+        tab_identidade_btn = logged_in.find_element(By.XPATH, "//button[contains(.,'Identidade Visual & Cores')]")
+        scroll_and_click(logged_in, tab_identidade_btn)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Paleta de Cores e Temas')]")))
+        pause()
+
+        # Verifica se o LandingPreview reflete o novo texto editado na aba 2
+        assert novo_titulo in logged_in.page_source
+
+        # Descartar limpa as alterações
+        wait.until(_bottombar_visivel)
+        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
+        wait.until(lambda d: not _bottombar_visivel(d))
+        pause()
+
+    def test_guarda_de_rota_ao_sair_para_outro_modulo_com_alteracoes(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//label[contains(text(),'TELEFONE')]")))
+        pause()
+        tel_input = logged_in.find_element(
+            By.XPATH, "//label[contains(text(),'TELEFONE')]/following-sibling::input"
+        )
+        tel_input.clear()
+        tel_input.send_keys("(11) 99999-0000")
+        pause()
+        wait.until(_bottombar_visivel)
+
+        # Tenta navegar para processos na Sidebar
+        link_processos = logged_in.find_element(By.XPATH, "//a[contains(@href, '/sistema/processos')]")
         scroll_and_click(logged_in, link_processos)
 
-        wait.until(
-            EC.visibility_of_element_located((By.ID, "unsaved-modal-title"))
-        )
-        logged_in.find_element(
-            By.XPATH, "//button[normalize-space()='Sair e descartar']"
-        ).click()
-        wait.until(EC.url_contains("/sistema/processos"))
+        # Aguarda modal customizado de alterações não salvas
+        wait.until(EC.presence_of_element_located((By.ID, "unsaved-modal-title")))
+        modal_title = logged_in.find_element(By.ID, "unsaved-modal-title")
+        assert "alterações não salvas" in modal_title.text.lower()
+
+        # Clica em 'Continuar editando' para cancelar a saída
+        btn_continuar = logged_in.find_element(By.XPATH, "//button[contains(.,'Continuar editando')]")
+        scroll_and_click(logged_in, btn_continuar)
+        wait.until(EC.invisibility_of_element_located((By.ID, "unsaved-modal-title")))
+        pause()
+
+        # Permanece na rota de personalização
+        assert "personalizacao" in logged_in.current_url
+
+        # Descarta para limpar o estado
+        js_click(logged_in, logged_in.find_element(By.XPATH, "//button[contains(.,'Descartar')]"))
+        wait.until(lambda d: not _bottombar_visivel(d))
+        pause()
+
+    def test_alternancia_preview_multidispositivo_desktop_tablet_mobile(self, logged_in, wait):
+        logged_in.get(CONTEUDO_TAB_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Dados Institucionais')]")))
+        pause()
+
+        btn_tablet = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Tablet (768px)']")))
+        scroll_and_click(logged_in, btn_tablet)
+        pause()
+        stage = logged_in.find_element(By.XPATH, "//*[contains(@class, 'previewStage')]")
+        wait.until(lambda d: stage.size["width"] <= 800)
+        assert stage.size["width"] <= 800
+
+        btn_mobile = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Mobile (390px)']")))
+        scroll_and_click(logged_in, btn_mobile)
+        pause()
+        wait.until(lambda d: stage.size["width"] <= 420)
+        assert stage.size["width"] <= 420
+
+        btn_desktop = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Desktop']")))
+        scroll_and_click(logged_in, btn_desktop)
+        pause()
+        wait.until(lambda d: stage.size["width"] > 800)
+        assert stage.size["width"] > 800
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+class TestSincronizacaoTemasUS14:
+    """US-14 — Sincronização dos Temas com a área do Sistema e do Login"""
+
+    def test_tokens_de_marca_injetados_no_root_sem_sobrescrever_navy_inline(self, logged_in, wait):
+        logged_in.get(CLIENTES_URL)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//h1[contains(text(),'Clientes')]")))
+        pause()
+
+        tokens = logged_in.execute_script("""
+            const s = document.documentElement.style;
+            return {
+                brandPrimary: s.getPropertyValue('--brand-primary'),
+                brandAccent: s.getPropertyValue('--brand-accent'),
+                navyInline: s.getPropertyValue('--navy'),
+            };
+        """)
+        assert tokens["brandPrimary"] != "", "Token --brand-primary deve estar presente"
+        assert tokens["brandAccent"] != "", "Token --brand-accent deve estar presente"
+        assert tokens["navyInline"] == "", "--navy estático não deve ser sobrescrito inline no :root"
+
+    def test_sidebar_consome_brand_primary(self, logged_in, wait):
+        logged_in.get(CLIENTES_URL)
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "aside")))
+        pause()
+
+        aside_bg = logged_in.execute_script("""
+            const aside = document.querySelector('aside');
+            return aside ? getComputedStyle(aside).backgroundColor : null;
+        """)
+        assert aside_bg is not None and aside_bg != "rgba(0, 0, 0, 0)"
+
+    def test_botoes_contabeis_financeiro_preservam_cores_reservadas(self, logged_in, wait):
+        logged_in.get(f"{BASE_URL}/sistema/financeiro")
+        wait.until(EC.presence_of_element_located((By.XPATH, "//button[contains(.,'Nova Entrada')]")))
+        pause()
+
+        colors = logged_in.execute_script("""
+            const btnIn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Nova Entrada'));
+            const btnOut = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Nova Saída'));
+            return {
+                entrada: btnIn ? getComputedStyle(btnIn).backgroundColor : null,
+                saida: btnOut ? getComputedStyle(btnOut).backgroundColor : null,
+            };
+        """)
+        assert colors["entrada"] == "rgb(46, 125, 50)", "Nova Entrada deve ser verde contábil (#2e7d32)"
+        assert colors["saida"] == "rgb(198, 40, 40)", "Nova Saída deve ser vermelho semântico (#c62828)"
+

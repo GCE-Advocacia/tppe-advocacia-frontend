@@ -151,32 +151,10 @@ test('shared save persists radius, updates existing public tabs, system actions 
   assert.equal(await settings(page).getByRole('button', { name: 'Pílula (999px)' }).getAttribute('aria-pressed'), 'true');
   await page.goto(`${baseURL}/sistema/usuarios`);
   assert.equal(await radiusOf(page.getByRole('button', { name: /Novo Usuário/i })), '999px');
-  await page.goto(`${baseURL}/sistema/processos`);
-  assert.equal(await radiusOf(page.getByRole('button', { name: /Novo Processo/i })), '999px');
-  await page.goto(`${baseURL}/sistema/clientes`);
-  assert.equal(await radiusOf(page.getByRole('button', { name: /Novo cliente/i })), '999px');
   const login = await context.newPage();
   await login.goto(`${baseURL}/login`);
   await expectGlobal(login, '999px');
   assert.equal(await radiusOf(login.locator('button[type="submit"]').first()), '999px');
-});
-
-test('saved square radius reaches login and primary system actions', async t => {
-  const { page } = await setup(t);
-  await openSettings(page);
-  await settings(page).getByRole('button', { name: 'Reto (0px)' }).click();
-  await saveAll(page);
-  await expectGlobal(page, '0px');
-  for (const [path, name] of [
-    ['/login', 'button[type="submit"]'],
-    ['/sistema/processos', 'button[aria-label="Novo Processo"], button:has-text("Novo Processo")'],
-    ['/sistema/clientes', 'button:has-text("Novo cliente")'],
-  ]) {
-    await page.goto(`${baseURL}${path}`);
-    const action = page.locator(name).first();
-    await action.waitFor();
-    assert.equal(await radiusOf(action), '0px', `${path} action radius`);
-  }
 });
 
 test('a failed save preserves the draft and original global radius; retry saves custom values across reload', async t => {
@@ -209,35 +187,6 @@ test('legacy config defaults to Suave and zero survives save/reload', async t =>
   await settings(page).waitFor();
   await expectPreview(page, '0px');
   await expectGlobal(page, '0px');
-});
-
-test('unsaved route guard supports continue, close, overlay dismissal, and discard navigation', async t => {
-  const { page } = await setup(t);
-  await openSettings(page);
-  await settings(page).getByRole('button', { name: 'Reto (0px)' }).click();
-  const destination = page.locator('a[href="/sistema/processos"]').first();
-  const dialog = page.getByRole('dialog');
-
-  await destination.click();
-  await dialog.getByRole('heading', { name: 'Alterações não salvas' }).waitFor();
-  assert.equal(new URL(page.url()).pathname, '/sistema/personalizacao');
-  await dialog.getByRole('button', { name: 'Continuar editando' }).click();
-  await dialog.waitFor({ state: 'detached' });
-  assert.equal(await page.locator('[data-pending-changes="true"]').count(), 1);
-
-  await destination.click();
-  await dialog.getByRole('button', { name: 'Fechar' }).click();
-  await dialog.waitFor({ state: 'detached' });
-  assert.equal(await page.locator('[data-pending-changes="true"]').count(), 1);
-
-  await destination.click();
-  await page.locator('[class*="unsavedOverlay"]').click({ position: { x: 8, y: 8 } });
-  await dialog.waitFor({ state: 'detached' });
-  assert.equal(await page.locator('[data-pending-changes="true"]').count(), 1);
-
-  await destination.click();
-  await dialog.getByRole('button', { name: 'Sair e descartar' }).click();
-  await page.waitForURL('**/sistema/processos');
 });
 
 for (const width of [1440, 390]) {

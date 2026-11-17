@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -20,7 +19,6 @@ import type { PersonalizacaoThemesController } from './usePersonalizacaoThemes';
 export function usePersonalizacaoForm() {
   const navigate = useNavigate();
   const { applyConfig } = useBrandingActions();
-
   const [saved, setSaved] = useState<LandingPageData>(EMPTY_DATA);
   const [data, setData] = useState<LandingPageData>(EMPTY_DATA);
   const [loading, setLoading] = useState(true);
@@ -55,12 +53,10 @@ export function usePersonalizacaoForm() {
   // Guarda de rota 1: alerta ao fechar a janela / dar F5 com rascunhos não salvos
   useEffect(() => {
     if (!isDirty) return;
-
     const warnBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = '';
     };
-
     window.addEventListener('beforeunload', warnBeforeUnload);
     return () => window.removeEventListener('beforeunload', warnBeforeUnload);
   }, [isDirty]);
@@ -71,72 +67,32 @@ export function usePersonalizacaoForm() {
       setPendingNavigationPath(null);
       return;
     }
-
     const confirmInternalNavigation = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const link = target?.closest('a[href]') as HTMLAnchorElement | null;
-
-      if (
-        !link ||
-        event.defaultPrevented ||
-        event.button !== 0 ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) return;
-
+      if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const destination = new URL(link.href, window.location.href);
-
-      if (
-        destination.origin !== window.location.origin ||
-        destination.pathname === window.location.pathname
-      ) return;
-
+      if (destination.origin !== window.location.origin || destination.pathname === window.location.pathname) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-
-      setPendingNavigationPath(
-        `${destination.pathname}${destination.search}${destination.hash}`
-      );
+      setPendingNavigationPath(`${destination.pathname}${destination.search}${destination.hash}`);
     };
-
     document.addEventListener('click', confirmInternalNavigation, true);
-
-    return () => {
-      document.removeEventListener('click', confirmInternalNavigation, true);
-    };
+    return () => document.removeEventListener('click', confirmInternalNavigation, true);
   }, [isDirty]);
-
-  // Continuar editando e cancelar navegação
-  const continueEditing = useCallback(() => {
-    setPendingNavigationPath(null);
-  }, []);
 
   const cancelNavigation = useCallback(() => {
     setPendingNavigationPath(null);
   }, []);
 
-  // Descarta as alterações e navega para o destino solicitado
-  const discardAndNavigate = useCallback(() => {
+  const confirmNavigation = useCallback(() => {
     if (!pendingNavigationPath) return;
-
-    const destination = pendingNavigationPath;
-
-    discard();
+    const targetPath = pendingNavigationPath;
     setPendingNavigationPath(null);
-    navigate(destination);
+    navigate(targetPath);
   }, [pendingNavigationPath, navigate]);
 
-  // Confirma a navegação
-  const confirmNavigation = useCallback(() => {
-    discardAndNavigate();
-  }, [discardAndNavigate]);
-
-  const set = useCallback(<K extends keyof LandingPageData>(
-    key: K,
-    value: LandingPageData[K]
-  ) => {
+  const set = useCallback(<K extends keyof LandingPageData>(key: K, value: LandingPageData[K]) => {
     setSaveError(null);
     setData(d => ({ ...d, [key]: value }));
   }, []);
@@ -145,22 +101,16 @@ export function usePersonalizacaoForm() {
     setData(saved);
     branding.discard();
     setSaveError(null);
-
     if (themesCtrl) {
       themesCtrl.setSelectedThemeId(saved.themeId ?? null);
-
       if (saved.themeId) {
         themesCtrl.setBaseThemeId(saved.themeId);
       }
     }
   }, [saved, branding]);
 
-  const save = useCallback(async (
-    themesCtrl: PersonalizacaoThemesController,
-    confirmed = false
-  ) => {
+  const save = useCallback(async (themesCtrl: PersonalizacaoThemesController, confirmed = false) => {
     if (saving || !isDirty || (branding.dirty && !branding.ready)) return;
-
     setSaveError(null);
 
     // CENÁRIO 2: Modificou cores de um tema pré-definido (ou sem tema vinculado)
@@ -174,30 +124,17 @@ export function usePersonalizacaoForm() {
       return;
     }
 
-    if (
-      formDirty &&
-      themesCtrl.baseTheme &&
-      !themesCtrl.baseTheme.is_predefined &&
-      themesCtrl.isBaseThemeModified &&
-      !confirmed
-    ) {
+    if (formDirty && themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified && !confirmed) {
       setConfirmThemeUpdate(true);
       return;
     }
 
     // CENÁRIO 1: Tema personalizado em edição OU alteração apenas de outros campos
     setSaving(true);
-
     try {
       await branding.save();
-
       if (formDirty) {
-        if (
-          themesCtrl.isColorsDirty &&
-          themesCtrl.baseTheme &&
-          !themesCtrl.baseTheme.is_predefined &&
-          themesCtrl.isBaseThemeModified
-        ) {
+        if (themesCtrl.isColorsDirty && themesCtrl.baseTheme && !themesCtrl.baseTheme.is_predefined && themesCtrl.isBaseThemeModified) {
           await updateTheme(themesCtrl.baseTheme.id, {
             name: themesCtrl.baseTheme.name,
             description: themesCtrl.baseTheme.description,
@@ -223,36 +160,24 @@ export function usePersonalizacaoForm() {
 
         const payloadData: LandingPageData = {
           ...data,
-          themeId: themesCtrl.baseTheme
-            ? themesCtrl.baseTheme.id
-            : data.themeId,
+          themeId: themesCtrl.baseTheme ? themesCtrl.baseTheme.id : data.themeId,
         };
-
         const updated = await updateOfficeConfig(payloadData, applyConfig);
-
         setSaved(updated);
         setData(updated);
-
         if (updated.themeId) {
           themesCtrl.setSelectedThemeId(updated.themeId);
           themesCtrl.setBaseThemeId(updated.themeId);
         }
-
         await themesCtrl.fetchThemes();
       }
-
       setConfirmThemeUpdate(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-
       if (/networkerror|failed to fetch/i.test(msg)) {
-        setSaveError(
-          'Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.'
-        );
+        setSaveError('Falha na conexão com o servidor. Verifique sua conexão com a internet e tente novamente.');
       } else {
-        setSaveError(
-          msg || 'Erro ao salvar. Verifique sua conexão e tente novamente.'
-        );
+        setSaveError(msg || 'Erro ao salvar. Verifique sua conexão e tente novamente.');
       }
     } finally {
       setSaving(false);
@@ -274,15 +199,9 @@ export function usePersonalizacaoForm() {
     branding,
     formDirty,
     isDirty,
-
-    // Navegação
     pendingNavigationPath,
-    pendingNavigation: pendingNavigationPath,
-    continueEditing,
     cancelNavigation,
-    discardAndNavigate,
     confirmNavigation,
-
     applyConfig,
     set,
     discard,
