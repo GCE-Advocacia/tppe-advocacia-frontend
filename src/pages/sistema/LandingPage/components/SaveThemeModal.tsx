@@ -1,5 +1,5 @@
 import { useState, useEffect, useId } from 'react';
-import { X, Check, Loader2 } from 'lucide-react';
+import { X, Check, Loader2, BookOpen } from 'lucide-react';
 import type { LandingPageData } from '../types';
 import styles from '../LandingPage.module.css';
 
@@ -14,6 +14,7 @@ export interface SaveThemeModalProps {
   saving: boolean;
   error: string | null;
   onConfirm: (name: string, desc: string) => void;
+  onOpenLibrary?: () => void;
   limitReached?: boolean;
   maxCustom?: number;
 }
@@ -29,6 +30,7 @@ export default function SaveThemeModal({
   saving,
   error,
   onConfirm,
+  onOpenLibrary,
   limitReached = false,
   maxCustom = 6,
 }: SaveThemeModalProps) {
@@ -124,6 +126,18 @@ export default function SaveThemeModal({
           >
             Cancelar
           </button>
+          {limitReached && onOpenLibrary && (
+            <button
+              type="button"
+              className={styles.btnCancel}
+              onClick={onOpenLibrary}
+              disabled={saving}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <BookOpen size={14} />
+              Abrir Biblioteca de Temas
+            </button>
+          )}
           <button
             type="button"
             className={styles.btnConfirm}

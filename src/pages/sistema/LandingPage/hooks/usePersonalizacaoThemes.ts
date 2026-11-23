@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useBrandingActions } from '../../../../contexts/BrandingContext';
 import {
   getThemes,
@@ -43,6 +43,7 @@ export function usePersonalizacaoThemes({
   const [newThemeDesc, setNewThemeDesc] = useState('');
   const [savingNewTheme, setSavingNewTheme] = useState(false);
   const [saveNewError, setSaveNewError] = useState<string | null>(null);
+  const pendingCreatedThemeIdRef = useRef<number | null>(null);
 
   const fetchThemes = useCallback(async () => {
     try {
@@ -289,6 +290,7 @@ export function usePersonalizacaoThemes({
   }, [handleThemeSelected]);
 
   const openForkModal = useCallback((defaultName?: string) => {
+    pendingCreatedThemeIdRef.current = null;
     setIsForkingPredefined(Boolean(baseTheme?.is_predefined));
     setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Personalizado)` : ''));
     setNewThemeDesc('');
@@ -297,6 +299,7 @@ export function usePersonalizacaoThemes({
   }, [baseTheme]);
 
   const openCopyModal = useCallback((defaultName?: string) => {
+    pendingCreatedThemeIdRef.current = null;
     setIsForkingPredefined(false);
     setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Cópia)` : ''));
     setNewThemeDesc('');
@@ -305,6 +308,7 @@ export function usePersonalizacaoThemes({
   }, [baseTheme]);
 
   const closeSaveModal = useCallback(() => {
+    pendingCreatedThemeIdRef.current = null;
     setShowSaveCurrentModal(false);
     setIsForkingPredefined(false);
   }, []);
@@ -321,9 +325,10 @@ export function usePersonalizacaoThemes({
     }
     setSavingNewTheme(true);
     setSaveNewError(null);
+    let createdInThisFlow = false;
     try {
       await brandingSave();
-      const created = await createTheme({
+      const themePayload = {
         name: name.trim(),
         description: desc.trim() || null,
         color: data.color || '#232C43',
@@ -343,20 +348,45 @@ export function usePersonalizacaoThemes({
         color_text_secondary: data.colorTextSecondary || '#6B7280',
         color_link_primary: data.colorLinkPrimary || '#FFFFFF',
         color_link_secondary: data.colorLinkSecondary || '#661C16',
-      });
+      };
+
+      let themeId = pendingCreatedThemeIdRef.current;
+      if (themeId !== null) {
+        await updateTheme(themeId, themePayload);
+      } else {
+        const created = await createTheme(themePayload);
+        themeId = created.id;
+        pendingCreatedThemeIdRef.current = themeId;
+        createdInThisFlow = true;
+      }
 
       const onUpdated = applyConfigCallback || defaultApplyConfig;
-      const updated = await updateOfficeConfig({ ...data, themeId: created.id }, onUpdated);
-      setSaved(updated);
-      setData(updated);
-      setBaseThemeId(created.id);
-      setSelectedThemeId(created.id);
+      try {
+        const updated = await updateOfficeConfig({ ...data, themeId }, onUpdated);
+        pendingCreatedThemeIdRef.current = null;
+        setSaved(updated);
+        setData(updated);
+        setBaseThemeId(themeId);
+        setSelectedThemeId(themeId);
 
-      await fetchThemes();
-      setShowSaveCurrentModal(false);
-      setIsForkingPredefined(false);
-      setNewThemeName('');
-      setNewThemeDesc('');
+        await fetchThemes();
+        setShowSaveCurrentModal(false);
+        setIsForkingPredefined(false);
+        setNewThemeName('');
+        setNewThemeDesc('');
+      } catch (configErr) {
+        // O tema já existe na biblioteca: sincroniza estado para evitar duplicação ao tentar novamente
+        setData(d => ({ ...d, themeId }));
+        setBaseThemeId(themeId);
+        setSelectedThemeId(themeId);
+        await fetchThemes();
+        const detail = configErr instanceof Error ? configErr.message : 'Erro ao salvar configurações.';
+        setSaveNewError(
+          createdInThisFlow
+            ? `Tema salvo na biblioteca, mas houve erro ao aplicar as configurações: ${detail}`
+            : detail
+        );
+      }
     } catch (err) {
       setSaveNewError(err instanceof Error ? err.message : 'Erro ao criar tema.');
     } finally {

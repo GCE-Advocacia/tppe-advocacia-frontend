@@ -240,6 +240,10 @@ export default function LandingPageConfig() {
         onConfirm={(name, desc) =>
           themes.handleSaveCurrentAsTheme(name, desc, form.branding.save, form.applyConfig)
         }
+        onOpenLibrary={() => {
+          themes.closeSaveModal();
+          themes.setShowThemeGalleryModal(true);
+        }}
       />
     </div>
   );

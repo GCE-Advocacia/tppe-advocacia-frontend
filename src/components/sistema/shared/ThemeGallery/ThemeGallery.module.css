@@ -47,9 +47,16 @@
 }
 
 .quotaWarning {
-  margin: 0 0 12px;
-  color: #b91c1c;
+  margin: 14px 24px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--color-danger-bg, #fdecea);
+  border: 1px solid #fecaca;
+  color: var(--color-danger, #c62828);
   font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .btnNewTheme {
