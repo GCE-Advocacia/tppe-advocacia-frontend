@@ -103,9 +103,7 @@ export function usePersonalizacaoForm() {
     setSaveError(null);
     if (themesCtrl) {
       themesCtrl.setSelectedThemeId(saved.themeId ?? null);
-      if (saved.themeId) {
-        themesCtrl.setBaseThemeId(saved.themeId);
-      }
+      themesCtrl.setBaseThemeId(saved.themeId ?? null);
     }
   }, [saved, branding]);
 
@@ -158,17 +156,20 @@ export function usePersonalizacaoForm() {
           });
         }
 
+        const resolvedThemeId =
+          themesCtrl.baseTheme &&
+          (!themesCtrl.isBaseThemeModified || !themesCtrl.baseTheme.is_predefined)
+            ? themesCtrl.baseTheme.id
+            : null;
         const payloadData: LandingPageData = {
           ...data,
-          themeId: themesCtrl.baseTheme ? themesCtrl.baseTheme.id : data.themeId,
+          themeId: resolvedThemeId,
         };
         const updated = await updateOfficeConfig(payloadData, applyConfig);
         setSaved(updated);
         setData(updated);
-        if (updated.themeId) {
-          themesCtrl.setSelectedThemeId(updated.themeId);
-          themesCtrl.setBaseThemeId(updated.themeId);
-        }
+        themesCtrl.setSelectedThemeId(updated.themeId ?? null);
+        themesCtrl.setBaseThemeId(updated.themeId ?? null);
         await themesCtrl.fetchThemes();
       }
       setConfirmThemeUpdate(false);

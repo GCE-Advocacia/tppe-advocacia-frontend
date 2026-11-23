@@ -18,6 +18,7 @@ interface Props {
   themes: LandingPageTheme[];
   onRefreshThemes: () => Promise<void>;
   onSelectTheme: (theme: LandingPageTheme) => void;
+  onThemeDeleted?: (themeId: number) => void;
   currentLandingColors: LandingPageData;
   activeThemeId?: number | null;
   quota?: ThemeQuota | null;
@@ -76,6 +77,7 @@ export default function ThemeGallery({
   themes,
   onRefreshThemes,
   onSelectTheme,
+  onThemeDeleted,
   currentLandingColors,
   activeThemeId,
   quota: initialQuota,
@@ -321,7 +323,9 @@ export default function ThemeGallery({
     if (!themeToDelete) return;
     setDeletingTheme(true);
     try {
-      await deleteTheme(themeToDelete.id);
+      const deletedId = themeToDelete.id;
+      await deleteTheme(deletedId);
+      onThemeDeleted?.(deletedId);
       await onRefreshThemes();
       await fetchQuota();
       setThemeToDelete(null);

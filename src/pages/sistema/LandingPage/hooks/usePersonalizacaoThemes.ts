@@ -108,7 +108,7 @@ export function usePersonalizacaoThemes({
     }
     const matched = themes.find(t => isColorMatching(t, data));
     if (matched) return matched;
-    return themes.find(t => t.is_predefined) || themes[0] || null;
+    return null;
   }, [data.themeId, baseThemeId, themes, data, isColorMatching]);
 
   // Inicializa baseThemeId quando as configurações e temas estiverem disponíveis
@@ -133,7 +133,7 @@ export function usePersonalizacaoThemes({
 
   // Verifica se as cores em edição divergiram do baseTheme
   const isBaseThemeModified = useMemo(() => {
-    if (!baseTheme) return false;
+    if (!baseTheme) return true;
     return !isColorMatching(baseTheme, data);
   }, [baseTheme, data, isColorMatching]);
 
@@ -213,10 +213,15 @@ export function usePersonalizacaoThemes({
       colorLinkSecondary: saved.colorLinkSecondary,
     }));
     setSelectedThemeId(saved.themeId ?? null);
-    if (saved.themeId) {
-      setBaseThemeId(saved.themeId);
-    }
+    setBaseThemeId(saved.themeId ?? null);
   }, [saved, setData]);
+
+  const handleThemeDeleted = useCallback((deletedId: number) => {
+    setSaved(s => (s.themeId === deletedId ? { ...s, themeId: null } : s));
+    setData(d => (d.themeId === deletedId ? { ...d, themeId: null } : d));
+    setBaseThemeId(prev => (prev === deletedId ? null : prev));
+    setSelectedThemeId(prev => (prev === deletedId ? null : prev));
+  }, [setData, setSaved]);
 
   const matchedTheme = useMemo(() => {
     const activeId = data.themeId ?? selectedThemeId;
@@ -272,7 +277,7 @@ export function usePersonalizacaoThemes({
   }, [handleThemeSelected]);
 
   const openForkModal = useCallback((defaultName?: string) => {
-    setIsForkingPredefined(true);
+    setIsForkingPredefined(Boolean(baseTheme?.is_predefined));
     setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Personalizado)` : ''));
     setNewThemeDesc('');
     setSaveNewError(null);
@@ -365,6 +370,7 @@ export function usePersonalizacaoThemes({
     updateSystemButtons,
     handleThemeSelected,
     handleSelectFromLibrary,
+    handleThemeDeleted,
     // Modais
     showThemeGalleryModal,
     setShowThemeGalleryModal,
