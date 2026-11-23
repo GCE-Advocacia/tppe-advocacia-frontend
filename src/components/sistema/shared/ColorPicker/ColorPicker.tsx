@@ -241,21 +241,21 @@ export function hslToRgb(
 
 export function parseColorString(value: string): ColorValue | null {
   const trimmed = value.trim();
-  if (trimmed.startsWith("#")) {
-    const hexMatch = trimmed.match(/^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})$/);
-    if (hexMatch) {
-      return hexToRgb(trimmed);
-    }
+  const hexMatch = trimmed.match(/^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})$/);
+  if (hexMatch) {
+    return hexToRgb(`#${hexMatch[1]}`);
   }
   const rgbMatch = trimmed.match(
     /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/i,
   );
   if (rgbMatch) {
+    const clamp255 = (n: number) => Math.max(0, Math.min(255, n));
+    const clampAlpha = (n: number) => Math.max(0, Math.min(1, n));
     return {
-      r: Number.parseInt(rgbMatch[1] ?? "0", 10),
-      g: Number.parseInt(rgbMatch[2] ?? "0", 10),
-      b: Number.parseInt(rgbMatch[3] ?? "0", 10),
-      a: rgbMatch[4] ? Number.parseFloat(rgbMatch[4]) : 1,
+      r: clamp255(Number.parseInt(rgbMatch[1] ?? "0", 10)),
+      g: clamp255(Number.parseInt(rgbMatch[2] ?? "0", 10)),
+      b: clamp255(Number.parseInt(rgbMatch[3] ?? "0", 10)),
+      a: rgbMatch[4] ? clampAlpha(Number.parseFloat(rgbMatch[4])) : 1,
     };
   }
   return null;
@@ -785,19 +785,58 @@ export interface ColorPickerInputProps {
 
 export function ColorPickerInput({ withoutAlpha = false, className = "" }: ColorPickerInputProps) {
   const { color, setColor, hsv, setHsv, format, disabled } = useColorPickerContext(INPUT_NAME);
+  const canonicalHex = rgbToHex(color);
+  const [hexDraft, setHexDraft] = React.useState(canonicalHex);
+  const hexFocusedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!hexFocusedRef.current) {
+      setHexDraft(canonicalHex);
+    }
+  }, [canonicalHex]);
+
+  const commitHexDraft = React.useCallback((raw: string) => {
+    const parsed = parseColorString(raw);
+    if (parsed) {
+      const clean = raw.trim().replace(/^#/, "");
+      const nextColor = clean.length === 8 ? parsed : { ...parsed, a: 1 };
+      setColor(nextColor);
+      setHexDraft(rgbToHex(nextColor));
+    } else {
+      setHexDraft(rgbToHex(color));
+    }
+  }, [color, setColor]);
 
   if (format === "hex") {
     return (
       <div className={styles.inputGroupWrapper}>
         <input
           type="text"
-          maxLength={9}
+          maxLength={12}
           className={`${styles.formatInput} ${withoutAlpha ? styles.inputIsolated : styles.inputFirst} ${className}`.trim()}
-          value={rgbToHex(color)}
+          value={hexDraft}
           disabled={disabled}
+          onFocus={() => {
+            hexFocusedRef.current = true;
+          }}
+          onBlur={() => {
+            hexFocusedRef.current = false;
+            commitHexDraft(hexDraft);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              commitHexDraft(hexDraft);
+            }
+          }}
           onChange={(e) => {
-            const parsed = parseColorString(e.target.value);
-            if (parsed) setColor({ ...parsed, a: e.target.value.trim().length === 9 ? parsed.a : color.a });
+            const raw = e.target.value;
+            setHexDraft(raw);
+            const clean = raw.trim().replace(/^#/, "");
+            if (/^[a-fA-F0-9]{6}$/.test(clean)) {
+              setColor(hexToRgb(`#${clean}`, 1));
+            } else if (/^[a-fA-F0-9]{8}$/.test(clean)) {
+              setColor(hexToRgb(`#${clean}`));
+            }
           }}
         />
         {!withoutAlpha && (
