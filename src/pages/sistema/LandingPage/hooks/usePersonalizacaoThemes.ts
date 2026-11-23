@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useBrandingActions } from '../../../../contexts/BrandingContext';
 import {
   getThemes,
@@ -43,6 +43,7 @@ export function usePersonalizacaoThemes({
   const [newThemeDesc, setNewThemeDesc] = useState('');
   const [savingNewTheme, setSavingNewTheme] = useState(false);
   const [saveNewError, setSaveNewError] = useState<string | null>(null);
+  const pendingCreatedThemeIdRef = useRef<number | null>(null);
 
   const fetchThemes = useCallback(async () => {
     try {
@@ -108,7 +109,7 @@ export function usePersonalizacaoThemes({
     }
     const matched = themes.find(t => isColorMatching(t, data));
     if (matched) return matched;
-    return themes.find(t => t.is_predefined) || themes[0] || null;
+    return null;
   }, [data.themeId, baseThemeId, themes, data, isColorMatching]);
 
   // Inicializa baseThemeId quando as configurações e temas estiverem disponíveis
@@ -133,7 +134,7 @@ export function usePersonalizacaoThemes({
 
   // Verifica se as cores em edição divergiram do baseTheme
   const isBaseThemeModified = useMemo(() => {
-    if (!baseTheme) return false;
+    if (!baseTheme) return true;
     return !isColorMatching(baseTheme, data);
   }, [baseTheme, data, isColorMatching]);
 
@@ -157,6 +158,11 @@ export function usePersonalizacaoThemes({
   const updateSystemButtons = useCallback((changes: Partial<Pick<LandingPageData, 'systemUsesLandingButtons' | 'colorButtonsSystem' | 'colorButtonsSystemHover' | 'colorButtonsSystemText'>>) => {
     setData(d => {
       const next: LandingPageData = { ...d, ...changes };
+      if (changes.systemUsesLandingButtons === true && (saved.systemUsesLandingButtons ?? true)) {
+        next.colorButtonsSystem = saved.colorButtonsSystem;
+        next.colorButtonsSystemHover = saved.colorButtonsSystemHover;
+        next.colorButtonsSystemText = saved.colorButtonsSystemText;
+      }
       if (baseTheme && !baseTheme.is_predefined) {
         next.themeId = baseTheme.id;
       } else if (baseTheme && isColorMatching(baseTheme, next)) {
@@ -166,9 +172,19 @@ export function usePersonalizacaoThemes({
       }
       return next;
     });
-  }, [baseTheme, isColorMatching, setData]);
+  }, [baseTheme, isColorMatching, saved, setData]);
 
   const isColorsDirty = useMemo(() => {
+    const dataUsesLanding = data.systemUsesLandingButtons ?? true;
+    const savedUsesLanding = saved.systemUsesLandingButtons ?? true;
+    const systemButtonsDirty =
+      dataUsesLanding !== savedUsesLanding ||
+      (!dataUsesLanding && (
+        (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
+        (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
+        (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase()
+      ));
+
     return (
       (data.colorBgPrimary || '').toLowerCase() !== (saved.colorBgPrimary || '').toLowerCase() ||
       (data.colorBgSecondary || '').toLowerCase() !== (saved.colorBgSecondary || '').toLowerCase() ||
@@ -182,10 +198,7 @@ export function usePersonalizacaoThemes({
       (data.colorTextSecondary || '').toLowerCase() !== (saved.colorTextSecondary || '').toLowerCase() ||
       (data.colorLinkPrimary || '').toLowerCase() !== (saved.colorLinkPrimary || '').toLowerCase() ||
       (data.colorLinkSecondary || '').toLowerCase() !== (saved.colorLinkSecondary || '').toLowerCase() ||
-      (data.systemUsesLandingButtons ?? true) !== (saved.systemUsesLandingButtons ?? true) ||
-      (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
-      (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
-      (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase() ||
+      systemButtonsDirty ||
       data.themeId !== saved.themeId
     );
   }, [data, saved]);
@@ -213,10 +226,15 @@ export function usePersonalizacaoThemes({
       colorLinkSecondary: saved.colorLinkSecondary,
     }));
     setSelectedThemeId(saved.themeId ?? null);
-    if (saved.themeId) {
-      setBaseThemeId(saved.themeId);
-    }
+    setBaseThemeId(saved.themeId ?? null);
   }, [saved, setData]);
+
+  const handleThemeDeleted = useCallback((deletedId: number) => {
+    setSaved(s => (s.themeId === deletedId ? { ...s, themeId: null } : s));
+    setData(d => (d.themeId === deletedId ? { ...d, themeId: null } : d));
+    setBaseThemeId(prev => (prev === deletedId ? null : prev));
+    setSelectedThemeId(prev => (prev === deletedId ? null : prev));
+  }, [setData, setSaved]);
 
   const matchedTheme = useMemo(() => {
     const activeId = data.themeId ?? selectedThemeId;
@@ -272,22 +290,25 @@ export function usePersonalizacaoThemes({
   }, [handleThemeSelected]);
 
   const openForkModal = useCallback((defaultName?: string) => {
-    setIsForkingPredefined(true);
-    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Personalizado)` : ''));
+    pendingCreatedThemeIdRef.current = null;
+    setIsForkingPredefined(Boolean(baseTheme?.is_predefined));
+    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name.slice(0, 84)} (Personalizado)` : ''));
     setNewThemeDesc('');
     setSaveNewError(null);
     setShowSaveCurrentModal(true);
   }, [baseTheme]);
 
   const openCopyModal = useCallback((defaultName?: string) => {
+    pendingCreatedThemeIdRef.current = null;
     setIsForkingPredefined(false);
-    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Cópia)` : ''));
+    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name.slice(0, 92)} (Cópia)` : ''));
     setNewThemeDesc('');
     setSaveNewError(null);
     setShowSaveCurrentModal(true);
   }, [baseTheme]);
 
   const closeSaveModal = useCallback(() => {
+    pendingCreatedThemeIdRef.current = null;
     setShowSaveCurrentModal(false);
     setIsForkingPredefined(false);
   }, []);
@@ -304,9 +325,10 @@ export function usePersonalizacaoThemes({
     }
     setSavingNewTheme(true);
     setSaveNewError(null);
+    let createdInThisFlow = false;
     try {
       await brandingSave();
-      const created = await createTheme({
+      const themePayload = {
         name: name.trim(),
         description: desc.trim() || null,
         color: data.color || '#232C43',
@@ -326,20 +348,45 @@ export function usePersonalizacaoThemes({
         color_text_secondary: data.colorTextSecondary || '#6B7280',
         color_link_primary: data.colorLinkPrimary || '#FFFFFF',
         color_link_secondary: data.colorLinkSecondary || '#661C16',
-      });
+      };
+
+      let themeId = pendingCreatedThemeIdRef.current;
+      if (themeId !== null) {
+        await updateTheme(themeId, themePayload);
+      } else {
+        const created = await createTheme(themePayload);
+        themeId = created.id;
+        pendingCreatedThemeIdRef.current = themeId;
+        createdInThisFlow = true;
+      }
 
       const onUpdated = applyConfigCallback || defaultApplyConfig;
-      const updated = await updateOfficeConfig({ ...data, themeId: created.id }, onUpdated);
-      setSaved(updated);
-      setData(updated);
-      setBaseThemeId(created.id);
-      setSelectedThemeId(created.id);
+      try {
+        const updated = await updateOfficeConfig({ ...data, themeId }, onUpdated);
+        pendingCreatedThemeIdRef.current = null;
+        setSaved(updated);
+        setData(updated);
+        setBaseThemeId(themeId);
+        setSelectedThemeId(themeId);
 
-      await fetchThemes();
-      setShowSaveCurrentModal(false);
-      setIsForkingPredefined(false);
-      setNewThemeName('');
-      setNewThemeDesc('');
+        await fetchThemes();
+        setShowSaveCurrentModal(false);
+        setIsForkingPredefined(false);
+        setNewThemeName('');
+        setNewThemeDesc('');
+      } catch (configErr) {
+        // O tema já existe na biblioteca: sincroniza estado para evitar duplicação ao tentar novamente
+        setData(d => ({ ...d, themeId }));
+        setBaseThemeId(themeId);
+        setSelectedThemeId(themeId);
+        await fetchThemes();
+        const detail = configErr instanceof Error ? configErr.message : 'Erro ao salvar configurações.';
+        setSaveNewError(
+          createdInThisFlow
+            ? `Tema salvo na biblioteca, mas houve erro ao aplicar as configurações: ${detail}`
+            : detail
+        );
+      }
     } catch (err) {
       setSaveNewError(err instanceof Error ? err.message : 'Erro ao criar tema.');
     } finally {
@@ -365,6 +412,7 @@ export function usePersonalizacaoThemes({
     updateSystemButtons,
     handleThemeSelected,
     handleSelectFromLibrary,
+    handleThemeDeleted,
     // Modais
     showThemeGalleryModal,
     setShowThemeGalleryModal,

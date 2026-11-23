@@ -25,7 +25,7 @@ export default function CoresSection({
   const {
     baseTheme, matchedTheme, isBaseThemeModified, updateColor, updateSystemButtons,
     isColorsDirty, discardColorChanges,
-    handleSelectFromLibrary, fetchThemes,
+    handleSelectFromLibrary, handleThemeDeleted, fetchThemes,
     showThemeGalleryModal, setShowThemeGalleryModal,
     openCopyModal, themeQuota,
   } = themes;
@@ -310,8 +310,9 @@ export default function CoresSection({
         themes={themes.themes}
         onRefreshThemes={fetchThemes}
         onSelectTheme={handleSelectFromLibrary}
+        onThemeDeleted={handleThemeDeleted}
         currentLandingColors={data}
-        activeThemeId={data.themeId ?? matchedTheme?.id ?? baseTheme?.id ?? null}
+        activeThemeId={matchedTheme?.id ?? null}
         quota={themeQuota}
       />
     </>

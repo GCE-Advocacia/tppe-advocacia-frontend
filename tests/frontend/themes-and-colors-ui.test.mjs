@@ -317,3 +317,70 @@ test('TC-S1-11: active sidebar border and focused login field use their saved se
     return el && getComputedStyle(el).borderColor==='rgb(124, 58, 237)';
   });
 });
+
+test('deleting active custom theme keeps custom colors unlinked and does not assign official theme on save',async t=>{
+  const {page,state}=await setup(t,{customCount:1,active:4});
+  state.themes.find(th=>th.id===4).color_bg_primary='#123456';
+  state.config.color=state.config.color_bg_primary='#123456';
+  await openSettings(page);
+  await page.getByRole('button',{name:'Biblioteca de Temas',exact:true}).click();
+  await themeCard(page,'Customizado 1').getByTitle('Excluir tema personalizado').click();
+  await page.getByRole('button',{name:'Confirmar Exclusão',exact:true}).click();
+  await themeCard(page,'Customizado 1').waitFor({state:'detached'});
+  await page.getByTitle('Fechar biblioteca de temas').click();
+  await page.getByText('(Cores personalizadas)',{exact:true}).waitFor();
+  await page.getByRole('tab',{name:/Conteúdo da Landing Page/}).click();
+  await page.locator('[class*="field_"]').filter({has:page.locator('label').filter({hasText:/^TELEFONE$/})}).locator('input').fill('(61) 99999-0000');
+  await save(page).click();
+  await saved(page);
+  assert.equal(state.config.theme_id,null);
+  assert.equal(state.config.color_bg_primary.toLowerCase(),'#123456');
+});
+
+test('toggling system buttons off, editing, and back on clears dirty state and modified colors clear Em Uso badge',async t=>{
+  const {page}=await setup(t,{active:2});
+  await openSettings(page);
+  const checkbox=page.getByLabel(/Usar as mesmas cores de botões no sistema/);
+  assert.equal(await checkbox.isChecked(),true);
+  await checkbox.uncheck();
+  await page.locator('[data-pending-changes="true"]').waitFor({state:'attached'});
+  await checkbox.check();
+  await page.locator('[data-pending-changes="false"]').waitFor({state:'attached'});
+
+  await changeBackground(page,'#345678');
+  await page.getByRole('button',{name:'Biblioteca de Temas',exact:true}).click();
+  assert.equal(await themeCard(page,'Dourado & Ônix Nobre').getByText('Em Uso').count(),0);
+});
+
+test('partial fork failure reuses created theme on retry and full quota modal offers library shortcut',async t=>{
+  const {page,state}=await setup(t);
+  await openSettings(page);
+  await changeBackground(page,'#345678');
+  state.failure=true;
+  await save(page).click();
+  const dialog=page.getByRole('dialog',{name:'Novo Tema Personalizado'});
+  await dialog.waitFor();
+  await dialog.getByPlaceholder('Ex: Corporativo Noturno, Minimalista Ouro...').fill('Fork Unico');
+  await dialog.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+  await dialog.getByRole('alert').waitFor();
+  assert.equal(state.themes.filter(th=>th.name==='Fork Unico').length,1);
+
+  state.failure=false;
+  await dialog.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+  await saved(page);
+  assert.equal(state.themes.filter(th=>th.name==='Fork Unico').length,1);
+  assert.equal(state.writes.filter(w=>w.method==='POST'&&w.path==='/office-config/themes').length,1);
+});
+
+test('full quota fork modal provides shortcut to open Theme Gallery without losing draft',async t=>{
+  const {page}=await setup(t,{customCount:6});
+  await openSettings(page);
+  await changeBackground(page,'#345678');
+  await save(page).click();
+  const dialog=page.getByRole('dialog',{name:'Novo Tema Personalizado'});
+  await dialog.waitFor();
+  await dialog.getByRole('button',{name:'Abrir Biblioteca de Temas',exact:true}).click();
+  await page.getByRole('heading',{name:'Biblioteca de Temas',exact:true}).waitFor();
+  await page.getByTitle('Fechar biblioteca de temas').click();
+  await page.locator('[data-pending-changes="true"]').waitFor({state:'attached'});
+});
