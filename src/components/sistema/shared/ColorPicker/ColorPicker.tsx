@@ -777,6 +777,85 @@ export function ColorPickerFormatSelect(props: ColorPickerFormatSelectProps) {
   );
 }
 
+// ── NumericChannelInput (local draft buffer for smooth editing) ───
+interface NumericChannelInputProps {
+  value: number;
+  min: number;
+  max: number;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  onCommit: (next: number) => void;
+}
+
+function NumericChannelInput({
+  value,
+  min,
+  max,
+  disabled,
+  className,
+  style,
+  onCommit,
+}: NumericChannelInputProps) {
+  const [draft, setDraft] = React.useState(() => String(value));
+  const focusedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!focusedRef.current) {
+      setDraft(String(value));
+    }
+  }, [value]);
+
+  const commitDraft = React.useCallback(() => {
+    const trimmed = draft.trim();
+    if (trimmed === "") {
+      setDraft(String(value));
+      return;
+    }
+    const parsed = Number.parseInt(trimmed, 10);
+    if (Number.isNaN(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, parsed));
+    onCommit(clamped);
+    setDraft(String(clamped));
+  }, [draft, max, min, onCommit, value]);
+
+  return (
+    <input
+      type="number"
+      min={min}
+      max={max}
+      className={className}
+      style={style}
+      value={draft}
+      disabled={disabled}
+      onFocus={() => {
+        focusedRef.current = true;
+      }}
+      onBlur={() => {
+        focusedRef.current = false;
+        commitDraft();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commitDraft();
+        }
+      }}
+      onChange={(e) => {
+        const next = e.target.value;
+        setDraft(next);
+        if (next.trim() === "") return;
+        const parsed = Number.parseInt(next, 10);
+        if (!Number.isNaN(parsed) && parsed >= min && parsed <= max) {
+          onCommit(parsed);
+        }
+      }}
+    />
+  );
+}
+
 // ── ColorPickerInput ──────────────────────────────────────────────
 export interface ColorPickerInputProps {
   withoutAlpha?: boolean;
@@ -840,20 +919,15 @@ export function ColorPickerInput({ withoutAlpha = false, className = "" }: Color
           }}
         />
         {!withoutAlpha && (
-          <input
-            type="number"
+          <NumericChannelInput
+            key="hex-a"
             min={0}
             max={100}
             className={`${styles.formatInput} ${styles.inputLast}`}
             style={{ width: 44, textAlign: "center" }}
             value={Math.round((color.a ?? 1) * 100)}
             disabled={disabled}
-            onChange={(e) => {
-              const val = Number.parseInt(e.target.value, 10);
-              if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-                setColor({ ...color, a: val / 100 });
-              }
-            }}
+            onCommit={(val) => setColor({ ...color, a: val / 100 })}
           />
         )}
       </div>
@@ -863,63 +937,43 @@ export function ColorPickerInput({ withoutAlpha = false, className = "" }: Color
   if (format === "rgb") {
     return (
       <div className={styles.inputGroupWrapper}>
-        <input
-          type="number"
+        <NumericChannelInput
+          key="rgb-r"
           min={0}
           max={255}
           className={`${styles.formatInput} ${styles.inputFirst}`}
           value={Math.round(color.r)}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 255) {
-              setColor({ ...color, r: val });
-            }
-          }}
+          onCommit={(val) => setColor({ ...color, r: val })}
         />
-        <input
-          type="number"
+        <NumericChannelInput
+          key="rgb-g"
           min={0}
           max={255}
           className={`${styles.formatInput} ${styles.inputMiddle}`}
           value={Math.round(color.g)}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 255) {
-              setColor({ ...color, g: val });
-            }
-          }}
+          onCommit={(val) => setColor({ ...color, g: val })}
         />
-        <input
-          type="number"
+        <NumericChannelInput
+          key="rgb-b"
           min={0}
           max={255}
           className={`${styles.formatInput} ${withoutAlpha ? styles.inputLast : styles.inputMiddle}`}
           value={Math.round(color.b)}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 255) {
-              setColor({ ...color, b: val });
-            }
-          }}
+          onCommit={(val) => setColor({ ...color, b: val })}
         />
         {!withoutAlpha && (
-          <input
-            type="number"
+          <NumericChannelInput
+            key="rgb-a"
             min={0}
             max={100}
             className={`${styles.formatInput} ${styles.inputLast}`}
             style={{ width: 42, textAlign: "center" }}
             value={Math.round((color.a ?? 1) * 100)}
             disabled={disabled}
-            onChange={(e) => {
-              const val = Number.parseInt(e.target.value, 10);
-              if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-                setColor({ ...color, a: val / 100 });
-              }
-            }}
+            onCommit={(val) => setColor({ ...color, a: val / 100 })}
           />
         )}
       </div>
@@ -930,63 +984,43 @@ export function ColorPickerInput({ withoutAlpha = false, className = "" }: Color
     const hsl = rgbToHsl(color);
     return (
       <div className={styles.inputGroupWrapper}>
-        <input
-          type="number"
+        <NumericChannelInput
+          key="hsl-h"
           min={0}
           max={360}
           className={`${styles.formatInput} ${styles.inputFirst}`}
           value={hsl.h}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 360) {
-              setColor(hslToRgb({ ...hsl, h: val }, color.a));
-            }
-          }}
+          onCommit={(val) => setColor(hslToRgb({ ...hsl, h: val }, color.a))}
         />
-        <input
-          type="number"
+        <NumericChannelInput
+          key="hsl-s"
           min={0}
           max={100}
           className={`${styles.formatInput} ${styles.inputMiddle}`}
           value={hsl.s}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-              setColor(hslToRgb({ ...hsl, s: val }, color.a));
-            }
-          }}
+          onCommit={(val) => setColor(hslToRgb({ ...hsl, s: val }, color.a))}
         />
-        <input
-          type="number"
+        <NumericChannelInput
+          key="hsl-l"
           min={0}
           max={100}
           className={`${styles.formatInput} ${withoutAlpha ? styles.inputLast : styles.inputMiddle}`}
           value={hsl.l}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-              setColor(hslToRgb({ ...hsl, l: val }, color.a));
-            }
-          }}
+          onCommit={(val) => setColor(hslToRgb({ ...hsl, l: val }, color.a))}
         />
         {!withoutAlpha && (
-          <input
-            type="number"
+          <NumericChannelInput
+            key="hsl-a"
             min={0}
             max={100}
             className={`${styles.formatInput} ${styles.inputLast}`}
             style={{ width: 42, textAlign: "center" }}
             value={Math.round((color.a ?? 1) * 100)}
             disabled={disabled}
-            onChange={(e) => {
-              const val = Number.parseInt(e.target.value, 10);
-              if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-                setColor({ ...color, a: val / 100 });
-              }
-            }}
+            onCommit={(val) => setColor({ ...color, a: val / 100 })}
           />
         )}
       </div>
@@ -996,63 +1030,43 @@ export function ColorPickerInput({ withoutAlpha = false, className = "" }: Color
   // hsb
   return (
     <div className={styles.inputGroupWrapper}>
-      <input
-        type="number"
+      <NumericChannelInput
+        key="hsb-h"
         min={0}
         max={360}
         className={`${styles.formatInput} ${styles.inputFirst}`}
         value={hsv.h}
         disabled={disabled}
-        onChange={(e) => {
-          const val = Number.parseInt(e.target.value, 10);
-          if (!Number.isNaN(val) && val >= 0 && val <= 360) {
-            setHsv({ ...hsv, h: val });
-          }
-        }}
+        onCommit={(val) => setHsv({ ...hsv, h: val })}
       />
-      <input
-        type="number"
+      <NumericChannelInput
+        key="hsb-s"
         min={0}
         max={100}
         className={`${styles.formatInput} ${styles.inputMiddle}`}
         value={hsv.s}
         disabled={disabled}
-        onChange={(e) => {
-          const val = Number.parseInt(e.target.value, 10);
-          if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-            setHsv({ ...hsv, s: val });
-          }
-        }}
+        onCommit={(val) => setHsv({ ...hsv, s: val })}
       />
-      <input
-        type="number"
+      <NumericChannelInput
+        key="hsb-v"
         min={0}
         max={100}
         className={`${styles.formatInput} ${withoutAlpha ? styles.inputLast : styles.inputMiddle}`}
         value={hsv.v}
         disabled={disabled}
-        onChange={(e) => {
-          const val = Number.parseInt(e.target.value, 10);
-          if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-            setHsv({ ...hsv, v: val });
-          }
-        }}
+        onCommit={(val) => setHsv({ ...hsv, v: val })}
       />
       {!withoutAlpha && (
-        <input
-          type="number"
+        <NumericChannelInput
+          key="hsb-a"
           min={0}
           max={100}
           className={`${styles.formatInput} ${styles.inputLast}`}
           style={{ width: 42, textAlign: "center" }}
           value={Math.round((hsv.a ?? 1) * 100)}
           disabled={disabled}
-          onChange={(e) => {
-            const val = Number.parseInt(e.target.value, 10);
-            if (!Number.isNaN(val) && val >= 0 && val <= 100) {
-              setColor({ ...color, a: val / 100 });
-            }
-          }}
+          onCommit={(val) => setColor({ ...color, a: val / 100 })}
         />
       )}
     </div>
