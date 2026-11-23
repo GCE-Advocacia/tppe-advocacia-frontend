@@ -384,3 +384,49 @@ test('full quota fork modal provides shortcut to open Theme Gallery without losi
   await page.getByTitle('Fechar biblioteca de temas').click();
   await page.locator('[data-pending-changes="true"]').waitFor({state:'attached'});
 });
+
+test('ColorPicker allows backspace typing, hex without #, alpha reset, and clearing RGB inputs',async t=>{
+  const {page}=await setup(t);
+  await openSettings(page);
+  await page.locator('[data-slot="color-picker-root"] button').first().click();
+  const pop=colorPopover(page);
+  const hexInput=pop.locator('input[type="text"]');
+  const alphaInput=pop.locator('input[type="number"]');
+  const preview=page.locator('[data-landing-preview]');
+
+  // Backspace & step-by-step typing in HEX
+  await hexInput.click();
+  await hexInput.press('End');
+  await hexInput.press('Backspace');
+  assert.equal(await hexInput.inputValue(),'#232C4');
+  await hexInput.press('Control+a');
+  await hexInput.press('Backspace');
+  assert.equal(await hexInput.inputValue(),'');
+  await hexInput.pressSequentially('#123456');
+  assert.equal((await preview.evaluate(el=>el.style.getPropertyValue('--pv-bg-primary'))).toLowerCase(),'#123456');
+
+  // Paste/type HEX without '#'
+  await hexInput.fill('E11D48');
+  await hexInput.blur();
+  assert.equal(await hexInput.inputValue(),'#E11D48');
+  assert.equal((await preview.evaluate(el=>el.style.getPropertyValue('--pv-bg-primary'))).toLowerCase(),'#e11d48');
+
+  // Entering 6-digit HEX clears previous alpha transparency
+  await alphaInput.fill('50');
+  assert.equal((await preview.evaluate(el=>el.style.getPropertyValue('--pv-bg-primary'))).toLowerCase(),'#e11d4880');
+  await hexInput.fill('#336699');
+  assert.equal((await preview.evaluate(el=>el.style.getPropertyValue('--pv-bg-primary'))).toLowerCase(),'#336699');
+  assert.equal(await alphaInput.inputValue(),'100');
+
+  // RGB numeric channel can be fully cleared and retyped
+  await pop.locator('select').selectOption('rgb');
+  const redInput=pop.locator('input[type="number"]').first();
+  await redInput.click();
+  await redInput.press('Control+a');
+  await redInput.press('Backspace');
+  assert.equal(await redInput.inputValue(),'');
+  await redInput.pressSequentially('200');
+  await redInput.blur();
+  assert.equal(await redInput.inputValue(),'200');
+  assert.equal((await preview.evaluate(el=>el.style.getPropertyValue('--pv-bg-primary'))).toLowerCase(),'#c86699');
+});
