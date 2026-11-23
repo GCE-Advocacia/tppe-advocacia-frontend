@@ -312,7 +312,7 @@ export default function CoresSection({
         onSelectTheme={handleSelectFromLibrary}
         onThemeDeleted={handleThemeDeleted}
         currentLandingColors={data}
-        activeThemeId={data.themeId ?? matchedTheme?.id ?? baseTheme?.id ?? null}
+        activeThemeId={matchedTheme?.id ?? null}
         quota={themeQuota}
       />
     </>

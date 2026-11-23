@@ -157,6 +157,11 @@ export function usePersonalizacaoThemes({
   const updateSystemButtons = useCallback((changes: Partial<Pick<LandingPageData, 'systemUsesLandingButtons' | 'colorButtonsSystem' | 'colorButtonsSystemHover' | 'colorButtonsSystemText'>>) => {
     setData(d => {
       const next: LandingPageData = { ...d, ...changes };
+      if (changes.systemUsesLandingButtons === true && (saved.systemUsesLandingButtons ?? true)) {
+        next.colorButtonsSystem = saved.colorButtonsSystem;
+        next.colorButtonsSystemHover = saved.colorButtonsSystemHover;
+        next.colorButtonsSystemText = saved.colorButtonsSystemText;
+      }
       if (baseTheme && !baseTheme.is_predefined) {
         next.themeId = baseTheme.id;
       } else if (baseTheme && isColorMatching(baseTheme, next)) {
@@ -166,9 +171,19 @@ export function usePersonalizacaoThemes({
       }
       return next;
     });
-  }, [baseTheme, isColorMatching, setData]);
+  }, [baseTheme, isColorMatching, saved, setData]);
 
   const isColorsDirty = useMemo(() => {
+    const dataUsesLanding = data.systemUsesLandingButtons ?? true;
+    const savedUsesLanding = saved.systemUsesLandingButtons ?? true;
+    const systemButtonsDirty =
+      dataUsesLanding !== savedUsesLanding ||
+      (!dataUsesLanding && (
+        (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
+        (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
+        (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase()
+      ));
+
     return (
       (data.colorBgPrimary || '').toLowerCase() !== (saved.colorBgPrimary || '').toLowerCase() ||
       (data.colorBgSecondary || '').toLowerCase() !== (saved.colorBgSecondary || '').toLowerCase() ||
@@ -182,10 +197,7 @@ export function usePersonalizacaoThemes({
       (data.colorTextSecondary || '').toLowerCase() !== (saved.colorTextSecondary || '').toLowerCase() ||
       (data.colorLinkPrimary || '').toLowerCase() !== (saved.colorLinkPrimary || '').toLowerCase() ||
       (data.colorLinkSecondary || '').toLowerCase() !== (saved.colorLinkSecondary || '').toLowerCase() ||
-      (data.systemUsesLandingButtons ?? true) !== (saved.systemUsesLandingButtons ?? true) ||
-      (data.colorButtonsSystem || '').toLowerCase() !== (saved.colorButtonsSystem || '').toLowerCase() ||
-      (data.colorButtonsSystemHover || '').toLowerCase() !== (saved.colorButtonsSystemHover || '').toLowerCase() ||
-      (data.colorButtonsSystemText || '').toLowerCase() !== (saved.colorButtonsSystemText || '').toLowerCase() ||
+      systemButtonsDirty ||
       data.themeId !== saved.themeId
     );
   }, [data, saved]);
