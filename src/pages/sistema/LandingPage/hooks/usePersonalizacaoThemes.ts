@@ -292,7 +292,7 @@ export function usePersonalizacaoThemes({
   const openForkModal = useCallback((defaultName?: string) => {
     pendingCreatedThemeIdRef.current = null;
     setIsForkingPredefined(Boolean(baseTheme?.is_predefined));
-    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Personalizado)` : ''));
+    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name.slice(0, 84)} (Personalizado)` : ''));
     setNewThemeDesc('');
     setSaveNewError(null);
     setShowSaveCurrentModal(true);
@@ -301,7 +301,7 @@ export function usePersonalizacaoThemes({
   const openCopyModal = useCallback((defaultName?: string) => {
     pendingCreatedThemeIdRef.current = null;
     setIsForkingPredefined(false);
-    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name} (Cópia)` : ''));
+    setNewThemeName(defaultName || (baseTheme ? `${baseTheme.name.slice(0, 92)} (Cópia)` : ''));
     setNewThemeDesc('');
     setSaveNewError(null);
     setShowSaveCurrentModal(true);

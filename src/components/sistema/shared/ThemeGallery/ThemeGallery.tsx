@@ -89,6 +89,7 @@ export default function ThemeGallery({
   // Modal de Exclusão
   const [themeToDelete, setThemeToDelete] = useState<LandingPageTheme | null>(null);
   const [deletingTheme, setDeletingTheme] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Cota dinâmica fornecida pelo backend
   const [internalQuota, setInternalQuota] = useState<ThemeQuota | null>(null);
@@ -193,7 +194,7 @@ export default function ThemeGallery({
   function openDuplicateModal(baseTheme: LandingPageTheme) {
     if (isLimitReached) return;
     setFormData({
-      name: `${baseTheme.name} (Cópia)`,
+      name: `${baseTheme.name.slice(0, 92)} (Cópia)`,
       description: baseTheme.description || '',
       color: baseTheme.color,
       color_bg_primary: baseTheme.color_bg_primary,
@@ -322,6 +323,7 @@ export default function ThemeGallery({
   async function handleDeleteTheme() {
     if (!themeToDelete) return;
     setDeletingTheme(true);
+    setDeleteError(null);
     try {
       const deletedId = themeToDelete.id;
       await deleteTheme(deletedId);
@@ -330,7 +332,7 @@ export default function ThemeGallery({
       await fetchQuota();
       setThemeToDelete(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erro ao excluir tema.');
+      setDeleteError(err instanceof Error ? err.message : 'Erro ao excluir tema.');
     } finally {
       setDeletingTheme(false);
     }
@@ -501,6 +503,7 @@ export default function ThemeGallery({
                             title="Excluir tema personalizado"
                             onClick={(e) => {
                               e.stopPropagation();
+                              setDeleteError(null);
                               setThemeToDelete(theme);
                             }}
                           >
@@ -555,11 +558,11 @@ export default function ThemeGallery({
 
       {/* Modal: Confirmar Exclusão */}
       {themeToDelete && (
-        <div className={styles.modalOverlay} onMouseDown={() => setThemeToDelete(null)}>
+        <div className={styles.modalOverlay} onMouseDown={() => { if (!deletingTheme) { setDeleteError(null); setThemeToDelete(null); } }}>
           <div className={styles.modalBox} onMouseDown={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Excluir Tema</h3>
-              <button className={styles.modalClose} onClick={() => setThemeToDelete(null)}>
+              <button className={styles.modalClose} disabled={deletingTheme} onClick={() => { setDeleteError(null); setThemeToDelete(null); }}>
                 <X size={18} />
               </button>
             </div>
@@ -570,13 +573,14 @@ export default function ThemeGallery({
               <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
                 Esta ação liberará 1 espaço na sua cota de temas personalizados. Não afetará as cores atualmente salvas na sua Landing Page.
               </p>
+              {deleteError && <p role="alert" className={styles.modalError}>{deleteError}</p>}
             </div>
             <div className={styles.modalActions}>
               <button
                 type="button"
                 className={styles.btnCancel}
                 disabled={deletingTheme}
-                onClick={() => setThemeToDelete(null)}
+                onClick={() => { setDeleteError(null); setThemeToDelete(null); }}
               >
                 Cancelar
               </button>

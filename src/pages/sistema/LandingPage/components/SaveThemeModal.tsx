@@ -97,7 +97,7 @@ export default function SaveThemeModal({
               placeholder="Ex: Corporativo Noturno, Minimalista Ouro..."
               value={themeName}
               onChange={e => setThemeName(e.target.value)}
-              maxLength={50}
+              maxLength={100}
               autoFocus
             />
           </div>
@@ -107,6 +107,7 @@ export default function SaveThemeModal({
             <textarea
               className={styles.textareaInput}
               rows={2}
+              maxLength={255}
               placeholder="Breve descrição da identidade deste tema..."
               value={themeDesc}
               onChange={e => setThemeDesc(e.target.value)}
